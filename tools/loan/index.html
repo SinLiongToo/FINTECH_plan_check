@@ -29,6 +29,24 @@
   --transition: 0.22s cubic-bezier(.4,0,.2,1);
 }
 
+/* Light mode overrides — driven by the shared nav's theme toggle,
+   which sets data-theme on <html>. Higher specificity than :root
+   so these win without touching any of the rules below. */
+html[data-theme="light"] {
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface2: #eef0f3;
+  --border: #dde1e7;
+  --accent: #2563eb;
+  --accent2: #4f46e5;
+  --success: #059669;
+  --danger: #dc2626;
+  --warn: #b45309;
+  --text: #161a20;
+  --text2: #5b6472;
+  --text3: #7c8594;
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {

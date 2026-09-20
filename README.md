@@ -1,6 +1,9 @@
 # FinTech Toolkit（四合一理財工具箱）
 
-把四個原本獨立的理財小工具合併成一個共用外殼（導覽列 / 深淺色主題 / 手機版）的靜態網站，部署在 GitHub Pages（帳號：**masahltu0322**）。
+把四個原本獨立的理財小工具合併成一個共用外殼（導覽列 / 深淺色主題 / 手機版）的靜態網站，部署在 GitHub Pages。
+
+**上線網址：https://sinliongtoo.github.io/FINTECH_plan_check/**
+Repo：[SinLiongToo/FINTECH_plan_check](https://github.com/SinLiongToo/FINTECH_plan_check)
 
 > ⚠️ 這個 repo 是**全新的合併專案**。四個原始工具的原始檔案完全不會被修改或搬移，只會被「複製」進來後再套上共用外殼。原始位置：
 > - `Projects_antigravity/taiwan stock label drop`（股價下跌追蹤器）
@@ -53,7 +56,7 @@ GitHub Pages 只能放靜態檔案，不能跑 Python，所以「即時抓股價
 - ✅ 完全自包含：股價資料以 `const RAW = {...}` 直接內嵌在 `<script>` 裡，**不是**從外部 `raw_data.js` 載入。
 - ⚠️ 同資料夾裡的 `raw_data.js` 與 `DRAWNDOWN EXPLORER/taiwan_stock_v3 (1).html` 是舊版殘留檔案，目前的 v4 沒有引用它們，合併時**不需要一併複製**。
 - ℹ️ 內建「⚡ Server Refresh」按鈕會呼叫 `localhost:8765`（`server.py`），這條路徑部署到 GitHub Pages 後會失效，需改接方案 D 的 `data/stock_data.json`。
-- ✅ 已有 light/dark class 機制，可直接擴充成全站共用主題。
+- ✅ 已有 light/dark class 機制，已接到全站共用的主題切換鈕上。
 
 ### ⚖️ Rebalance Engine (`rebalance.html`)
 - ✅ 完全自包含：只依賴外部 CDN（Chart.js + Google Fonts），沒有任何本地相對路徑檔案依賴。
@@ -74,7 +77,8 @@ GitHub Pages 只能放靜態檔案，不能跑 Python，所以「即時抓股價
 
 ## 部署
 
-- GitHub 帳號：**masahltu0322**（新建 repo，用 GitHub Pages 發布）
+- Repo/GitHub Pages 建立在 **SinLiongToo** 這個 GitHub 帳號下（終端機當時已登入這個帳號，且已在對話中跟你確認過直接沿用，不用另外切換帳號）
+- 上線網址：https://sinliongtoo.github.io/FINTECH_plan_check/
 - 靜態站台（`index.html` + `tools/*`）由 GitHub Pages 直接發布
 - 股價資料管線（`fetch_stock_data.py` + Actions workflow）與站台在同一個 repo 內，排程自動更新、自動 commit
 

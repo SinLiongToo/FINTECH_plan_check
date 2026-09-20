@@ -1,10 +1,10 @@
-# Implementation Plan（初版，2026-09-20 記錄）
+# Implementation Plan（2026-09-20 建立，隨實作進度持續更新）
 
-狀態：**規劃階段，尚未開始實作**。此文件記錄目前討論定案的整合方案，作為後續實作的依據；隨實作進度更新。
+狀態：Phase 0～2.5 已完成並上線；Phase 3（股價資料管線）與 Phase 4（美股搜尋）進行中。
 
 ## 目標
 
-把四個獨立的靜態理財工具合併成一個共用外殼的網站，新增美股搜尋，部署到 GitHub Pages（帳號 `masahltu0322`），原始四個專案資料夾維持完全不動。
+把四個獨立的靜態理財工具合併成一個共用外殼的網站，新增美股搜尋，部署到 GitHub Pages（[SinLiongToo/FINTECH_plan_check](https://github.com/SinLiongToo/FINTECH_plan_check)），原始四個專案資料夾維持完全不動。
 
 ## 專案結構（新 repo：`project_claude_FINTECH`）
 
@@ -41,18 +41,24 @@ project_claude_FINTECH/
 ### Phase 1 — 專案骨架
 - [x] 建立 `index.html` 入口儀表板（4 張工具卡片）
 - [x] 建立 `assets/shared.css`、`assets/shared.js`：統一設計 tokens（`--ftk-*`）、深淺色主題切換（localStorage `ftk-theme`）、手機版漢堡選單
-- [ ] `git init` 新 repo，設定 GitHub Pages（`masahltu0322` 帳號下新建 repo）— 尚未執行，待你確認 repo 名稱後才建立/推送
+- [x] `git init`、建立 GitHub repo [`SinLiongToo/FINTECH_plan_check`](https://github.com/SinLiongToo/FINTECH_plan_check)（帳號登入的是 `SinLiongToo`，已跟你確認過就是要用的帳號）、開啟 GitHub Pages，上線網址：https://sinliongtoo.github.io/FINTECH_plan_check/
 
 ### Phase 2 — 搬遷四個工具
 - [x] 複製四個原始 HTML 進 `tools/*/index.html`（原檔完全未改動，僅複製）
 - [x] 每個工具 `<head>` 加一行 `<link>` 引入 `assets/shared.css`，`</body>` 前加 `<script>` 設定 `FTK_ROOT`/`FTK_PAGE` 並載入 `assets/shared.js`（共用導覽列+主題鈕以 `.ftk-` 命名空間注入，不會與各工具原有 CSS/JS 衝突）
 - [x] Stock Drawdown Explorer：把它原生的 `.light` 深淺色切換，接到共用主題鈕（隱藏了它自己原本的 Light 按鈕，避免兩個切換鈕重複）
-- [x] 本機起了一個暫時的靜態伺服器，確認 7 個頁面（index + 4 工具 + 2 個 assets 檔）都能以正確的相對路徑載入（HTTP 200），沒有壞連結
-- [ ] 手機版排版（表格橫向捲動、輸入區可折疊）尚未逐一在四個工具上實機檢查，建議 Phase 5 部署後用手機瀏覽器實測
+- [x] 導覽列新增常駐的「← 返回總覽」按鈕（只在工具頁顯示，不在首頁顯示），不需要展開手機版漢堡選單就能直接回首頁
+- [x] 用 Playwright 起本機靜態伺服器 + headless Chromium 實際截圖驗證（不只是檢查 HTTP 200）：
+  - 過程中抓到一個真正的 bug：`shared.js` 檔頭註解裡寫了 `tools/*/index.html` 這個字串，裡面的 `*/` 被 JS 剖析器當成註解結尾，導致整支腳本從那之後全部變成語法錯誤、共用導覽列在所有頁面都完全沒有渲染出來。已修正註解措辭並重新驗證通過（`node --check` + 五個頁面 headless 截圖皆正常）。
+  - 桌面 + 手機（375px）雙尺寸、深/淺色雙主題都截圖比對過，四個工具頁面與首頁的導覽列、主題切換、返回按鈕、漢堡選單全部正常運作。
+- [x] 手機版初步排版檢查：首頁卡片、Loan 工具的可折疊輸入面板、Retirement 工具的單欄堆疊都正常。**發現一個既有（非本次合併造成）的小瑕疵**：Rebalance Engine 的「股債年齡試算配置」巢狀 3 欄小格在 375px 寬度下會把整個輸入區擠出畫面造成水平溢出；這是原始 `rebalance.html` 本來就有的排版行為，不是搬遷過程造成的迴歸，列為後續可選的優化項目，未動手修正。
 
-### 已知限制（尚未處理）
-- Rebalance / Retirement / Loan 三個工具**目前完全沒有淺色模式**（原始設計就是深色寫死，顏色多為固定變數但沒有 light 版本的變數值）。目前共用導覽列/首頁的主題切換鈕**只會影響外層的 nav/footer/首頁**，不會改變這三個工具內容區的顏色。只有 Stock Drawdown Explorer 因為原本就有 `.light` 機制，才能真正跟著切換。
-  若要讓這三個工具的內容區也支援淺色模式，需要另外幫每個工具新增一組淺色版 CSS 變數（非小工程，建議列為獨立的後續任務，而不是這次順手做）。
+### Phase 2.5 — 四個工具的淺色模式（原本列為已知限制，已完成）
+- [x] Rebalance Engine：CSS 變數本來就集中管理，直接新增 `html[data-theme="light"]` 覆寫區塊（含修正一個原本用寫死 `rgba(18,24,38,0.8)` 而非變數的頁首列背景，改用新變數 `--header-bg` 才能真正跟著換色）
+- [x] Loan Investment Simulator：同樣是 CSS 變數集中管理，直接新增 `html[data-theme="light"]` 覆寫區塊
+- [x] Retirement Simulator：這個工具整頁用 Tailwind CDN 工具類寫死深色（`bg-[#0b0f19]`、`text-slate-400` 等），沒有集中的 CSS 變數可覆寫，改成針對約 30 個實際用到的深色系工具類逐一寫 `html[data-theme="light"] .class{...!important}` 覆寫，另外挑出 4 個用 Tailwind 漸層做文字/背景效果的元素（quote 橫幅、頁首區塊、標題漸層文字 ×2）加上 id 直接覆寫 `background-image`，並讓 Chart.js 圖表在每次重繪時依當下主題挑選格線/座標軸顏色
+- [x] 全部用 headless Chromium 實際截圖驗證深/淺色下的可讀性（沒有白底白字或黑底黑字的區塊）
+- **未處理的小落差（刻意不做，性價比低）**：三個工具裡少數 Chart.js 的座標軸文字/格線顏色是寫死的中性灰／半透明白，在淺色模式下對比度沒有到完美，但仍可讀，跟頁面主體的文字對比策略一致（次要文字接受「還算堪讀」而非追求 WCAG AA 滿分），沒有另外寫程式在每次主題切換時即時重繪所有既有圖表（只有 Retirement 工具的圖表因為本來就是「按需重繪」而做了主題感知；已渲染完的舊圖表要到下次重新試算才會套用新配色）。
 
 ### Phase 3 — 股價資料管線（方案 D）
 - [ ] 改編 `fetch_stock_data.py`，ticker map 涵蓋現有工具用到的台股代號 + 新增美股代號
@@ -65,11 +71,11 @@ project_claude_FINTECH/
 - [ ] 決定是否需要 on-demand 查詢路徑（使用者輸入不在快取內的代號時的 fallback 行為）
 
 ### Phase 5 — 部署與驗收
-- [ ] Push 到 `masahltu0322` 的 GitHub repo，開啟 GitHub Pages
-- [ ] 實機檢查手機版（iOS/Android 瀏覽器）+ 桌面版 + 深淺色切換
-- [ ] 確認四個工具間可自由切換，狀態互不干擾
+- [x] Push 到 `SinLiongToo/FINTECH_plan_check`，開啟 GitHub Pages，build 成功、7 個路徑皆回應 200
+- [x] Headless Chromium 檢查手機版（375px）+ 桌面版 + 深淺色切換
+- [x] 確認四個工具間可自由切換（導覽列 + 返回總覽按鈕），狀態互不干擾（各工具用獨立 `localStorage`/記憶體狀態，僅共用 `ftk-theme`）
+- [ ] 真人手機（iOS/Android 實機瀏覽器）尚未測試，僅用 headless Chromium 模擬 375px 視窗驗證
 
 ## 待確認事項
 
 - 美股搜尋除了讀取排程快取的 `data/stock_data.json`，是否需要「使用者輸入任意代號都能即時查」的 on-demand 路徑（如果需要，屬於 Phase 4 的延伸討論，可能要回頭考慮方案 A 的 Cloudflare Worker 作為 fallback）。
-- 新 GitHub repo 的名稱尚未決定。

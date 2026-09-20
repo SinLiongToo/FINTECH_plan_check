@@ -1,7 +1,7 @@
 /* ==========================================================================
    FinTech Toolkit — Shared nav bar + site-wide dark/light theme switch.
    Each page must set `window.FTK_ROOT` (relative path back to the project
-   root, e.g. "./" for index.html or "../../" for tools/*/index.html) BEFORE
+   root, e.g. "./" for index.html or "../../" for a page under tools) BEFORE
    loading this script.
    ========================================================================== */
 (function(){
@@ -42,9 +42,14 @@
       return '<a class="ftk-nav-link' + activeCls + '" href="' + t.href + '">' + t.label + '</a>';
     }).join('');
 
+    var backHtml = (currentKey && currentKey !== 'home')
+      ? '<a class="ftk-back-btn" href="' + ROOT + 'index.html">← 返回總覽</a>'
+      : '';
+
     nav.innerHTML =
       '<div class="ftk-nav-inner">' +
         '<a class="ftk-brand" href="' + ROOT + 'index.html">FinTech Toolkit</a>' +
+        backHtml +
         '<button type="button" class="ftk-burger" aria-label="Menu">☰</button>' +
         '<div class="ftk-nav-links">' + linksHtml +
           '<button type="button" class="ftk-theme-btn" aria-label="Toggle theme"></button>' +

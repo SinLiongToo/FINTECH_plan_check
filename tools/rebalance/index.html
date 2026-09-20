@@ -29,6 +29,29 @@
             --purple: #8b5cf6;
             --glow: rgba(245, 158, 11, 0.15);
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --header-bg: rgba(18, 24, 38, 0.8);
+        }
+
+        /* Light mode overrides — driven by the shared nav's theme toggle,
+           which sets data-theme on <html>. Higher specificity than :root
+           so these win without touching any of the rules below. */
+        html[data-theme="light"] {
+            --bg-color: #f5f6f8;
+            --panel-bg: #ffffff;
+            --panel-bg-hover: #eef0f3;
+            --panel-border: #dde1e7;
+            --input-bg: #eef0f3;
+            --text-primary: #161a20;
+            --text-secondary: #5b6472;
+            --text-muted: #7c8594;
+            --primary: #b45309;
+            --primary-hover: #92400e;
+            --success: #059669;
+            --danger: #dc2626;
+            --blue: #2563eb;
+            --purple: #7c3aed;
+            --glow: rgba(180, 83, 9, 0.12);
+            --header-bg: rgba(255, 255, 255, 0.85);
         }
 
         [data-lang="en"] .lang-zh { display: none !important; }
@@ -72,7 +95,7 @@
 
         /* Header */
         header {
-            background: rgba(18, 24, 38, 0.8);
+            background: var(--header-bg);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--panel-border);
             position: sticky;

@@ -15,11 +15,82 @@
         /* 隱藏滾動條但保持功能 */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* ================================================================
+           Light mode overrides — driven by the shared nav's theme toggle,
+           which sets data-theme on <html>. This page is authored entirely
+           with Tailwind's dark-only utility classes (no CSS variables), so
+           each utility class used for backgrounds/text/borders is
+           individually overridden here for the light theme. The
+           `html[data-theme="light"]` ancestor gives every rule higher
+           specificity than the plain Tailwind utility class it targets,
+           so these win regardless of the Tailwind CDN stylesheet's
+           position in the DOM. `!important` is added as a safety net.
+           ================================================================ */
+        html[data-theme="light"] body{ background:#f5f6f8 !important; color:#161a20 !important; }
+
+        /* panel / input / table backgrounds */
+        html[data-theme="light"] .bg-\[\#131a26\]{ background:#ffffff !important; }
+        html[data-theme="light"] .bg-\[\#141c2b\]{ background:#eef0f3 !important; }
+        html[data-theme="light"] .bg-\[\#172030\]{ background:#eef0f3 !important; }
+        html[data-theme="light"] .bg-\[\#192335\]{ background:#e4e7ec !important; }
+        html[data-theme="light"] .bg-\[\#111823\]{ background:#eef0f3 !important; }
+        html[data-theme="light"] .bg-\[\#0e141f\]\/40{ background:rgba(0,0,0,0.03) !important; }
+        html[data-theme="light"] .bg-\[\#0f1522\]\/30{ background:rgba(0,0,0,0.02) !important; }
+        html[data-theme="light"] .bg-slate-800{ background:#e4e7ec !important; }
+        html[data-theme="light"] .bg-slate-700{ background:#d8dce3 !important; }
+        html[data-theme="light"] .bg-slate-800\/30{ background:rgba(0,0,0,0.04) !important; }
+        html[data-theme="light"] .hover\:bg-slate-700:hover{ background:#d8dce3 !important; }
+
+        /* borders / dividers */
+        html[data-theme="light"] .border-slate-700,
+        html[data-theme="light"] .border-slate-700\/60,
+        html[data-theme="light"] .border-slate-800,
+        html[data-theme="light"] .border-slate-800\/50,
+        html[data-theme="light"] .border-slate-800\/60,
+        html[data-theme="light"] .border-slate-800\/80{ border-color:#dde1e7 !important; }
+        html[data-theme="light"] .divide-slate-800\/50 > :not([hidden]) ~ :not([hidden]),
+        html[data-theme="light"] .divide-slate-800\/60 > :not([hidden]) ~ :not([hidden]){ border-color:#dde1e7 !important; }
+
+        /* text colors */
+        html[data-theme="light"] .text-white{ color:#161a20 !important; }
+        html[data-theme="light"] .text-slate-200{ color:#1f2430 !important; }
+        html[data-theme="light"] .text-slate-300{ color:#3b4250 !important; }
+        html[data-theme="light"] .text-slate-400{ color:#5b6472 !important; }
+        html[data-theme="light"] .text-slate-600{ color:#94a0b0 !important; }
+        html[data-theme="light"] .text-amber-400{ color:#b45309 !important; }
+        html[data-theme="light"] .text-amber-200\/90{ color:#92400e !important; }
+        html[data-theme="light"] .text-emerald-400{ color:#059669 !important; }
+        html[data-theme="light"] .text-emerald-300{ color:#047857 !important; }
+        html[data-theme="light"] .text-rose-400{ color:#dc2626 !important; }
+        html[data-theme="light"] .text-rose-300{ color:#b91c1c !important; }
+        html[data-theme="light"] .text-indigo-400{ color:#4f46e5 !important; }
+        html[data-theme="light"] .text-indigo-300{ color:#4338ca !important; }
+
+        /* the 4 hand-picked gradient elements (see IDs added in the HTML) —
+           overriding background-image directly is simpler & more reliable
+           than fighting Tailwind's --tw-gradient-* custom properties. */
+        html[data-theme="light"] #quoteBanner{
+          background-image:linear-gradient(to right, rgba(180,83,9,.08), rgba(202,138,4,.04), transparent) !important;
+          border-color:rgba(180,83,9,.25) !important;
+        }
+        html[data-theme="light"] #headerPanel{
+          background-image:linear-gradient(to right, #f8f6f1, #eef0f3) !important;
+        }
+        html[data-theme="light"] #ui-title{
+          background-image:linear-gradient(to right, #161a20, #2b323f, #4a5264) !important;
+        }
+        html[data-theme="light"] #healthCheckCard{
+          background-image:linear-gradient(to right, #fdf6ec, #eef0f3) !important;
+        }
+        html[data-theme="light"] #ui-health-title{
+          background-image:linear-gradient(to right, #92400e, #b45309) !important;
+        }
     </style>
 </head>
 <body class="bg-[#0b0f19] text-slate-200 min-h-screen p-3 md:p-8 font-sans antialiased">
 
-    <div class="max-w-7xl mx-auto bg-gradient-to-r from-amber-500/10 via-yellow-600/5 to-transparent border border-amber-500/20 rounded-xl p-3 mb-6 flex items-center shadow-lg backdrop-blur-md">
+    <div id="quoteBanner" class="max-w-7xl mx-auto bg-gradient-to-r from-amber-500/10 via-yellow-600/5 to-transparent border border-amber-500/20 rounded-xl p-3 mb-6 flex items-center shadow-lg backdrop-blur-md">
         <div class="flex items-center gap-2 text-amber-400 font-bold text-xs md:text-sm uppercase tracking-wider shrink-0 bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20">
             💬 Buffett Quotes
         </div>
@@ -31,7 +102,7 @@
     </div>
 
     <div class="max-w-7xl mx-auto bg-[#131a26] rounded-2xl shadow-2xl overflow-hidden border border-slate-800/80 mb-8">
-        <div class="bg-gradient-to-r from-slate-950 to-[#161f30] p-5 md:p-8 border-b border-slate-800/60 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div id="headerPanel" class="bg-gradient-to-r from-slate-950 to-[#161f30] p-5 md:p-8 border-b border-slate-800/60 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
                 <h1 id="ui-title" class="text-xl md:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">個人終身財富綜合動態模擬器</h1>
                 <p id="ui-subtitle" class="text-slate-400 mt-1 text-xs md:text-sm">頂級暗黑手機優化版：雙 Y 軸獨立級距（單位：萬），圖表起點智慧縮放。</p>
@@ -613,11 +684,18 @@
             if (assetChart) assetChart.destroy();
             if (flowChart) flowChart.destroy();
 
+            // 深/淺色主題感知的圖表配色（圖表在每次重繪時讀取當下主題）
+            const isLightTheme = document.documentElement.getAttribute('data-theme') === 'light';
+            const chartGrid = isLightTheme ? 'rgba(0,0,0,0.08)' : '#1e293b';
+            const chartTick = isLightTheme ? '#5b6472' : '#94a3b8';
+            const chartTickMuted = isLightTheme ? '#7c8594' : '#64748b';
+            const chartCashTick = isLightTheme ? '#059669' : '#10b981';
+
             // 完美的起點對齊與消除留白配置
             const xAxisConfig = {
                 grid: { display: false },
                 bounds: 'data',
-                ticks: { align: 'start', color: '#64748b', font: { size: 10 } }
+                ticks: { align: 'start', color: chartTickMuted, font: { size: 10 } }
             };
 
             // 智慧計算最小值：不要強制從0開始（非0初始點），讓圖表聚焦波動細節
@@ -647,7 +725,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
-                    plugins: { legend: { position: 'top', labels: { boxWidth: 10, color: '#94a3b8', font: { size: 10 } } } },
+                    plugins: { legend: { position: 'top', labels: { boxWidth: 10, color: chartTick, font: { size: 10 } } } },
                     scales: {
                         x: xAxisConfig,
                         y: {
@@ -655,8 +733,8 @@
                             type: 'linear',
                             display: true,
                             position: 'left',
-                            grid: { color: '#1e293b' },
-                            ticks: { color: '#94a3b8', callback: function(val) { return val + dict.unitWan; }, font: { size: 10 } },
+                            grid: { color: chartGrid },
+                            ticks: { color: chartTick, callback: function(val) { return val + dict.unitWan; }, font: { size: 10 } },
                             min: leftAxisMin // 【關鍵】：起點智慧縮放，不從0開始
                         },
                         y2: {
@@ -665,7 +743,7 @@
                             display: true,
                             position: 'right',
                             grid: { drawOnChartArea: false }, // 防止右軸格線干擾左軸
-                            ticks: { color: '#10b981', callback: function(val) { return val + dict.unitWan; }, font: { size: 10 } },
+                            ticks: { color: chartCashTick, callback: function(val) { return val + dict.unitWan; }, font: { size: 10 } },
                             min: rightAxisMin // 【關鍵】：起點智慧縮放
                         }
                     }
@@ -686,12 +764,12 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
-                    plugins: { legend: { position: 'top', labels: { boxWidth: 10, color: '#94a3b8', font: { size: 10 } } } },
+                    plugins: { legend: { position: 'top', labels: { boxWidth: 10, color: chartTick, font: { size: 10 } } } },
                     scales: {
                         x: xAxisConfig,
                         y: {
-                            grid: { color: '#1e293b' },
-                            ticks: { color: '#94a3b8', callback: function(val) { return val + dict.unitWan; }, font: { size: 10 } },
+                            grid: { color: chartGrid },
+                            ticks: { color: chartTick, callback: function(val) { return val + dict.unitWan; }, font: { size: 10 } },
                             min: flowMin // 【關鍵】：起點智慧縮放
                         }
                     }
