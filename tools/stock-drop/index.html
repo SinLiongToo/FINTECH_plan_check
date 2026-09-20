@@ -62,16 +62,18 @@ h1{font-size:1.28rem;font-weight:700;letter-spacing:-.3px;}
 .tab{font-family:var(--mono);font-size:.72rem;padding:7px 14px;border-radius:var(--r) var(--r) 0 0;border:1px solid var(--line);border-bottom:none;background:var(--panel2);color:var(--sub);cursor:pointer;transition:all .15s;}
 .tab.on{background:var(--panel);color:var(--ink);font-weight:600;}
 /* CHIPS */
-.chips-wrap{position:relative;}
-.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px;scrollbar-width:none;}
-.chips-fade{
-  position:absolute; top:0; right:0; bottom:18px; width:40px;
-  display:flex; align-items:center; justify-content:flex-end;
-  background:linear-gradient(to right, transparent, var(--bg) 65%);
-  pointer-events:none; color:var(--accent); font-size:20px; padding-right:2px;
-  opacity:0; transition:opacity .2s;
+.chips-wrap{position:relative;padding:0 34px;}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px;scrollbar-width:none;scroll-behavior:smooth;}
+.chips-nav{
+  position:absolute; top:0; bottom:18px; width:30px;
+  display:none; align-items:center; justify-content:center;
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--r);
+  color:var(--accent); font-size:18px; cursor:pointer; z-index:5;
 }
-.chips-fade.show{opacity:1;}
+.chips-nav:hover{border-color:var(--accent);background:var(--panel2);}
+.chips-nav.show{display:flex;}
+.chips-nav.prev{left:0;}
+.chips-nav.next{right:0;}
 .us-search{position:relative;max-width:340px;margin-bottom:14px;}
 .us-search input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);color:var(--ink);padding:8px 12px;font-size:.8rem;font-family:var(--sans);}
 .us-search input:focus{outline:none;border-color:var(--accent);}
@@ -208,8 +210,9 @@ button.gst:hover{border-color:var(--accent);color:var(--accent);}
     <div class="prog-ticks" id="progTicks"></div>
   </div>
   <div class="chips-wrap">
+    <button type="button" class="chips-nav prev" id="chipsPrev" aria-label="Scroll stocks left">&#8249;</button>
     <div class="chips" id="chipRow"></div>
-    <div class="chips-fade" id="chipsFade" aria-hidden="true">&#8250;</div>
+    <button type="button" class="chips-nav next" id="chipsNext" aria-label="Scroll stocks right">&#8250;</button>
   </div>
   <div class="us-search">
     <input type="text" id="usSearchInput" placeholder="&#x1F50D; Search US stocks (e.g. AAPL, NVDA, Apple)&#x2026;" autocomplete="off">
@@ -488,19 +491,23 @@ STOCKS.forEach(s=>{
 });
 function setChip(){ document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("on",c.dataset.s===curSym)); }
 
-// Chip row has horizontal scroll with no visible scrollbar (by design —
-// scrollbar-width:none) — without any cue, it's easy to not notice there
-// are more chips off to the right (this got worse once the row grew past
-// what fits on one screen). Show a fade+arrow hint whenever there's more
-// to scroll to, hide it once scrolled to the end.
-const chipsFade = document.getElementById("chipsFade");
-function updateChipsFade(){
-  const hasMore = chipRow.scrollWidth - chipRow.clientWidth - chipRow.scrollLeft > 4;
-  chipsFade.classList.toggle("show", hasMore);
+// Chip row has horizontal scroll with no visible/draggable scrollbar (by
+// design — scrollbar-width:none), so the only way to move it was mouse
+// wheel / trackpad gestures, which isn't obvious and doesn't work both
+// ways for every input device (a plain vertical-only mouse wheel can't
+// scroll it back at all). Real prev/next buttons instead of just a fade
+// hint, so scrolling in either direction always works with a click.
+const chipsPrev = document.getElementById("chipsPrev");
+const chipsNext = document.getElementById("chipsNext");
+function updateChipsNav(){
+  chipsPrev.classList.toggle("show", chipRow.scrollLeft > 4);
+  chipsNext.classList.toggle("show", chipRow.scrollWidth - chipRow.clientWidth - chipRow.scrollLeft > 4);
 }
-chipRow.addEventListener("scroll", updateChipsFade);
-window.addEventListener("resize", updateChipsFade);
-setTimeout(updateChipsFade, 0); // after chips + layout are in the DOM
+chipsPrev.addEventListener("click", () => chipRow.scrollBy({left: -240, behavior: "smooth"}));
+chipsNext.addEventListener("click", () => chipRow.scrollBy({left: 240, behavior: "smooth"}));
+chipRow.addEventListener("scroll", updateChipsNav);
+window.addEventListener("resize", updateChipsNav);
+setTimeout(updateChipsNav, 0); // after chips + layout are in the DOM
 
 // ─── CONTROLS ────────────────────────────────────────────────────────────
 document.getElementById("thresh").addEventListener("input",e=>{
