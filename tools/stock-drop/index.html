@@ -210,6 +210,8 @@ button.gst:hover{border-color:var(--accent);color:var(--accent);}
     <span class="cval" id="tv">10%</span>
     <div class="rsep"></div>
     <span class="clbl">Range</span>
+    <button class="rbtn" data-r="0.0192">1W</button>
+    <button class="rbtn" data-r="0.0833">1M</button>
     <button class="rbtn" data-r="0.25">3M</button>
     <button class="rbtn" data-r="0.5">6M</button>
     <button class="rbtn" data-r="1">1Y</button>
@@ -469,8 +471,14 @@ document.getElementById("thresh").addEventListener("input",e=>{
 document.querySelectorAll(".rbtn").forEach(b=>{
   b.addEventListener("click",()=>{
     document.querySelectorAll(".rbtn").forEach(x=>x.classList.remove("on")); b.classList.add("on");
-    rangeY=+b.dataset.r; if(!liveMode) recompute();
-    else { prices=prices.filter(p=>p.date>=new Date(Date.now()-rangeY*365.25*24*3600*1000)); recompute(); }
+    rangeY=+b.dataset.r;
+    // Always rebuild from the full series (buildPrices() picks liveRAW
+    // over RAW when present) instead of progressively filtering the
+    // already-displayed `prices` array — filtering in place could only
+    // ever shrink the range, never restore it when switching to a wider
+    // one (e.g. 3M then back to 1Y would stay stuck at 3M of data).
+    prices = buildPrices(curSym, rangeY);
+    recompute();
   });
 });
 
@@ -507,13 +515,19 @@ function buildPrices(sym, yearsFrac){
   // Prefer liveRAW (real Yahoo Finance data) over built-in GBM data
   const arr = liveRAW[sym] || RAW[sym];
   if(!arr) return [];
-  const cut = new Date(Date.now()-yearsFrac*365.25*24*3600*1000);
   // liveRAW entries are already {date, close} objects; RAW entries are [string, number]
-  if(liveRAW[sym]) {
-    return arr.filter(p => p.date >= cut && !isNaN(p.close) && p.close > 0);
-  }
-  return arr.map(p=>({date:new Date(p[0]+"T00:00:00"),close:p[1]}))
-            .filter(p=>p.date>=cut && !isNaN(p.close) && p.close>0);
+  const pts = liveRAW[sym]
+    ? arr.filter(p => !isNaN(p.close) && p.close > 0)
+    : arr.map(p=>({date:new Date(p[0]+"T00:00:00"),close:p[1]})).filter(p=>!isNaN(p.close) && p.close>0);
+  if(!pts.length) return [];
+  // Cut relative to this series' own last point, not wall-clock "now".
+  // The built-in GBM data (and even freshly-fetched weekly live data) has
+  // a fixed last date that can be weeks/months behind "today" — computing
+  // "3M" etc. from Date.now() could then land entirely after the last
+  // available point and silently return zero rows.
+  const lastDate = pts[pts.length-1].date;
+  const cut = new Date(lastDate.getTime() - yearsFrac*365.25*24*3600*1000);
+  return pts.filter(p => p.date >= cut);
 }
 
 // ─── SVG CHART ───────────────────────────────────────────────────────────
@@ -954,6 +968,7 @@ document.getElementById("serverBtn").addEventListener("click", async () => {
       date:  new Date(p[0] + "T00:00:00"),
       close: p[1]
     })).filter(p => !isNaN(p.close) && p.close > 0);
+    liveRAW[curSym] = prices; // so buildPrices()/range buttons pick this up too
 
     liveMode = true;
 
