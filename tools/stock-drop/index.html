@@ -1045,6 +1045,12 @@ async function applyStaticDataFor(sym) {
   return true;
 }
 
+// YYYY-MM-DD using local calendar fields (not toISOString, which goes
+// through UTC and can shift the date depending on the viewer's timezone).
+function fmtLocalDate(d) {
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
 // Show a symbol whose liveRAW[sym] is already populated from the static
 // JSON, with correct "Live" labeling (recompute()'s own liveMode branch
 // only covers the localhost-server case, so this bypasses it directly).
@@ -1056,12 +1062,19 @@ function displayStaticSymbol(sym) {
   episodes = detectDD(prices, thresh);
   drawChart(); renderStats(); renderCards();
   const s = STOCKS.find(x => x.sym === sym) || {};
-  const rec = STOCK_DB && STOCK_DB[sym.toLowerCase()];
   const last = prices[prices.length - 1];
   const cp = document.getElementById("cp_" + sym.replace(/\W/g, "_"));
   if (cp && last) cp.textContent = last.close.toLocaleString(undefined, {maximumFractionDigits: 0});
-  document.getElementById("slbl").textContent = `Static live data · ${s.name} · as of ${rec ? rec.as_of : "?"}`;
-  document.getElementById("tbnote").textContent = `${s.name} · weekly closes from Yahoo Finance, auto-updated by GitHub Actions (not real-time)`;
+  // Use the actual date of the last weekly close, not the date the fetch
+  // script last ran (data/stock_data.json's "as_of") — those can differ
+  // by several days since Yahoo's weekly bars close on the prior trading
+  // week, which was confusing when the two dates were shown side by side.
+  // fmtLocalDate (not toISOString, which converts to UTC and can shift
+  // the date by a day depending on the viewer's timezone) since `date`
+  // was built from a plain "YYYY-MM-DDT00:00:00" local-midnight string.
+  const lastCloseDate = last ? fmtLocalDate(last.date) : "?";
+  document.getElementById("slbl").textContent = `Static live data · ${s.name} · week of ${lastCloseDate}`;
+  document.getElementById("tbnote").textContent = `${s.name} · weekly close ${lastCloseDate} from Yahoo Finance, auto-updated by GitHub Actions (not real-time)`;
 }
 
 // Add a chip for a symbol not in the built-in STOCKS list (e.g. a US
