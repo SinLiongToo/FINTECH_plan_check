@@ -63,6 +63,16 @@ h1{font-size:1.28rem;font-weight:700;letter-spacing:-.3px;}
 .tab.on{background:var(--panel);color:var(--ink);font-weight:600;}
 /* CHIPS */
 .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px;scrollbar-width:none;}
+.us-search{position:relative;max-width:340px;margin-bottom:14px;}
+.us-search input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);color:var(--ink);padding:8px 12px;font-size:.8rem;font-family:var(--sans);}
+.us-search input:focus{outline:none;border-color:var(--accent);}
+.us-search-results{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--panel2);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:20;max-height:260px;overflow-y:auto;display:none;}
+.us-search-item{padding:8px 12px;cursor:pointer;font-size:.78rem;border-bottom:1px solid var(--line);}
+.us-search-item:last-child{border-bottom:none;}
+.us-search-item:hover{background:var(--asft);}
+.us-search-item b{color:var(--accent);font-family:var(--mono);}
+.us-search-item .sub{color:var(--sub);margin-left:6px;}
+.us-search-hint{font-size:.68rem;color:var(--sub);margin-top:4px;}
 .chips::-webkit-scrollbar{display:none;}
 .chip{display:flex;flex-direction:column;gap:1px;flex-shrink:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:6px 10px;cursor:pointer;min-width:90px;transition:all .18s;}
 .chip:hover{border-color:var(--sub);}
@@ -189,6 +199,11 @@ button.gst:hover{border-color:var(--accent);color:var(--accent);}
     <div class="prog-ticks" id="progTicks"></div>
   </div>
   <div class="chips" id="chipRow"></div>
+  <div class="us-search">
+    <input type="text" id="usSearchInput" placeholder="&#x1F50D; Search US stocks (e.g. AAPL, NVDA, Apple)&#x2026;" autocomplete="off">
+    <div class="us-search-results" id="usSearchResults"></div>
+    <div class="us-search-hint" id="usSearchHint"></div>
+  </div>
   <div class="ctrl">
     <span class="clbl">Drop &#x2265;</span>
     <input type="range" id="thresh" min="2" max="60" step="1" value="10">
@@ -790,16 +805,38 @@ document.getElementById("serverAllBtn").addEventListener("click", async () => {
   const progTicks= document.getElementById("progTicks");
 
   // First check server is reachable
+  let localServerUp = true;
   try {
     const ping = await fetch(`${SERVER_URL}/api/ping`, {signal: AbortSignal.timeout(1500)});
     if (!ping.ok) throw new Error();
   } catch {
-    alert(
-      "⚡⚡ Local server not running.\n\n" +
-      "Start it first:\n" +
-      "  python server.py\n\n" +
-      "Then click Refresh all 15 again."
-    );
+    localServerUp = false;
+  }
+
+  if (!localServerUp) {
+    // No local server (expected on the deployed site) — fall back to the
+    // pre-fetched data/stock_data.json built by the GitHub Actions pipeline.
+    await loadStockDB();
+    if (!STOCK_DB) {
+      alert(
+        "⚡⚡ No live data source available.\n\n" +
+        "Local server mode: run `python server.py` for real-time refresh.\n" +
+        "Static data mode: data/stock_data.json hasn't been generated yet " +
+        "(the GitHub Actions pipeline may not have run yet)."
+      );
+      return;
+    }
+    let ok = 0;
+    for (const s of STOCKS) {
+      if (await applyStaticDataFor(s.sym)) {
+        ok++;
+        const last = liveRAW[s.sym][liveRAW[s.sym].length - 1];
+        const cp = document.getElementById("cp_" + s.sym.replace(/\W/g, "_"));
+        if (cp && last) cp.textContent = last.close.toLocaleString(undefined, {maximumFractionDigits: 0});
+      }
+    }
+    displayStaticSymbol(curSym);
+    alert(`⚡⚡ Loaded static live data for ${ok}/${STOCKS.length} stocks (updated automatically, not real-time).`);
     return;
   }
 
@@ -939,15 +976,16 @@ document.getElementById("serverBtn").addEventListener("click", async () => {
     drawChart(); renderStats(); renderCards();
 
   } catch (err) {
-    if (err.name === "TimeoutError" || err.message.includes("fetch") || err.message.includes("Failed")) {
-      // Server not running
+    // No local server (expected on the deployed site) — fall back to the
+    // pre-fetched data/stock_data.json built by the GitHub Actions pipeline.
+    const applied = await applyStaticDataFor(curSym);
+    if (applied) {
+      displayStaticSymbol(curSym);
+    } else if (err.name === "TimeoutError" || err.message.includes("fetch") || err.message.includes("Failed")) {
       alert(
-        "⚡ Local server not running.\n\n" +
-        "To enable Server Refresh:\n" +
-        "  1. pip install yfinance\n" +
-        "  2. python server.py\n\n" +
-        "Keep server.py running in a terminal while using the tool.\n" +
-        "The server opens your browser automatically at http://localhost:8765"
+        "⚡ No live data available for this stock.\n\n" +
+        "Local server mode: run `python server.py` for real-time refresh.\n" +
+        "Or wait for the site's automated data update to include this symbol."
       );
     } else {
       alert("Server error: " + err.message);
@@ -969,6 +1007,136 @@ function recompute(){
   drawChart(); renderStats(); renderCards();
 }
 recompute();
+</script>
+
+<script>
+// ============================================================
+// STATIC STOCK DATA (data/stock_data.json, built by GitHub Actions)
+// Used both as a fallback for the "Server Refresh" buttons on the
+// deployed site (no localhost:8765 there) and to power US stock search.
+// ============================================================
+const STOCK_DATA_URL = "../../data/stock_data.json";
+let STOCK_DB = null;
+let stockDbPromise = null;
+
+function loadStockDB() {
+  if (!stockDbPromise) {
+    stockDbPromise = fetch(STOCK_DATA_URL)
+      .then(res => res.ok ? res.json() : null)
+      .then(db => { STOCK_DB = db; return db; })
+      .catch(() => { STOCK_DB = null; return null; });
+  }
+  return stockDbPromise;
+}
+loadStockDB(); // kick off in the background on page load
+
+// Populate liveRAW[sym] from the static DB. Returns true on success.
+async function applyStaticDataFor(sym) {
+  await loadStockDB();
+  if (!STOCK_DB) return false;
+  const rec = STOCK_DB[sym.toLowerCase()];
+  if (!rec || !rec.weekly) return false;
+  const pts = rec.weekly.dates.map((d, i) => ({
+    date: new Date(d + "T00:00:00"),
+    close: rec.weekly.close[i]
+  })).filter(p => !isNaN(p.close) && p.close > 0);
+  if (!pts.length) return false;
+  liveRAW[sym] = pts;
+  return true;
+}
+
+// Show a symbol whose liveRAW[sym] is already populated from the static
+// JSON, with correct "Live" labeling (recompute()'s own liveMode branch
+// only covers the localhost-server case, so this bypasses it directly).
+function displayStaticSymbol(sym) {
+  curSym = sym;
+  setChip();
+  prices = buildPrices(sym, rangeY); // buildPrices() prefers liveRAW[sym] when present
+  liveMode = true;
+  episodes = detectDD(prices, thresh);
+  drawChart(); renderStats(); renderCards();
+  const s = STOCKS.find(x => x.sym === sym) || {};
+  const rec = STOCK_DB && STOCK_DB[sym.toLowerCase()];
+  const last = prices[prices.length - 1];
+  const cp = document.getElementById("cp_" + sym.replace(/\W/g, "_"));
+  if (cp && last) cp.textContent = last.close.toLocaleString(undefined, {maximumFractionDigits: 0});
+  document.getElementById("slbl").textContent = `Static live data · ${s.name} · as of ${rec ? rec.as_of : "?"}`;
+  document.getElementById("tbnote").textContent = `${s.name} · weekly closes from Yahoo Finance, auto-updated by GitHub Actions (not real-time)`;
+}
+
+// Add a chip for a symbol not in the built-in STOCKS list (e.g. a US
+// stock picked from search). Reuses the same chip markup/behavior as
+// the built-in chips.
+function addChip(sym, name, cn) {
+  const existing = STOCKS.find(x => x.sym === sym);
+  if (existing) { displayStaticSymbol(sym); return; }
+
+  const s = { sym, name, cn: cn || name, since: new Date().getFullYear() };
+  STOCKS.push(s);
+
+  const c = document.createElement("div");
+  c.className = "chip";
+  c.dataset.s = sym;
+  c.innerHTML = `<span class="csym">${sym}</span><span class="cname">${s.cn}</span><span class="cprice" id="cp_${sym.replace(/\W/g,"_")}">—</span>`;
+  c.addEventListener("click", () => displayStaticSymbol(sym));
+  chipRow.appendChild(c);
+
+  displayStaticSymbol(sym);
+  chipRow.scrollLeft = chipRow.scrollWidth;
+}
+
+// ─── US STOCK SEARCH ────────────────────────────────────────────────────
+const usSearchInput = document.getElementById("usSearchInput");
+const usSearchResults = document.getElementById("usSearchResults");
+const usSearchHint = document.getElementById("usSearchHint");
+
+usSearchInput.addEventListener("focus", async () => {
+  await loadStockDB();
+  if (!STOCK_DB) usSearchHint.textContent = "⚠ Static stock data not available yet — showing built-in Taiwan stocks only.";
+});
+
+usSearchInput.addEventListener("input", async () => {
+  const q = usSearchInput.value.trim().toLowerCase();
+  usSearchResults.innerHTML = "";
+  if (!q) { usSearchResults.style.display = "none"; return; }
+  await loadStockDB();
+  if (!STOCK_DB) { usSearchResults.style.display = "none"; return; }
+
+  const seen = new Set();
+  const matches = [];
+  for (const key in STOCK_DB) {
+    const rec = STOCK_DB[key];
+    if (!rec || rec.currency !== "USD" || seen.has(rec.symbol)) continue;
+    const hay = (rec.symbol + " " + (rec.name || "")).toLowerCase();
+    if (!hay.includes(q)) continue;
+    seen.add(rec.symbol);
+    matches.push(rec);
+    if (matches.length >= 8) break;
+  }
+
+  if (!matches.length) { usSearchResults.style.display = "none"; return; }
+  usSearchResults.style.display = "block";
+  matches.forEach(rec => {
+    const item = document.createElement("div");
+    item.className = "us-search-item";
+    item.innerHTML = `<b>${rec.symbol}</b><span class="sub">${rec.name} · ${rec.exchange || ""}</span>`;
+    item.addEventListener("click", async () => {
+      const ok = await applyStaticDataFor(rec.symbol);
+      if (ok) addChip(rec.symbol, rec.name, rec.symbol);
+      else alert(`No price history available for ${rec.symbol} yet.`);
+      usSearchInput.value = "";
+      usSearchResults.style.display = "none";
+      usSearchResults.innerHTML = "";
+    });
+    usSearchResults.appendChild(item);
+  });
+});
+
+document.addEventListener("click", (e) => {
+  if (!usSearchInput.contains(e.target) && !usSearchResults.contains(e.target)) {
+    usSearchResults.style.display = "none";
+  }
+});
 </script>
 
 <script>

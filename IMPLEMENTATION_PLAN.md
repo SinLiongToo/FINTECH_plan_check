@@ -1,6 +1,6 @@
 # Implementation Plan（2026-09-20 建立，隨實作進度持續更新）
 
-狀態：Phase 0～2.5 已完成並上線；Phase 3（股價資料管線）與 Phase 4（美股搜尋）進行中。
+狀態：Phase 0～4 已完成並上線。剩下 Phase 5 的「真人手機實機測試」與少數列為刻意不做/後續可選的項目。
 
 ## 目標
 
@@ -61,14 +61,16 @@ project_claude_FINTECH/
 - **未處理的小落差（刻意不做，性價比低）**：三個工具裡少數 Chart.js 的座標軸文字/格線顏色是寫死的中性灰／半透明白，在淺色模式下對比度沒有到完美，但仍可讀，跟頁面主體的文字對比策略一致（次要文字接受「還算堪讀」而非追求 WCAG AA 滿分），沒有另外寫程式在每次主題切換時即時重繪所有既有圖表（只有 Retirement 工具的圖表因為本來就是「按需重繪」而做了主題感知；已渲染完的舊圖表要到下次重新試算才會套用新配色）。
 
 ### Phase 3 — 股價資料管線（方案 D）
-- [ ] 改編 `fetch_stock_data.py`，ticker map 涵蓋現有工具用到的台股代號 + 新增美股代號
-- [ ] 建立 `.github/workflows/daily_stock_update.yml` 排程（台股/美股收盤各一次 + 手動觸發）
-- [ ] Stock Drawdown Explorer：把「⚡ Server Refresh」改接 `data/stock_data.json`
-- [ ] Rebalance Engine：把「🔄 自動抓取即時股價」改接 `data/stock_data.json`
+- [x] 寫 `fetch_stock_data.py`：ticker map 涵蓋 Stock Drawdown Explorer 內建的 15 檔台股 + TAIEX、Rebalance 預設的 VT/BND/0050，另外加了 6 檔大盤 ETF（VOO/VTI/QQQ/SPY 等）+ 33 檔美股大型股，共 55 檔。**改用週線（`interval="1wk"`, `period="max"`）而不是日線**：跟兩個工具內建的「Weekly GBM data」資料粒度一致，也讓 `data/stock_data.json` 保持在合理大小（55 檔 × 完整歷史約 6.8 MB），避免排程一天兩次 commit 造成 repo 過度膨脹；沒有沿用原本 dashboard 專案版本會抓的 intraday 分鐘線和 MA20/MA60，因為這兩個工具目前都用不到。
+- [x] 本機實際跑過 `python fetch_stock_data.py --all`：55/55 成功，驗證過 JSON 結構（`data/stock_data.json`，每檔股票同時用 `symbol`／小寫代號／台股去點號代號 3 種 key 存取）。
+- [x] 建立 `.github/workflows/daily_stock_update.yml`：台股收盤（UTC 06:30）與美股收盤（UTC 22:00）各跑一次 + `workflow_dispatch` 手動觸發，跑完用 `github-actions[bot]` 身分 commit + push `data/stock_data.json`。
+- [x] Stock Drawdown Explorer：「⚡ Refresh current」與「⚡⚡ Refresh all 15」現在都會在偵測不到本機 `server.py`（GitHub Pages 上一定偵測不到）時，自動 fallback 改讀 `data/stock_data.json`，用 headless Chromium 實測過兩個按鈕在完全沒有本機伺服器的情況下都能正確載入真實股價、更新圖表與 chip 上的價格。
+- [ ] Rebalance Engine：**刻意沒有另外接 `data/stock_data.json`**。原因：這個工具的「🔄 自動抓取即時股價」本來就已經有 fallback 機制（先試本機 `/api/stock`，失敗後改打公開 CORS proxy `api.allorigins.win` 轉發 Yahoo Finance），也就是我們比較表裡的方案 C，是原工具自己就設計好的行為，不是我引入的。在 GitHub Pages 上這條路徑目前應該能動（取決於 allorigins.win 是否可用/限流），先不重工，列為可選的後續加強項目。
 
-### Phase 4 — 美股搜尋（新功能）
-- [ ] 在共用外殼或 Stock Drawdown Explorer 內新增「美股搜尋」輸入框（代號/名稱比對 `data/stock_data.json` 裡的 ticker map）
-- [ ] 決定是否需要 on-demand 查詢路徑（使用者輸入不在快取內的代號時的 fallback 行為）
+### Phase 4 — 美股搜尋（新功能，已完成）
+- [x] 在 Stock Drawdown Explorer 的 chip 列下方新增「🔍 Search US stocks」輸入框，即時比對 `data/stock_data.json` 裡幣別為 USD 的所有代號 + 公司名稱（大小寫不敏感、代號或名稱局部比對皆可，如打 `nvda` 或 `apple` 都能找到），下拉最多顯示 8 筆結果。
+- [x] 點選結果後：動態新增一個 chip（跟內建 15 檔台股長得一模一樣，沿用同一套 CSS），把該股票的完整週線歷史從 `data/stock_data.json` 灌進 `liveRAW`，並直接切換圖表顯示該股票的真實跌幅分析（不是內建的 GBM 模擬資料）。用 headless Chromium 實測過搜尋 NVDA、Apple，圖表、最大回撤、標籤文字（正確顯示「Static live data」而非誤植「Weekly GBM data」）都正確。
+- [x] 沒有做「使用者輸入任意不在快取內的代號也能即時查」的 on-demand 路徑（待確認事項裡提過的方案 A/Cloudflare Worker）——目前搜尋範圍限定在 `fetch_stock_data.py` 的 ticker map 內建的美股清單（33 檔大型股 + 6 檔 ETF），這是刻意的範圍收斂，不是遺漏。
 
 ### Phase 5 — 部署與驗收
 - [x] Push 到 `SinLiongToo/FINTECH_plan_check`，開啟 GitHub Pages，build 成功、7 個路徑皆回應 200
@@ -76,6 +78,9 @@ project_claude_FINTECH/
 - [x] 確認四個工具間可自由切換（導覽列 + 返回總覽按鈕），狀態互不干擾（各工具用獨立 `localStorage`/記憶體狀態，僅共用 `ftk-theme`）
 - [ ] 真人手機（iOS/Android 實機瀏覽器）尚未測試，僅用 headless Chromium 模擬 375px 視窗驗證
 
-## 待確認事項
+## 後續可選的加強項目（非阻塞，未動手做）
 
-- 美股搜尋除了讀取排程快取的 `data/stock_data.json`，是否需要「使用者輸入任意代號都能即時查」的 on-demand 路徑（如果需要，屬於 Phase 4 的延伸討論，可能要回頭考慮方案 A 的 Cloudflare Worker 作為 fallback）。
+- Rebalance Engine 改接 `data/stock_data.json`，取代/補強它現有的 `allorigins.win` CORS proxy fallback，會更穩定但非必要（現有機制已經能動）。
+- 美股搜尋擴大到「任意代號都能即時查」而非侷限在 `fetch_stock_data.py` 內建的清單，需要方案 A（Cloudflare Worker）或擴充 ticker map。
+- Rebalance Engine「股債年齡試算配置」在 375px 手機寬度下的水平溢出（Phase 2 驗證時發現的既有瑕疵，非本次合併造成）。
+- 真人手機（iOS/Android 實機瀏覽器）測試，目前只用 headless Chromium 模擬 375px 視窗驗證過。

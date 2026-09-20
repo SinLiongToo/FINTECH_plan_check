@@ -39,7 +39,7 @@ GitHub Pages 只能放靜態檔案，不能跑 Python，所以「即時抓股價
 
 **方案 D 的實際運作方式**（沿用並改編自既有專案 `FINICIAL ANNUAL REPORT DOWNLOAD TO MD_dashboard/fetch_stock_data.py` 與 `.github/workflows/daily_stock_update.yml`）：
 
-1. `fetch_stock_data.py` 用 `yfinance` 抓每檔股票的 5 年日線 + 近 5 天 15 分鐘線，計算 MA20/MA60、52 週高低、漲跌幅，寫進 `data/stock_data.json`。內建的 ticker map 已經涵蓋大量美股代號（`NVDA`/`AAPL`/`MSFT`…）與台股代號（`2330.TW`…），也支援任意代號 fallback。
+1. `fetch_stock_data.py`（本專案的版本，從 dashboard 專案改編、簡化）用 `yfinance` 抓每檔股票的**週線**完整歷史（`period="max", interval="1wk"`），計算 52 週高低、漲跌幅，寫進 `data/stock_data.json`。改用週線而非日線是為了跟兩個工具內建的「Weekly GBM data」粒度一致，也讓檔案大小可控（55 檔股票、完整歷史，約 6.8 MB）。內建 ticker map 涵蓋 Stock Drawdown Explorer 的 15 檔台股 + TAIEX、Rebalance 的 VT/BND/0050，再加 6 檔大盤 ETF 與 33 檔美股大型股（共 55 檔）作為美股搜尋的資料庫。
 2. GitHub Actions 排程在台股收盤（UTC 06:30）與美股收盤（UTC 22:00）各跑一次，也可手動觸發（`workflow_dispatch`）。
 3. 因為抓資料的動作發生在 **GitHub Actions 的伺服器**、不是使用者瀏覽器，完全沒有 CORS 問題。
 4. Action 用 `github-actions[bot]` 身分把更新後的 `data/stock_data.json` commit + push 回 repo；GitHub Pages 上線的網頁純粹讀取這份寫死的 JSON，頁面載入時不即時打 API。
@@ -55,7 +55,8 @@ GitHub Pages 只能放靜態檔案，不能跑 Python，所以「即時抓股價
 ### 📉 Stock Drawdown Explorer (`taiwan_stock_v4.html`)
 - ✅ 完全自包含：股價資料以 `const RAW = {...}` 直接內嵌在 `<script>` 裡，**不是**從外部 `raw_data.js` 載入。
 - ⚠️ 同資料夾裡的 `raw_data.js` 與 `DRAWNDOWN EXPLORER/taiwan_stock_v3 (1).html` 是舊版殘留檔案，目前的 v4 沒有引用它們，合併時**不需要一併複製**。
-- ℹ️ 內建「⚡ Server Refresh」按鈕會呼叫 `localhost:8765`（`server.py`），這條路徑部署到 GitHub Pages 後會失效，需改接方案 D 的 `data/stock_data.json`。
+- ✅ 「⚡ Refresh current」「⚡⚡ Refresh all 15」已改成：先試本機 `localhost:8765`（`server.py`），偵測不到就自動 fallback 讀 `data/stock_data.json`，部署到 GitHub Pages 後一樣能載入真實股價。
+- ✅ **新增美股搜尋**：chip 列下方新增搜尋框，即時比對 `data/stock_data.json` 裡的美股代號/公司名稱，選取後動態加一個 chip 並載入該股票的真實歷史跌幅分析。
 - ✅ 已有 light/dark class 機制，已接到全站共用的主題切換鈕上。
 
 ### ⚖️ Rebalance Engine (`rebalance.html`)
