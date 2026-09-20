@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1e40af">
+<meta name="description" content="Loan Investment & Fintech Decision Simulator — compare fixed vs variable loans, invest vs prepay, with lock-in period support.">
+<title>Loan Investment Decision Simulator</title>
+<link rel="stylesheet" href="../../assets/shared.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+/* ====== DESIGN SYSTEM ====== */
+:root {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface2: #273549;
+  --border: #334155;
+  --accent: #3b82f6;
+  --accent2: #6366f1;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warn: #f59e0b;
+  --text: #f1f5f9;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --card-radius: 14px;
+  --btn-radius: 8px;
+  --transition: 0.22s cubic-bezier(.4,0,.2,1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', 'PingFang TC', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 16px;
+}
+
+.container { max-width: 1200px; margin: 0 auto; }
+
+/* ====== HEADER ====== */
+.app-header {
+  display: flex; align-items: center; gap: 14px;
+  padding: 20px 0 18px;
+}
+.app-logo {
+  width: 44px; height: 44px; border-radius: 12px;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.app-title { font-size: 1.35rem; font-weight: 700; line-height: 1.2; }
+.app-subtitle { font-size: 0.78rem; color: var(--text2); margin-top: 2px; }
+
+/* ====== MODE BADGE ====== */
+.mode-row {
+  display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap;
+}
+.mode-badge {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 100px; padding: 6px 14px; font-size: 0.78rem;
+  cursor: pointer; transition: var(--transition);
+  user-select: none;
+}
+.mode-badge.active {
+  background: linear-gradient(135deg, #1d4ed8, #4338ca);
+  border-color: #6366f1; color: #fff;
+}
+.mode-badge span { font-size: 1rem; }
+
+/* ====== CARD ====== */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--card-radius);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.card h3 { font-size: 0.95rem; font-weight: 600; color: var(--text2); margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* ====== FORM GRID ====== */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 0.8rem; color: var(--text2); font-weight: 500; }
+.field input {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--btn-radius);
+  color: var(--text);
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: var(--transition);
+  width: 100%;
+}
+.field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.18); }
+.field input.error { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(239,68,68,0.18); }
+.field .hint { font-size: 0.72rem; color: var(--text3); }
+.field .err-msg { font-size: 0.72rem; color: var(--danger); display: none; }
+.field.invalid .err-msg { display: block; }
+
+/* ====== BUTTONS ====== */
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.btn {
+  padding: 10px 18px; border: none; border-radius: var(--btn-radius);
+  font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  transition: var(--transition); display: flex; align-items: center; gap: 6px;
+}
+.btn-primary { background: linear-gradient(135deg, #2563eb, #4f46e5); color: #fff; }
+.btn-primary:hover { filter: brightness(1.12); transform: translateY(-1px); }
+.btn-outline {
+  background: transparent; color: var(--text2);
+  border: 1px solid var(--border);
+}
+.btn-outline:hover { border-color: var(--accent); color: var(--text); }
+
+/* ====== TABS ====== */
+.tabs-wrapper {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--card-radius);
+  margin-bottom: 0;
+  overflow: hidden;
+}
+.tabs {
+  display: flex; overflow-x: auto; border-bottom: 1px solid var(--border);
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex-shrink: 0;
+  padding: 12px 16px; font-size: 0.82rem; font-weight: 500;
+  color: var(--text3); cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.tab:hover { color: var(--text2); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ====== TAB PANELS ====== */
+.tab-content { padding: 20px; }
+.hidden { display: none !important; }
+
+/* ====== SUMMARY ====== */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.sum-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  transition: var(--transition);
+}
+.sum-card:hover { border-color: var(--accent2); transform: translateY(-2px); }
+.sum-card .sc-label { font-size: 0.72rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+.sum-card .sc-value { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+.sum-card .sc-sub { font-size: 0.76rem; color: var(--text2); margin-top: 3px; }
+
+.recommend-box {
+  background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(59,130,246,0.12));
+  border: 1px solid rgba(16,185,129,0.3);
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+.recommend-box b { color: var(--success); }
+.crossover-pill {
+  display: inline-block;
+  background: rgba(245,158,11,0.2);
+  border: 1px solid rgba(245,158,11,0.4);
+  border-radius: 100px;
+  padding: 2px 10px;
+  font-size: 0.75rem;
+  color: var(--warn);
+  margin-left: 6px;
+}
+
+/* ====== MODE CONTEXT TABLE ====== */
+.mode-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 0.82rem; margin-top: 12px;
+}
+.mode-table th, .mode-table td {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  text-align: center;
+}
+.mode-table th { background: var(--surface2); color: var(--text2); font-weight: 600; }
+.mode-table td:first-child { text-align: left; color: var(--text2); }
+.check { color: var(--success); }
+
+/* ====== TOGGLE SWITCH (Flow/Cumulative) ====== */
+.toggle-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px;
+}
+.toggle-label { font-size: 0.82rem; color: var(--text2); }
+.toggle-switch {
+  display: flex; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 100px;
+  padding: 3px;
+}
+.toggle-switch button {
+  background: none; border: none; cursor: pointer;
+  padding: 5px 14px; border-radius: 100px;
+  font-size: 0.78rem; color: var(--text3);
+  transition: var(--transition);
+}
+.toggle-switch button.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(59,130,246,0.35);
+}
+
+/* ====== TABLE ====== */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 0.78rem; min-width: 480px; }
+th, td { border: 1px solid var(--border); padding: 6px 8px; text-align: right; }
+th { background: var(--surface2); color: var(--text2); font-weight: 600; position: sticky; top: 0; z-index: 1; }
+td:first-child { text-align: center; color: var(--text3); }
+tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+tr:hover td { background: rgba(59,130,246,0.06); }
+.pos { color: var(--success); }
+.neg { color: var(--danger); }
+
+/* ====== CHART ====== */
+.chart-box { position: relative; height: 340px; }
+.chart-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 700px) { .chart-row { grid-template-columns: 1fr; } }
+
+/* ====== RATIO CHART ====== */
+.ratio-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 600px) { .ratio-row { grid-template-columns: 1fr; } }
+.ratio-box { position: relative; height: 260px; }
+
+/* ====== PROGRESS BAR ====== */
+.ratio-bar { display: flex; height: 18px; border-radius: 9px; overflow: hidden; margin: 6px 0; }
+.ratio-bar .seg-int { background: linear-gradient(90deg, #ef4444, #f97316); }
+.ratio-bar .seg-prin { background: linear-gradient(90deg, #3b82f6, #06b6d4); }
+.ratio-legend { display: flex; gap: 14px; font-size: 0.75rem; color: var(--text2); margin-top: 4px; }
+.ratio-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+
+/* ====== MOBILE ====== */
+@media (max-width: 768px) {
+  body { padding: 10px; }
+  .app-title { font-size: 1.1rem; }
+  .form-grid { grid-template-columns: 1fr 1fr; }
+  .btn-row { gap: 6px; }
+  .btn { padding: 9px 12px; font-size: 0.78rem; }
+  .summary-grid { grid-template-columns: 1fr 1fr; }
+  .tab { padding: 10px 12px; font-size: 0.77rem; }
+  .tab-content { padding: 14px; }
+}
+@media (max-width: 480px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .summary-grid { grid-template-columns: 1fr 1fr; }
+  .chart-row { grid-template-columns: 1fr; }
+  .app-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+}
+
+/* ====== LOCK-IN INDICATOR ====== */
+.lock-row td.locked { background: rgba(245,158,11,0.08) !important; color: var(--warn); }
+
+/* ====== SCROLLABLE TABLE PANEL ====== */
+.table-panel { max-height: 520px; overflow-y: auto; }
+
+/* ====== COLLAPSIBLE INPUTS (mobile) ====== */
+.collapse-btn {
+  display: none; width: 100%;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--btn-radius); padding: 11px;
+  color: var(--text); font-size: 0.88rem; cursor: pointer;
+  text-align: left; margin-bottom: 10px;
+}
+@media (max-width: 600px) {
+  .collapse-btn { display: block; }
+  .form-collapsible { display: none; }
+  .form-collapsible.open { display: block; }
+}
+
+/* ====== README STYLES ====== */
+.readme-body { line-height: 1.75; color: var(--text2); }
+.readme-body h4 { color: var(--text); margin: 20px 0 8px; font-size: 0.95rem; }
+.readme-body ul { padding-left: 20px; }
+.readme-body li { margin-bottom: 4px; }
+.readme-body pre {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px; font-size: 0.78rem;
+  overflow-x: auto; color: var(--success); margin: 8px 0;
+}
+.changelog-entry { border-left: 3px solid var(--accent); padding-left: 12px; margin-bottom: 14px; }
+.changelog-entry .log-date { font-size: 0.75rem; color: var(--text3); }
+.changelog-entry .log-title { font-weight: 600; color: var(--text); margin: 2px 0; }
+.changelog-entry ul { font-size: 0.8rem; }
+
+/* ====== TOOLTIP ====== */
+.tooltip-icon {
+  display: inline-block; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--surface2); border: 1px solid var(--border);
+  text-align: center; font-size: 0.65rem; line-height: 15px;
+  color: var(--text3); cursor: help; margin-left: 4px;
+  vertical-align: middle;
+}
+
+/* ====== WARN BADGE ====== */
+.lock-notice {
+  background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3);
+  border-radius: 8px; padding: 8px 12px; font-size: 0.78rem; color: var(--warn);
+  margin-bottom: 10px; display: none;
+}
+.lock-notice.visible { display: block; }
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<!-- HEADER -->
+<div class="app-header">
+  <div class="app-logo">💰</div>
+  <div>
+    <div class="app-title">Loan Investment Decision Simulator</div>
+    <div class="app-subtitle">借貸 × 投資 × 提前還款 全方位分析工具 / Loan, Invest, & Prepayment Simulator · Offline Ready</div>
+  </div>
+</div>
+
+<!-- MODE SELECTOR -->
+<div class="mode-row">
+  <div class="mode-badge active" id="modeA" onclick="setMode('A')">
+    <span>📈</span> A — 借錢投資 (Loan to Invest)
+  </div>
+  <div class="mode-badge" id="modeB" onclick="setMode('B')">
+    <span>🏠</span> B — 房貸還款 (Mortgage Payoff)
+  </div>
+</div>
+
+<!-- INPUT CARD -->
+<div class="card" id="inputCard">
+  <button class="collapse-btn" onclick="toggleInputs(this)">⚙️ 輸入參數 Input Parameters ▼</button>
+  <div class="form-collapsible open" id="formBody">
+    <h3>貸款設定 / Loan Setup</h3>
+    <div class="form-grid">
+      <div class="field" id="f-loan">
+        <label>貸款金額 Loan Amount (萬/10k TWD) <span class="tooltip-icon" title="Unit: 10k TWD. 100 = 1,000,000 TWD / 單位：萬元，100 = 1,000,000 TWD">?</span></label>
+        <input id="loan" type="number" min="1" placeholder="e.g. 100 (= $1,000,000)">
+        <span class="err-msg">Required, and must be > 0 / 必填，且需 > 0</span>
+      </div>
+      <div class="field" id="f-rate">
+        <label>初始年利率 Initial Rate (%)</label>
+        <input id="rate" type="number" step="0.01" min="0" placeholder="e.g. 2">
+        <span class="err-msg">Required / 必填</span>
+      </div>
+      <div class="field">
+        <label>變動後年利率 New Rate (%, optional)</label>
+        <input id="rate2" type="number" step="0.01" min="0" placeholder="e.g. 3">
+        <span class="hint">Leave blank to use Initial Rate throughout / 留空 = 全程用初始利率</span>
+      </div>
+      <div class="field">
+        <label>利率轉換時間 Rate Change After (years)</label>
+        <input id="changeYear" type="number" min="0" placeholder="e.g. 3">
+      </div>
+      <div class="field" id="f-years">
+        <label>貸款年限 Loan Duration (years)</label>
+        <input id="years" type="number" min="1" placeholder="e.g. 20">
+        <span class="err-msg">Required, and must be > 0 / 必填，且需 > 0</span>
+      </div>
+      <div class="field">
+        <label>
+          閉鎖期 Lock-in Period (years)
+          <span class="tooltip-icon" title="Prepayment prohibited during lock-in period; extra payment is only used for investment / 閉鎖期內禁止提前還款，extra payment 只能用於投資">?</span>
+        </label>
+        <input id="lockYear" type="number" min="0" placeholder="e.g. 2 (0 = 無閉鎖)">
+        <span class="hint">Extra payment goes to investment only during lock-in / 期間內 extra 僅能投資，不可提前還款</span>
+      </div>
+    </div>
+
+    <h3 style="margin-top:18px;">額外資金設定 / Extra Fund Setup</h3>
+    <div class="form-grid">
+      <div class="field" id="f-extra">
+        <label>每月額外資金 Extra Monthly (TWD) <span class="tooltip-icon" title="Mode A: Total investment ≤ loan. Mode B: Max monthly payment / Mode A：總投資額不超過貸款額。Mode B：不可超過月付款額。">?</span></label>
+        <input id="extraPay" type="number" min="0" placeholder="e.g. 5000" oninput="validateExtra()">
+        <span class="err-msg" id="extraErr"></span>
+        <span class="warn-msg" id="extraWarn" style="display:none;font-size:0.72rem;color:var(--warn);"></span>
+        <span class="hint" id="extraHint">Mode A: Total Investment ≤ Loan | Mode B: ≤ Monthly Pay / Mode A：總投資額 ≤ 貸款額 ｜ Mode B：不可超過月付款</span>
+      </div>
+      <div class="field" id="f-invest">
+        <label>預期投資報酬率 Expected Return (% /year)</label>
+        <input id="investRate" type="number" step="0.1" min="0" placeholder="e.g. 8">
+      </div>
+    </div>
+
+    <div class="lock-notice" id="lockNotice">
+      ⚠️ Lock-in period active: Extra Payment during this period is only for investment and won't prepay the loan. / 已設定閉鎖期：鎖定期間的 Extra Payment 僅計入投資，不計入提前還款。
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="calculate()">🔢 計算 Calculate</button>
+      <button class="btn btn-outline" onclick="exportCSV()">📥 Export CSV</button>
+      <button class="btn btn-outline" onclick="downloadAllCharts()">🖼 Download Charts</button>
+    </div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-wrapper">
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('summary',this)">📊 Summary (總覽)</div>
+    <div class="tab" onclick="showTab('tabTable',this)">📋 Table (數據表)</div>
+    <div class="tab" onclick="showTab('tabRatio',this)">🥧 Ratio (本息比)</div>
+    <div class="tab" onclick="showTab('tabLoanChart',this)">📈 Loan Chart (貸款圖)</div>
+    <div class="tab" onclick="showTab('tabCumChart',this)">📉 Cum Chart (累計圖)</div>
+    <div class="tab" onclick="showTab('tabInvestChart',this)">💹 Invest vs Prepay (投資與還款)</div>
+    <div class="tab" onclick="showTab('tabInvestTable',this)">💼 Invest Table (投資表)</div>
+    <div class="tab" onclick="showTab('tabMode',this)">ℹ️ Mode Info (模式說明)</div>
+    <div class="tab" onclick="showTab('tabReadme',this)">📖 README / Changelog (說明書)</div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div id="summary" class="tab-content">
+    <div id="summaryGrid" class="summary-grid"></div>
+    <div id="recommendBox"></div>
+  </div>
+
+  <!-- TABLE (Flow/Cumulative toggle) -->
+  <div id="tabTable" class="tab-content hidden">
+    <div class="toggle-row">
+      <span class="toggle-label">顯示模式 Display Mode：</span>
+      <div class="toggle-switch">
+        <button id="btnFlow" class="active" onclick="switchTableMode('flow')">📋 Flow (月流量 / Monthly)</button>
+        <button id="btnCum" onclick="switchTableMode('cumulative')">📈 Cumulative (累計 / Cum.)</button>
+      </div>
+    </div>
+    <div class="table-panel">
+      <div class="table-wrap" id="flowTableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>月份<br>Month</th>
+              <th>Fixed 月付<br>Fixed Pay</th><th>Fixed 利息<br>Fixed Interest</th><th>Fixed 本金<br>Fixed Principal</th>
+              <th>Var 月付<br>Var Pay</th><th>Var 利息<br>Var Interest</th><th>Var 本金<br>Var Principal</th>
+              <th>Prepay?<br>提前還款?</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyFlow"></tbody>
+        </table>
+      </div>
+      <div class="table-wrap hidden" id="cumTableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>月份<br>Month</th>
+              <th>Fixed 累利息<br>Fixed Cum Int</th><th>Fixed 累本金<br>Fixed Cum Prin</th>
+              <th>Var 累利息<br>Var Cum Int</th><th>Var 累本金<br>Var Cum Prin</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyCum"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- RATIO ANALYSIS -->
+  <div id="tabRatio" class="tab-content hidden">
+    <h3 style="margin-bottom:14px;">利息 vs 本金 比例分析 / Interest vs Principal Ratio Analysis</h3>
+    <div id="ratioBarSection"></div>
+    <div class="ratio-row" style="margin-top:20px;">
+      <div>
+        <p style="font-size:0.82rem;color:var(--text2);margin-bottom:8px;">Fixed — 利息 vs 本金 / Interest vs Principal</p>
+        <div class="ratio-box"><canvas id="chartRatioFixed"></canvas></div>
+      </div>
+      <div>
+        <p style="font-size:0.82rem;color:var(--text2);margin-bottom:8px;">Variable — 利息 vs 本金 / Interest vs Principal</p>
+        <div class="ratio-box"><canvas id="chartRatioVar"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOAN CHART -->
+  <div id="tabLoanChart" class="tab-content hidden">
+    <div class="chart-box"><canvas id="chartCanvas1"></canvas></div>
+  </div>
+
+  <!-- CUMULATIVE CHART -->
+  <div id="tabCumChart" class="tab-content hidden">
+    <div class="chart-box"><canvas id="chartCanvas3"></canvas></div>
+  </div>
+
+  <!-- INVEST vs PREPAY CHART -->
+  <div id="tabInvestChart" class="tab-content hidden">
+    <div class="chart-box"><canvas id="chartCanvas2"></canvas></div>
+  </div>
+
+  <!-- INVEST TABLE -->
+  <div id="tabInvestTable" class="tab-content hidden">
+    <h3 style="margin-bottom:12px;">Invest vs Prepay (Cumulative / 累計對比)</h3>
+    <div class="table-panel">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>月份<br>Month</th>
+              <th>投資總值<br>Investment</th>
+              <th>累計投入<br>Contribution</th>
+              <th>利息節省<br>Saved</th>
+              <th>差額<br>Diff (Invest−Saved)</th>
+              <th>投資獲利<br>Profit</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyInvest"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODE TABLE -->
+  <div id="tabMode" class="tab-content hidden">
+    <h3 style="margin-bottom:12px;">A vs B 模式說明 / Mode A vs B Explanation</h3>
+    <table class="mode-table">
+      <thead>
+        <tr>
+          <th>項目 / Item</th>
+          <th>A — 借錢投資 (Loan to Invest)</th>
+          <th>B — 房貸還款 (Mortgage Payoff)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>資金來源 / Capital Source</td>
+          <td>一次性貸款 / Lump sum (Loan)</td>
+          <td>每月收入 / Monthly Income</td>
+        </tr>
+        <tr>
+          <td>模式 / Mode</td>
+          <td>Fund (lump sum)</td>
+          <td>Flow (monthly)</td>
+        </tr>
+        <tr>
+          <td>Lock-in (閉鎖期)</td>
+          <td>可選 / Optional (通常無 / usually none)</td>
+          <td>必須 / Required <span class="check">✅</span></td>
+        </tr>
+        <tr>
+          <td>投入方式 / Method</td>
+          <td>一次性或定期定額 / Lump or DCA <span class="check">✅</span></td>
+          <td>每月額外支付 / Monthly Extra</td>
+        </tr>
+        <tr>
+          <td>風險 / Risk</td>
+          <td>高 / High</td>
+          <td>低 / Low</td>
+        </tr>
+        <tr>
+          <td>本質 / Nature</td>
+          <td>投資獲利策略 / Investment Strategy</td>
+          <td>節省利息成本 / Interest Savings</td>
+        </tr>
+        <tr>
+          <td>Extra Payment 限制 / Limit</td>
+          <td>總投入 ≤ 貸款額 (自動截止) / Total contribution ≤ Loan (Auto-stop)</td>
+          <td>每月 ≤ 月付款額 / Monthly ≤ standard payment</td>
+        </tr>
+        <tr>
+          <td>Lock-in 期間 Extra / During Lock-in</td>
+          <td>僅計入投資 / Investment only</td>
+          <td>僅計入投資 / Investment only</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:0.78rem;color:var(--text3);margin-top:12px;">
+      * 本工具同時支援 A / B 兩種模式的計算，透過切換模式徽章可切換情境說明。<br>
+      * This tool supports calculations for both A & B modes. Toggle the badges above to switch descriptions.
+    </p>
+  </div>
+
+  <!-- README -->
+  <div id="tabReadme" class="tab-content hidden">
+    <div class="readme-body">
+      <h4>📖 README — Loan Investment Fintech Tool</h4>
+      <p style="margin-bottom:16px;font-size:0.82rem;">完整說明與變更日誌 / Full Documentation & Changelog</p>
+
+      <h4>🕒 優化日誌 Changelog</h4>
+
+      <div class="changelog-entry">
+        <div class="log-date">2026-06-19</div>
+        <div class="log-title">v2.0 — 全面升級 / Comprehensive Upgrade</div>
+        <ul>
+          <li><b>閉鎖期 Lock-in Year</b>: 新增欄位，鎖定期內 Extra 僅計入投資不還本 / Added input field; extra payment goes only to investment and not prepayment during lock-in.</li>
+          <li><b>Flow vs Cumulative Toggle</b>: 單一表格內點選切換 / Unified Flow/Cumulative table views under a single tab with a toggle.</li>
+          <li><b>累計圖表 Cumulative Chart</b>: 新增累計本息趨勢圖 / Added cumulative paid interest & principal trend chart.</li>
+          <li><b>利息 vs 本金比例分析</b>: 新增環形圖與進度條 / Added doughnut charts and progress bars for cost structure analysis.</li>
+          <li><b>輸入驗證 Input Validation</b>: 限制 Extra ≥ 0，且 Mode B 限制每月額外還款 ≤ 標準月付款額 / Restricts extra payments to non-negative; limits Mode B extra to standard monthly payment.</li>
+          <li><b>投資上限 Capping</b>: Mode A 限制總投資金額不得大於貸款總值，達上限後自動截止 / Mode A total contribution capped at initial loan amount, auto-stopping new inflows.</li>
+          <li><b>手機版 Mobile Responsive</b>: 響應式佈局、折疊選單與表格捲動 / Fully responsive layouts, collapsible forms, and horizontal table scrolling.</li>
+          <li><b>離線使用 Offline Support</b>: Service Worker 快取 Chart.js / Service Worker caching for offline chart rendering.</li>
+          <li><b>A vs B 模式說明 Mode Explanation</b>: 新增雙語模式對照表 / Added bilingual Mode A vs B comparison table.</li>
+          <li><b>UI 設計 / Design Upgrade</b>: 深色玻璃質感主題 / Premium slate and sapphire dark theme (Glassmorphism).</li>
+        </ul>
+      </div>
+
+      <div class="changelog-entry">
+        <div class="log-date">2022–2024</div>
+        <div class="log-title">v1.x — 初始版本 / Initial Release</div>
+        <ul>
+          <li>固定利率 vs 機動利率比較 / Fixed vs Variable rate comparison.</li>
+          <li>投資 vs 提前還款決策輔助 / Investment vs Prepayment decision aid.</li>
+          <li>基本資料表格與雙圖表 / Basic tables and dual charts.</li>
+          <li>匯出 CSV 格式 / CSV Export capability.</li>
+        </ul>
+      </div>
+
+      <h4>1. 工具用途 Purpose</h4>
+      <p>本工具支援兩種主要理財情境 / This tool supports two financial scenarios:</p>
+      <ul>
+        <li><b>A — 借錢投資 (Loan to Invest)</b>: 借入一次性貸款，比較投資報酬率 vs 貸款利息成本 / Borrow a lump sum, comparing investment returns against interest costs.</li>
+        <li><b>B — 房貸還款 (Mortgage Payoff)</b>: 使用每月額外資金提前還款以節省利息 / Apply monthly extra cash to prepay loan principal and save interest.</li>
+      </ul>
+
+      <h4>2. 閉鎖期公式說明 Lock-in Formula</h4>
+      <pre>
+m <= lockYear × 12 (閉鎖期間 / During Lock-in):
+  → Extra 僅累計投資複利，不減少貸款本金 / Extra goes to investment compound growth, no loan principal reduction.
+  → 提前還款餘額不變 / Prepayment balance remains unchanged.
+
+m > lockYear × 12 (閉鎖期後 / Post Lock-in):
+  → Extra 用於提前還款，加速償還本金 / Extra goes to early prepayment, reducing principal.
+  → 利息節省計算從閉鎖期後開始 / Interest savings calculation begins after the lock-in period.
+      </pre>
+
+      <h4>3. Extra Payment 驗證規則 Validation Rules</h4>
+      <ul>
+        <li>不可為負數 (≥ 0) / Cannot be negative (≥ 0).</li>
+        <li>Mode B 中不可超過月付款額（避免比較失真）/ Cannot exceed standard monthly payment in Mode B to avoid calculation distortion.</li>
+        <li>Mode A 中總投入額度上限為貸款總金額（超出部分會自動停止投入並發出警告）/ Total contribution in Mode A is capped at the initial loan amount (exceeding amounts are auto-capped with a warning).</li>
+      </ul>
+
+      <h4>4. 計算邏輯 Calculation Logic</h4>
+      <pre>
+投資複利 (Investment compound growth):
+  Month m: Invest = Invest × (1 + r_inv) + extra
+  r_inv = investRate / 100 / 12
+
+提前還款（含閉鎖期）/ Early Prepayment (with lock-in):
+  if m <= lockMonth:
+    bal_prepay unchanged (no extra reduction)
+  else:
+    bal_prepay -= (monthlyPay + extra - interest)
+  interestSaved = totalNormalInterest - accruedInterestWithPrepay
+      </pre>
+
+      <h4>5. 圖表說明 Charts</h4>
+      <ul>
+        <li><b>Loan Chart</b>: 月利息與本金趨勢 / Monthly interest & principal trends (Fixed vs Variable).</li>
+        <li><b>Cumulative Chart</b>: 累計已付利息與本金趨勢 / Cumulative interest & principal trends.</li>
+        <li><b>Invest vs Prepay</b>: 投資總值 vs 節省利息（含黃金交叉點）/ Investment final value vs interest saved (with crossover analysis).</li>
+        <li><b>利息/本金比 (Ratio)</b>: 環形圖與百分比分析 / Doughnut charts and percentage analysis of loan cost structure.</li>
+      </ul>
+
+      <h4>6. 離線使用 Offline</h4>
+      <p>首次開啟後，Service Worker 會自動快取 Chart.js CDN 檔案。之後即使無網路連接，圖表與功能仍可正常運作。<br>Upon first load, the Service Worker caches the Chart.js CDN files. Subsequently, the simulator remains fully operational without internet access.</p>
+
+      <h4>7. 免責聲明 Disclaimer</h4>
+      <ul>
+        <li>本工具僅供模擬評估，非正式財務建議 / This tool is for simulation only and does not constitute professional financial advice.</li>
+        <li>投資報酬率為假設值，實際報酬可能波動 / Investment returns are hypothetical and subject to market fluctuations.</li>
+        <li>提前還款效益為確定性回報（等同節省貸款利率成本）/ Prepayment yield is guaranteed (equivalent to avoiding interest rate costs).</li>
+      </ul>
+    </div>
+  </div>
+
+</div><!-- end tabs-wrapper -->
+
+</div><!-- end container -->
+
+
+<script>
+// ============================================================
+// SERVICE WORKER (Offline Support)
+// ============================================================
+if('serviceWorker' in navigator){
+  const swCode = `
+    const CACHE='fintech-v2';
+    const FILES=[
+      'https://cdn.jsdelivr.net/npm/chart.js'
+    ];
+    self.addEventListener('install',e=>{
+      e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)).catch(()=>{}));
+      self.skipWaiting();
+    });
+    self.addEventListener('fetch',e=>{
+      e.respondWith(
+        caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{
+          return caches.open(CACHE).then(c=>{
+            c.put(e.request,res.clone());
+            return res;
+          });
+        }))
+      );
+    });
+  `;
+  const blob=new Blob([swCode],{type:'application/javascript'});
+  const swUrl=URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(()=>{});
+}
+
+// ============================================================
+// STATE
+// ============================================================
+let chart1, chart2, chart3, chartRF, chartRV;
+let scheduleVar=[], scheduleFixed=[];
+let investCurve=[], prepayCurve=[];
+let cumFixed=[], cumVar=[];
+let currentTableMode='flow';
+let currentMode='A';
+let calcMonthlyFixed=0; // used for validation
+
+// ============================================================
+// UTILS
+// ============================================================
+function fmt(n){ return '$'+Math.round(n).toLocaleString(); }
+function fmtPct(n){ return n.toFixed(1)+'%'; }
+
+function getTimeStr(){
+  let d=new Date();
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+// ============================================================
+// MODE
+// ============================================================
+function setMode(m){
+  currentMode=m;
+  document.getElementById('modeA').classList.toggle('active',m==='A');
+  document.getElementById('modeB').classList.toggle('active',m==='B');
+}
+
+// ============================================================
+// MOBILE COLLAPSE
+// ============================================================
+function toggleInputs(btn){
+  const body=document.getElementById('formBody');
+  body.classList.toggle('open');
+  btn.textContent=body.classList.contains('open')
+    ? '⚙️ 輸入參數 Input Parameters ▲'
+    : '⚙️ 輸入參數 Input Parameters ▼';
+}
+
+// ============================================================
+// TABS
+// ============================================================
+const ALL_TABS=['summary','tabTable','tabRatio','tabLoanChart','tabCumChart','tabInvestChart','tabInvestTable','tabMode','tabReadme'];
+
+function showTab(id, el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  ALL_TABS.forEach(t=>document.getElementById(t).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
+// ============================================================
+// TABLE MODE TOGGLE
+// ============================================================
+function switchTableMode(mode){
+  currentTableMode=mode;
+  document.getElementById('btnFlow').classList.toggle('active',mode==='flow');
+  document.getElementById('btnCum').classList.toggle('active',mode==='cumulative');
+  document.getElementById('flowTableWrap').classList.toggle('hidden',mode!=='flow');
+  document.getElementById('cumTableWrap').classList.toggle('hidden',mode!=='cumulative');
+}
+
+// ============================================================
+// VALIDATION
+// ============================================================
+function setFieldError(id, show){
+  document.getElementById(id).classList.toggle('invalid',show);
+}
+
+function validateExtra(loanAmt, payF, n){
+  const val=Number(document.getElementById('extraPay').value)||0;
+  const errEl=document.getElementById('extraErr');
+  const warnEl=document.getElementById('extraWarn');
+  const field=document.getElementById('f-extra');
+  let errMsg='', warnMsg='';
+
+  if(val<0){
+    errMsg='不可為負數 (Must be ≥ 0 / 不可為負數)';
+  } else if(currentMode==='B'){
+    // Mode B: hard limit — extra cannot exceed monthly payment
+    if(payF>0 && val>payF){
+      errMsg=`Mode B: Cannot exceed monthly payment ${fmt(payF)} / Mode B：不可超過月付款額 ${fmt(payF)}`;
+    }
+  } else {
+    // Mode A: soft limit — total contribution should not exceed loan
+    if(loanAmt>0 && n>0 && val*n>loanAmt){
+      const maxExtra=Math.floor(loanAmt/n);
+      warnMsg=`⚠️ Mode A: Total investment ${fmt(val*n)} > Loan ${fmt(loanAmt)}. Recommend monthly ≤ ${fmt(maxExtra)} to keep investment ratio. Calculation allowed. / Mode A：總投資額 ${fmt(val*n)} > 貸款額 ${fmt(loanAmt)}。建議每月不超過 ${fmt(maxExtra)} 以維持借投比。仍可計算。`;
+    }
+  }
+
+  errEl.textContent=errMsg;
+  errEl.style.display=errMsg?'block':'none';
+  warnEl.textContent=warnMsg;
+  warnEl.style.display=warnMsg?'block':'none';
+  field.classList.toggle('invalid',!!errMsg);
+  return !errMsg; // warning does NOT block calculation
+}
+
+function validateInputs(loan, rate1, years){
+  let ok=true;
+  if(!loan||loan<=0){ setFieldError('f-loan',true); ok=false; } else setFieldError('f-loan',false);
+  if(!rate1||rate1<=0){ setFieldError('f-rate',true); ok=false; } else setFieldError('f-rate',false);
+  if(!years||years<=0){ setFieldError('f-years',true); ok=false; } else setFieldError('f-years',false);
+  return ok;
+}
+
+// ============================================================
+// MAIN CALCULATE
+// ============================================================
+function calculate(){
+  const loan    = Number(document.getElementById('loan').value)*10000;
+  const rate1   = Number(document.getElementById('rate').value);
+  const rate2   = Number(document.getElementById('rate2').value)||0;
+  const changeYear = Number(document.getElementById('changeYear').value)||0;
+  const years   = Number(document.getElementById('years').value);
+  const lockYear= Number(document.getElementById('lockYear').value)||0;
+  const investRate = Number(document.getElementById('investRate').value)||0;
+
+  if(!validateInputs(loan,rate1,years)) return;
+
+  const n = years*12;
+  const changeMonth = changeYear*12;
+  const lockMonth = lockYear*12;
+
+  // Show lock notice
+  const lockNotice=document.getElementById('lockNotice');
+  lockNotice.classList.toggle('visible',lockYear>0);
+
+  // --- Fixed rate monthly payment ---
+  const rF = rate1/100/12;
+  const payF = loan*rF/(1-Math.pow(1+rF,-n));
+  calcMonthlyFixed = payF;
+
+  // Extra validation (mode-aware)
+  const extra = Number(document.getElementById('extraPay').value)||0;
+  const extraOk = validateExtra(loan, payF, n);
+  if(!extraOk) return; // Only Mode B hard-blocks; Mode A shows warning but continues
+
+  scheduleVar=[]; scheduleFixed=[];
+  investCurve=[]; prepayCurve=[];
+  cumFixed=[]; cumVar=[];
+
+  // ---- FIXED schedule ----
+  let balF=loan, accIntF=0, accPrinF=0, totalFix=0;
+  for(let i=1;i<=n;i++){
+    let int=balF*rF;
+    let prin=payF-int;
+    accIntF+=int; accPrinF+=prin;
+    cumFixed.push({interest:accIntF,principal:accPrinF});
+    balF-=prin;
+    totalFix+=int;
+    scheduleFixed.push({payment:payF,interest:int,principal:prin});
+  }
+
+  // ---- VARIABLE schedule ----
+  let balV=loan, accIntV=0, accPrinV=0, totalVar=0;
+  for(let i=1;i<=n;i++){
+    let r=(i<=changeMonth&&rate2>0)?rate1/100/12:(
+      rate2>0&&i>changeMonth?rate2/100/12:rate1/100/12
+    );
+    // Correct: use current remaining term
+    let remaining=n-i+1;
+    let payV=balV*r/(1-Math.pow(1+r,-remaining));
+    let int=balV*r;
+    let prin=payV-int;
+    if(prin<0)prin=0;
+    accIntV+=int; accPrinV+=prin;
+    cumVar.push({interest:accIntV,principal:accPrinV});
+    balV-=prin;
+    if(balV<0)balV=0;
+    totalVar+=int;
+    scheduleVar.push({payment:payV,interest:int,principal:prin});
+  }
+
+  // ---- INVESTMENT (compound) ----
+  // Mode A: total contribution capped at loan amount
+  const rInv=investRate/100/12;
+  let invest=0;
+  let cumContrib=0;       // running total contributed
+  let cumContribArr=[];   // per-month cumulative contribution (for Profit)
+  for(let i=1;i<=n;i++){
+    let monthExtra=extra;
+    if(currentMode==='A'){
+      // Stop adding new money once total contribution hits the loan
+      const remaining=loan-cumContrib;
+      if(remaining<=0){
+        monthExtra=0;
+      } else if(remaining<extra){
+        monthExtra=remaining; // partial top-up to hit cap exactly
+      }
+    }
+    cumContrib+=monthExtra;
+    invest=invest*(1+rInv)+monthExtra;
+    investCurve.push(invest);
+    cumContribArr.push(cumContrib);
+  }
+
+  // ---- PREPAY (with lock-in) ----
+  // Normal total interest = totalFix
+  let bal2=loan, interest2=0;
+  for(let i=1;i<=n;i++){
+    if(bal2<=0){
+      prepayCurve.push(prepayCurve[prepayCurve.length-1]||0);
+      continue;
+    }
+    let int=bal2*rF;
+    interest2+=int;
+    if(i<=lockMonth){
+      // Lock-in: no extra applied to principal
+      bal2-=(payF-int);
+    } else {
+      // After lock-in: extra reduces principal
+      let prepayAmt=payF+extra-int;
+      bal2-=prepayAmt;
+    }
+    let saved=totalFix-interest2;
+    prepayCurve.push(saved>0?saved:0);
+  }
+
+  const savedTotal=Math.max(0,totalFix-interest2);
+
+  // ---- CROSSOVER ----
+  let crossoverMonth=null;
+  for(let i=0;i<n;i++){
+    if(investCurve[i]>prepayCurve[i]){ crossoverMonth=i+1; break; }
+  }
+
+  const profit=invest-cumContrib;
+  const diff=totalFix-totalVar;
+
+  // ---- RENDER ----
+  renderSummary(payF,scheduleVar[0]?.payment||0,totalFix,totalVar,invest,cumContrib,n,savedTotal,profit,crossoverMonth,diff,lockYear);
+  renderFlowTable(n,lockMonth);
+  renderCumTable(n);
+  renderInvestTable(n,cumContribArr);
+  renderChartLoan(n);
+  renderChartCumulative(n);
+  renderChartInvest(n,crossoverMonth);
+  renderRatioAnalysis(totalFix,loan,totalVar,loan);
+}
+
+// ============================================================
+// SUMMARY
+// ============================================================
+function renderSummary(payF,payV,totalFix,totalVar,invest,extra,n,savedTotal,profit,crossoverMonth,diff,lockYear){
+  const grid=document.getElementById('summaryGrid');
+  const loanBetter=diff>0?'Variable ✅':'Fixed ✅';
+  const crossStr=crossoverMonth?`${Math.floor(crossoverMonth/12)}yr ${crossoverMonth%12}mo`:'Never / 從未';
+
+  grid.innerHTML=`
+    <div class="sum-card">
+      <div class="sc-label">Fixed 月付 / Monthly Pay</div>
+      <div class="sc-value">${fmt(payF)}</div>
+      <div class="sc-sub">總利息 / Total Int: ${fmt(totalFix)}</div>
+    </div>
+    <div class="sum-card">
+      <div class="sc-label">Variable 月付 / Monthly Pay</div>
+      <div class="sc-value">${fmt(payV)}</div>
+      <div class="sc-sub">總利息 / Total Int: ${fmt(totalVar)}</div>
+    </div>
+    <div class="sum-card">
+      <div class="sc-label">投資最終值 / Final Invest</div>
+      <div class="sc-value">${fmt(invest)}</div>
+      <div class="sc-sub">獲利 / Profit: ${fmt(profit)}</div>
+    </div>
+    <div class="sum-card">
+      <div class="sc-label">提前還款節省 / Prepay Saved</div>
+      <div class="sc-value">${fmt(savedTotal)}</div>
+      <div class="sc-sub">閉鎖期 / Lock-in: ${lockYear}yr</div>
+    </div>
+    <div class="sum-card">
+      <div class="sc-label">交叉點 / Crossover Point</div>
+      <div class="sc-value" style="font-size:0.95rem;">${crossStr}</div>
+      <div class="sc-sub">投資 > 節省利息的時間 / Time Invest > Saved</div>
+    </div>
+    <div class="sum-card">
+      <div class="sc-label">貸款建議 / Loan Suggestion</div>
+      <div class="sc-value" style="font-size:0.95rem;">${loanBetter}</div>
+      <div class="sc-sub">節省 / Saved: ${fmt(Math.abs(diff))}</div>
+    </div>
+  `;
+
+  document.getElementById('recommendBox').innerHTML=`
+    <div class="recommend-box">
+      <b>決策建議 / Decision Suggestion</b><br>
+      貸款 (Loan)：${diff>0?'機動利率較有利（利息較低） / Variable rate is better (lower interest)':'固定利率較有利（利息較低） / Fixed rate is better (lower interest)'}，節省 (Saved) ${fmt(Math.abs(diff))}<br>
+      額外資金 (Extra Fund)：${profit>savedTotal?'投資報酬 > 節省利息，建議 <b>投資</b> / Investment returns > Prepayment savings, recommend <b>Investment</b>':'節省利息 > 投資報酬，建議 <b>提前還款</b> / Prepayment savings > Investment returns, recommend <b>Prepayment</b>'}<br>
+      投資利潤 (Investment Profit) ${fmt(profit)} vs 節省利息 (Savings) ${fmt(savedTotal)}
+      <span class="crossover-pill">⏱ 交叉 / Crossover: ${crossStr}</span>
+    </div>`;
+}
+
+// ============================================================
+// FLOW TABLE
+// ============================================================
+function renderFlowTable(n,lockMonth){
+  const tb=document.getElementById('tbodyFlow');
+  tb.innerHTML='';
+  for(let i=0;i<n;i++){
+    const v=scheduleVar[i], f=scheduleFixed[i];
+    const locked=i<lockMonth;
+    tb.innerHTML+=`
+    <tr>
+      <td>${i+1}</td>
+      <td>${fmt(f.payment)}</td><td>${fmt(f.interest)}</td><td>${fmt(f.principal)}</td>
+      <td>${fmt(v.payment)}</td><td>${fmt(v.interest)}</td><td>${fmt(v.principal)}</td>
+      <td class="${locked?'locked':''}">${locked?'🔒 閉鎖 / Locked':'✅'}</td>
+    </tr>`;
+  }
+}
+
+// ============================================================
+// CUMULATIVE TABLE
+// ============================================================
+function renderCumTable(n){
+  const tb=document.getElementById('tbodyCum');
+  tb.innerHTML='';
+  for(let i=0;i<n;i++){
+    const f=cumFixed[i],v=cumVar[i];
+    tb.innerHTML+=`
+    <tr>
+      <td>${i+1}</td>
+      <td>${fmt(f.interest)}</td><td>${fmt(f.principal)}</td>
+      <td>${fmt(v.interest)}</td><td>${fmt(v.principal)}</td>
+    </tr>`;
+  }
+}
+
+// ============================================================
+// INVEST TABLE
+// ============================================================
+function renderInvestTable(n, cumContribArr){
+  const tb=document.getElementById('tbodyInvest');
+  tb.innerHTML='';
+  for(let i=0;i<n;i++){
+    const inv=investCurve[i], saved=prepayCurve[i];
+    const contrib=cumContribArr[i];  // actual money put in up to this month
+    const diff=inv-saved, profit=inv-contrib;
+    const capReached=(i>0 && cumContribArr[i]===cumContribArr[i-1] && currentMode==='A');
+    tb.innerHTML+=`
+    <tr${capReached?' style="opacity:0.6"':''}>
+      <td>${i+1}${capReached?' 🔒':''}</td>
+      <td>${fmt(inv)}</td>
+      <td>${fmt(contrib)}</td>
+      <td>${fmt(saved)}</td>
+      <td class="${diff>=0?'pos':'neg'}">${fmt(diff)}</td>
+      <td class="${profit>=0?'pos':'neg'}">${fmt(profit)}</td>
+    </tr>`;
+  }
+}
+
+// ============================================================
+// RATIO ANALYSIS
+// ============================================================
+function renderRatioAnalysis(intF,prinF,intV,prinV){
+  // Bar
+  const totalF=intF+prinF, totalV=intV+prinV;
+  const pctIF=intF/totalF*100, pctPF=prinF/totalF*100;
+  const pctIV=intV/totalV*100, pctPV=prinV/totalV*100;
+
+  document.getElementById('ratioBarSection').innerHTML=`
+    <div style="margin-bottom:14px;">
+      <div style="font-size:0.82rem;color:var(--text2);margin-bottom:4px;">Fixed — 利息/Interest ${fmtPct(pctIF)} vs 本金/Principal ${fmtPct(pctPF)}</div>
+      <div class="ratio-bar">
+        <div class="seg-int" style="width:${pctIF}%"></div>
+        <div class="seg-prin" style="width:${pctPF}%"></div>
+      </div>
+      <div class="ratio-legend">
+        <span><span class="ratio-dot" style="background:#ef4444"></span>利息 / Interest ${fmt(intF)}</span>
+        <span><span class="ratio-dot" style="background:#3b82f6"></span>本金 / Principal ${fmt(prinF)}</span>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:0.82rem;color:var(--text2);margin-bottom:4px;">Variable — 利息/Interest ${fmtPct(pctIV)} vs 本金/Principal ${fmtPct(pctPV)}</div>
+      <div class="ratio-bar">
+        <div class="seg-int" style="width:${pctIV}%"></div>
+        <div class="seg-prin" style="width:${pctPV}%"></div>
+      </div>
+      <div class="ratio-legend">
+        <span><span class="ratio-dot" style="background:#ef4444"></span>利息 / Interest ${fmt(intV)}</span>
+        <span><span class="ratio-dot" style="background:#3b82f6"></span>本金 / Principal ${fmt(prinV)}</span>
+      </div>
+    </div>
+  `;
+
+  // Doughnut — Fixed
+  if(chartRF) chartRF.destroy();
+  chartRF=new Chart(document.getElementById('chartRatioFixed'),{
+    type:'doughnut',
+    data:{
+      labels:['利息 Interest','本金 Principal'],
+      datasets:[{data:[intF,prinF],backgroundColor:['#ef4444','#3b82f6'],borderWidth:0,hoverOffset:8}]
+    },
+    options:{
+      plugins:{
+        legend:{labels:{color:'#94a3b8',font:{size:11}}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${fmt(ctx.raw)} (${fmtPct(ctx.raw/(intF+prinF)*100)})`}}
+      },
+      cutout:'62%'
+    }
+  });
+
+  // Doughnut — Variable
+  if(chartRV) chartRV.destroy();
+  chartRV=new Chart(document.getElementById('chartRatioVar'),{
+    type:'doughnut',
+    data:{
+      labels:['利息 Interest','本金 Principal'],
+      datasets:[{data:[intV,prinV],backgroundColor:['#f97316','#06b6d4'],borderWidth:0,hoverOffset:8}]
+    },
+    options:{
+      plugins:{
+        legend:{labels:{color:'#94a3b8',font:{size:11}}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${fmt(ctx.raw)} (${fmtPct(ctx.raw/(intV+prinV)*100)})`}}
+      },
+      cutout:'62%'
+    }
+  });
+}
+
+// ============================================================
+// CHART 1 — LOAN FLOW
+// ============================================================
+function renderChartLoan(n){
+  if(chart1) chart1.destroy();
+  const step=Math.max(1,Math.floor(n/120));
+  const labels=[], fi=[], fp=[], vi=[], vp=[];
+  for(let i=0;i<n;i+=step){
+    labels.push(i+1);
+    fi.push(scheduleFixed[i].interest);
+    fp.push(scheduleFixed[i].principal);
+    vi.push(scheduleVar[i].interest);
+    vp.push(scheduleVar[i].principal);
+  }
+  chart1=new Chart(document.getElementById('chartCanvas1'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Fixed 利息 / Fixed Interest',data:fi,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.08)',tension:0.3,pointRadius:0},
+      {label:'Var 利息 / Var Interest',data:vi,borderColor:'#f97316',backgroundColor:'rgba(249,115,22,0.08)',tension:0.3,pointRadius:0},
+      {label:'Fixed 本金 / Fixed Principal',data:fp,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.08)',tension:0.3,pointRadius:0},
+      {label:'Var 本金 / Var Principal',data:vp,borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,0.08)',tension:0.3,pointRadius:0},
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{labels:{color:'#94a3b8',boxWidth:12}}},
+      scales:{
+        x:{ticks:{color:'#64748b'},grid:{color:'rgba(255,255,255,0.05)'},title:{display:true,text:'月份 / Month',color:'#64748b'}},
+        y:{ticks:{color:'#64748b'},grid:{color:'rgba(255,255,255,0.05)'},title:{display:true,text:'金額 / Amount (TWD)',color:'#64748b'}}
+      }
+    }
+  });
+}
+
+// ============================================================
+// CHART 3 — CUMULATIVE
+// ============================================================
+function renderChartCumulative(n){
+  if(chart3) chart3.destroy();
+  const step=Math.max(1,Math.floor(n/120));
+  const labels=[], cfi=[], cfp=[], cvi=[], cvp=[];
+  for(let i=0;i<n;i+=step){
+    labels.push(i+1);
+    cfi.push(cumFixed[i].interest);
+    cfp.push(cumFixed[i].principal);
+    cvi.push(cumVar[i].interest);
+    cvp.push(cumVar[i].principal);
+  }
+  chart3=new Chart(document.getElementById('chartCanvas3'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Fixed 累計利息 / Fixed Cum Interest',data:cfi,borderColor:'#ef4444',tension:0.3,pointRadius:0,fill:false},
+      {label:'Var 累計利息 / Var Cum Interest',data:cvi,borderColor:'#f97316',tension:0.3,pointRadius:0,fill:false},
+      {label:'Fixed 累計本金 / Fixed Cum Principal',data:cfp,borderColor:'#3b82f6',tension:0.3,pointRadius:0,fill:false},
+      {label:'Var 累計本金 / Var Cum Principal',data:cvp,borderColor:'#06b6d4',tension:0.3,pointRadius:0,fill:false},
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{labels:{color:'#94a3b8',boxWidth:12}}},
+      scales:{
+        x:{ticks:{color:'#64748b'},grid:{color:'rgba(255,255,255,0.05)'},title:{display:true,text:'月份 / Month',color:'#64748b'}},
+        y:{ticks:{color:'#64748b'},grid:{color:'rgba(255,255,255,0.05)'},title:{display:true,text:'累計金額 / Cumulative Amount (TWD)',color:'#64748b'}}
+      }
+    }
+  });
+}
+
+// ============================================================
+// CHART 2 — INVEST vs PREPAY
+// ============================================================
+function renderChartInvest(n, crossoverMonth){
+  if(chart2) chart2.destroy();
+  const step=Math.max(1,Math.floor(n/120));
+  const labels=[], inv=[], pre=[];
+  for(let i=0;i<n;i+=step){
+    labels.push(i+1);
+    inv.push(investCurve[i]);
+    pre.push(prepayCurve[i]);
+  }
+
+  const crossoverPlugin={
+    id:'crossoverLine',
+    afterDatasetsDraw(chart){
+      if(!crossoverMonth) return;
+      const {ctx,scales:{x,y}}=chart;
+      const xIdx=labels.indexOf(labels.find(l=>l>=crossoverMonth))||0;
+      if(xIdx<0) return;
+      const xPos=x.getPixelForValue(xIdx);
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(xPos,y.top); ctx.lineTo(xPos,y.bottom);
+      ctx.lineWidth=2; ctx.strokeStyle='#f59e0b';
+      ctx.setLineDash([5,4]); ctx.stroke();
+      ctx.fillStyle='#f59e0b'; ctx.font='bold 11px Arial';
+      ctx.fillText('Crossover',xPos+5,y.top+14);
+      ctx.restore();
+    }
+  };
+
+  chart2=new Chart(document.getElementById('chartCanvas2'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'投資總值 / Investment Total',data:inv,borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,0.1)',tension:0.3,pointRadius:0,fill:true},
+      {label:'節省利息 / Interest Saved',data:pre,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.08)',tension:0.3,pointRadius:0,fill:true},
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{labels:{color:'#94a3b8',boxWidth:12}}},
+      scales:{
+        x:{ticks:{color:'#64748b'},grid:{color:'rgba(255,255,255,0.05)'},title:{display:true,text:'月份 / Month',color:'#64748b'}},
+        y:{ticks:{color:'#64748b'},grid:{color:'rgba(255,255,255,0.05)'},title:{display:true,text:'金額 / Amount (TWD)',color:'#64748b'}}
+      }
+    },
+    plugins:[crossoverPlugin]
+  });
+}
+
+// ============================================================
+// EXPORT CSV
+// ============================================================
+function exportCSV(){
+  if(!scheduleFixed.length){ alert('請先計算 / Please calculate first'); return; }
+  const time=getTimeStr();
+  const extra=Number(document.getElementById('extraPay').value)||0;
+
+  // Flow CSV
+  let c1='Month,FixedPay,FixedInt,FixedPrin,VarPay,VarInt,VarPrin\n';
+  scheduleFixed.forEach((f,i)=>{
+    const v=scheduleVar[i];
+    c1+=`${i+1},${f.payment.toFixed(2)},${f.interest.toFixed(2)},${f.principal.toFixed(2)},${v.payment.toFixed(2)},${v.interest.toFixed(2)},${v.principal.toFixed(2)}\n`;
+  });
+  dlBlob(c1,'loan_flow_'+time+'.csv');
+
+  setTimeout(()=>{
+    let c2='Month,FixedCumInt,FixedCumPrin,VarCumInt,VarCumPrin\n';
+    cumFixed.forEach((f,i)=>{
+      const v=cumVar[i];
+      c2+=`${i+1},${f.interest.toFixed(2)},${f.principal.toFixed(2)},${v.interest.toFixed(2)},${v.principal.toFixed(2)}\n`;
+    });
+    dlBlob(c2,'loan_cum_'+time+'.csv');
+  },200);
+
+  setTimeout(()=>{
+    let c3='Month,Investment,InterestSaved,Diff,Profit\n';
+    investCurve.forEach((inv,i)=>{
+      const saved=prepayCurve[i];
+      c3+=`${i+1},${inv.toFixed(2)},${saved.toFixed(2)},${(inv-saved).toFixed(2)},${(inv-extra*(i+1)).toFixed(2)}\n`;
+    });
+    dlBlob(c3,'invest_'+time+'.csv');
+  },400);
+}
+
+function dlBlob(content,filename){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([content],{type:'text/csv'}));
+  a.download=filename; a.click();
+}
+
+// ============================================================
+// DOWNLOAD CHARTS
+// ============================================================
+function downloadAllCharts(){
+  ['chartCanvas1','chartCanvas2','chartCanvas3'].forEach((id,i)=>{
+    setTimeout(()=>{
+      const el=document.getElementById(id);
+      if(!el) return;
+      const a=document.createElement('a');
+      a.href=el.toDataURL();
+      a.download=`chart_${i+1}_${getTimeStr()}.png`;
+      a.click();
+    },i*300);
+  });
+}
+</script>
+
+<script>
+  window.FTK_ROOT = '../../';
+  window.FTK_PAGE = 'loan';
+</script>
+<script src="../../assets/shared.js"></script>
+</body>
+</html>

@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>尊榮級終身財富模擬器 | Wealth & Retirement Luxury Simulator</title>
+    <link rel="stylesheet" href="../../assets/shared.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* 跑馬燈淡入淡出動畫 */
+        .fade-text {
+            transition: opacity 0.6s ease-in-out;
+        }
+        /* 隱藏滾動條但保持功能 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-[#0b0f19] text-slate-200 min-h-screen p-3 md:p-8 font-sans antialiased">
+
+    <div class="max-w-7xl mx-auto bg-gradient-to-r from-amber-500/10 via-yellow-600/5 to-transparent border border-amber-500/20 rounded-xl p-3 mb-6 flex items-center shadow-lg backdrop-blur-md">
+        <div class="flex items-center gap-2 text-amber-400 font-bold text-xs md:text-sm uppercase tracking-wider shrink-0 bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20">
+            💬 Buffett Quotes
+        </div>
+        <div class="w-full pl-4 overflow-hidden relative h-5 md:h-6">
+            <p id="buffett-quote" class="fade-text opacity-100 text-xs md:text-sm font-medium text-amber-200/90 truncate">
+                載入金句中... / Loading quotes...
+            </p>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto bg-[#131a26] rounded-2xl shadow-2xl overflow-hidden border border-slate-800/80 mb-8">
+        <div class="bg-gradient-to-r from-slate-950 to-[#161f30] p-5 md:p-8 border-b border-slate-800/60 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h1 id="ui-title" class="text-xl md:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">個人終身財富綜合動態模擬器</h1>
+                <p id="ui-subtitle" class="text-slate-400 mt-1 text-xs md:text-sm">頂級暗黑手機優化版：雙 Y 軸獨立級距（單位：萬），圖表起點智慧縮放。</p>
+            </div>
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button type="button" id="langBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-1.5 px-3 rounded-lg transition text-xs border border-slate-700">
+                    🌐 English
+                </button>
+                <button type="button" id="loadMockBtn" class="bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold py-1.5 px-3 rounded-lg transition text-xs shadow-md whitespace-nowrap">
+                    💡 載入範例數據
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-0 divide-y lg:divide-y-0 lg:divide-x divide-slate-800/60">
+            <form id="simForm" class="p-5 md:p-8 space-y-6 lg:col-span-4 bg-[#0e141f]/40">
+                
+                <div>
+                    <h2 id="ui-sec1" class="text-xs font-bold text-amber-400 uppercase tracking-wider border-b border-slate-800 pb-2 mb-4">1. 時間設定</h2>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label id="lbl-currentAge" class="block text-[11px] text-slate-400 mb-1">目前年齡</label>
+                            <input type="number" id="currentAge" value="45" class="w-full bg-[#172030] border border-slate-700/60 text-white rounded p-2 focus:ring-2 focus:ring-amber-500 outline-none text-sm">
+                        </div>
+                        <div>
+                            <label id="lbl-retireAge" class="block text-[11px] text-slate-400 mb-1">預計退休</label>
+                            <input type="number" id="retireAge" value="60" class="w-full bg-[#172030] border border-slate-700/60 text-white rounded p-2 focus:ring-2 focus:ring-amber-500 outline-none text-sm">
+                        </div>
+                        <div>
+                            <label id="lbl-lifeExpectancy" class="block text-[11px] text-slate-400 mb-1">預期壽命</label>
+                            <input type="number" id="lifeExpectancy" value="95" class="w-full bg-[#172030] border border-slate-700/60 text-white rounded p-2 focus:ring-2 focus:ring-amber-500 outline-none text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 id="ui-sec2" class="text-xs font-bold text-amber-400 uppercase tracking-wider border-b border-slate-800 pb-2 mb-4">2. 資產配置</h2>
+                    <div class="space-y-3">
+                        <div>
+                            <label id="lbl-currentAsset" class="block text-[11px] text-slate-400 mb-1">目前資產 ($)</label>
+                            <input type="number" id="currentAsset" value="500000" class="w-full bg-[#172030] border border-slate-700/60 text-white rounded p-2 focus:ring-2 focus:ring-amber-500 outline-none text-sm">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label id="lbl-cashAsset" class="block text-[11px] text-slate-400 mb-1">現金預備金 ($)</label>
+                                <input type="number" id="cashAsset" value="1000000" class="w-full bg-[#172030] border border-slate-700/60 text-white rounded p-2 focus:ring-2 focus:ring-amber-500 outline-none text-sm">
+                            </div>
+                            <div>
+                                <label id="lbl-investAsset" class="block text-[11px] text-slate-400 mb-1">投資資產 ($)</label>
+                                <input type="number" id="investAsset" value="800000" class="w-full bg-[#172030] border border-slate-700/60 text-white rounded p-2 focus:ring-2 focus:ring-amber-500 outline-none text-sm">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 id="ui-sec3" class="text-xs font-bold text-amber-400 uppercase tracking-wider border-b border-slate-800 pb-2 mb-4">3. 工作期收入與初始支出</h2>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label id="lbl-annualSalary" class="block text-[11px] text-slate-400 mb-1">目前年薪 ($)</label>
+                            <input type="number" id="annualSalary" value="2000000" class="w-full bg-[#172030] border border-slate-700/60 text-white rounded p-2 focus:ring-2 focus:ring-amber-500 outline-none text-sm">
+                        </div>
+                        <div>
+                            <label id="lbl-salaryGrowth" class="block text-[11px] text-slate-400 mb-1">年加薪率 (%)</label>
+                            <input type="number" step="0.1" id="salaryGrowth" value="2.0" class="w-full bg-[#172030] border border-slate-700/60 text-white rounded p-2 focus:ring-2 focus:ring-amber-500 outline-none text-sm">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label id="lbl-fixedExpense" class="block text-[11px] text-slate-400 mb-1">固定年支出 ($)</label>
+                            <input type="number" id="fixedExpense" value="600000" class="w-full bg-[#172030] border border-slate-700/60 text-white rounded p-2 focus:ring-2 focus:ring-amber-500 outline-none text-sm">
+                        </div>
+                        <div>
+                            <label id="lbl-floatingExpense" class="block text-[11px] text-slate-400 mb-1">變動年支出 ($)</label>
+                            <input type="number" id="floatingExpense" value="250000" class="w-full bg-[#172030] border border-slate-700/60 text-white rounded p-2 focus:ring-2 focus:ring-amber-500 outline-none text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 id="ui-sec4" class="text-xs font-bold text-amber-400 uppercase tracking-wider border-b border-slate-800 pb-2 mb-4">4. 總體與回報率</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label id="lbl-inflationRate" class="block text-[11px] text-slate-400 mb-1">預估通膨率 (%)</label>
+                            <input type="number" step="0.1" id="inflationRate" value="2.2" class="w-full bg-[#172030] border border-slate-700/60 text-white rounded p-2 focus:ring-2 focus:ring-amber-500 outline-none text-sm">
+                        </div>
+                        <div>
+                            <label id="lbl-interestRate" class="block text-[11px] text-slate-400 mb-1">投資年報酬 (%)</label>
+                            <input type="number" step="0.1" id="interestRate" value="6.0" class="w-full bg-[#172030] border border-slate-700/60 text-white rounded p-2 focus:ring-2 focus:ring-amber-500 outline-none text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" id="submitBtn" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold py-2.5 px-4 rounded-lg shadow-lg transition duration-200 text-sm">
+                    重新計算並更新
+                </button>
+            </form>
+
+            <div class="p-4 md:p-8 lg:col-span-8 flex flex-col space-y-6 bg-[#0f1522]/30">
+                
+                <!-- 退休可行性評估與建議 (Retirement Health Diagnostics) -->
+                <div id="healthCheckCard" class="bg-gradient-to-r from-[#141b27] to-[#1a2538] p-5 rounded-2xl border border-slate-800/80 shadow-lg">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-xl" id="healthIcon">🎯</span>
+                        <h3 id="ui-health-title" class="font-extrabold text-xs md:text-sm tracking-wider uppercase bg-gradient-to-r from-amber-400 to-yellow-200 bg-clip-text text-transparent">退休可行性評估與建議 / Retirement Feasibility & Advice</h3>
+                    </div>
+                    <div id="healthSummary" class="text-xs md:text-sm font-semibold text-slate-200 mb-2"></div>
+                    <div id="healthAdvice" class="text-[11px] md:text-xs text-slate-400 leading-relaxed"></div>
+                </div>
+                <div>
+                    <h2 id="ui-chartA-title" class="text-xs font-bold text-indigo-400 uppercase tracking-wider border-b border-slate-800 pb-1 mb-3">📈 圖表 A：總資產與投資(左軸-Y) vs 現金預備金(右軸-Y2) [單位：萬]</h2>
+                    <div class="relative bg-[#141c2b] p-2 md:p-4 rounded-xl border border-slate-800 shadow-inner h-[280px]">
+                        <canvas id="assetChart"></canvas>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 id="ui-chartB-title" class="text-xs font-bold text-emerald-400 uppercase tracking-wider border-b border-slate-800 pb-1 mb-3">📊 圖表 B：年度動態現金流（薪資 vs 通膨支出） [單位：萬]</h2>
+                    <div class="relative bg-[#141c2b] p-2 md:p-4 rounded-xl border border-slate-800 shadow-inner h-[220px]">
+                        <canvas id="flowChart"></canvas>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-800 pb-2 mb-3 gap-2">
+                        <h2 id="ui-table-title" class="text-xs font-bold text-slate-300 uppercase tracking-wider">📋 年度審計詳細數據明細表</h2>
+                        <button type="button" id="exportBtn" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold py-1 px-2.5 rounded text-xs transition shadow-sm flex items-center gap-1 w-full sm:w-auto justify-center">
+                            📥 匯出 CSV (Export)
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto bg-[#141c2b] rounded-xl border border-slate-800 shadow-inner max-h-[260px] overflow-y-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead class="bg-[#192335] text-slate-300 font-semibold sticky top-0 shadow-sm z-10">
+                                <tr id="table-th-row">
+                                    </tr>
+                            </thead>
+                            <tbody id="financialTableBody" class="divide-y divide-slate-800/50 text-slate-400">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto bg-[#111823] text-slate-400 rounded-2xl shadow-xl p-5 md:p-8 border border-slate-800/80">
+        <h2 id="readme-title" class="text-sm font-bold text-amber-400 flex items-center gap-2 mb-4 border-b border-slate-800 pb-3 uppercase tracking-wider">
+            📖 Help & README | 使用說明手冊
+        </h2>
+        <div id="readme-content" class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs leading-relaxed">
+            </div>
+    </div>
+
+    <script>
+        // 1. 巴菲特 10 句經典金句字典 (中英文對照)
+        const buffettQuotes = [
+            { zh: "「在別人貪婪時恐懼，在別人恐懼時貪婪。」", en: "\"Be fearful when others are greedy and greedy when others are fearful.\"" },
+            { zh: "「若不打算持有某檔股票十年，連持有十分鐘都不要想。」", en: "\"If you aren't willing to own a stock for ten years, don't even think about owning it for ten minutes.\"" },
+            { zh: "「投資的第一原則是不要賠錢；第二原則是永遠不要忘記第一原則。」", en: "\"Rule No. 1 is never lose money. Rule No. 2 is never forget Rule No. 1.\"" },
+            { zh: "「時間是優秀企業的朋友，是平庸企業的敵人。」", en: "\"Time is the friend of the wonderful company, the enemy of the mediocre.\"" },
+            { zh: "「價格是你付出的，價值是你得到的。」", en: "\"Price is what you pay. Value is what you get.\"" },
+            { zh: "「建立商譽需要二十年，毀掉它只需五分鐘。」", en: "\"It takes 20 years to build a reputation and five minutes to ruin it.\"" },
+            { zh: "「潮水退了，才知道誰沒穿褲子游泳。」", en: "\"Only when the tide goes out do you discover who's been swimming naked.\"" },
+            { zh: "「人生就像滾雪球，重要的是找到夠濕的雪和夠長的坡。」", en: "\"Life is like a snowball. The important thing is finding wet snow and a really long hill.\"" },
+            { zh: "「風險來自於你不知道自己在做什麼。」", en: "\"Risk comes from not knowing what you're doing.\"" },
+            { zh: "「最棒的投資，就是投資自己。」", en: "\"The most important investment you can make is in yourself.\"" }
+        ];
+
+        // 2. 多國語系語系檔
+        const i18n = {
+            zh: {
+                title: "終身財富綜合動態模擬器",
+                subtitle: "頂級暗黑手機優化版：雙 Y 軸獨立級距（單位：萬），圖表起點智慧縮放。",
+                mockBtn: "💡 載入範例數據",
+                sec1: "1. 時間設定",
+                sec2: "2. 資產配置",
+                sec3: "3. 工作期收入與初始支出",
+                sec4: "4. 總體與回報率",
+                currentAge: "目前年齡",
+                retireAge: "預計退休",
+                lifeExpectancy: "預期壽命",
+                currentAsset: "目前資產 ($)",
+                cashAsset: "現金預備金 ($)",
+                investAsset: "投資資產 ($)",
+                annualSalary: "目前年薪 ($)",
+                salaryGrowth: "年加薪率 (%)",
+                fixedExpense: "固定年支出 ($)",
+                floatingExpense: "變動年支出 ($)",
+                inflationRate: "預估通膨率 (%)",
+                interestRate: "投資年報酬 (%)",
+                submitBtn: "重新計算並更新",
+                chartATitle: "📈 圖表 A：總資產與投資(左軸-Y) vs 現金預備金(右軸-Y2) [單位：萬]",
+                chartBTitle: "📊 圖表 B：年度動態現金流（薪資 vs 通膨支出） [單位：萬]",
+                tableTitle: "📋 年度審計詳細數據明細表",
+                exportBtn: "📥 匯出 CSV",
+                retiredText: "已退休",
+                ageSuffix: "歲",
+                thAge: "年齡",
+                thSalary: "薪資收入",
+                thExpense: "通膨後支出",
+                thNet: "當年生計淨餘額",
+                thCash: "現金預備金",
+                thInvest: "投資資產",
+                thCurrentAsset: "目前資產",
+                thTotal: "總資產",
+                chartTotal: "👑 總資產 (左軸 Y)",
+                chartInvest: "投資資產 (左軸 Y)",
+                chartCurrentAsset: "目前資產 (左軸 Y)",
+                chartCash: "現金預備金 (右軸 Y2)",
+                chartSalary: "年度工作薪資",
+                chartExpense: "通膨後年度總支出",
+                unitWan: " 萬",
+                healthTitle: "退休可行性評估與建議",
+                readme: `
+                    <div>
+                        <h3 class="text-amber-400 font-bold mb-2 text-xs uppercase tracking-wider">💡 專業級計算核心邏輯</h3>
+                        <p class="mb-2">本模擬系統採用高階財富管理「期初捕捉、期末清算」的精算底層：</p>
+                        <ul class="list-disc pl-4 space-y-1 text-slate-400">
+                            <li><strong class="text-slate-300">智慧雙 Y 軸 (Dual Axes)：</strong> 由於您的「總資產」與「現金」存在幾十倍的級距差異，硬塞在同一個 Y 軸會導致小數值被壓扁。本圖表 A 將總資產與股票掛在左軸(Y)，現金掛在右軸(Y2)，各自獨立最佳化刻度。</li>
+                            <li><strong class="text-slate-300">起點智慧縮放 (Non-Zero Min)：</strong> 圖表起點不再強制從 0 開始，而是根據您的模擬極值進行邊界鎖定，讓您一眼看清財富成長的加速度與退休黃金交叉。</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-amber-400 font-bold mb-2 text-xs uppercase tracking-wider">🛠️ 手機版操作與 CSV 匯出</h3>
+                        <ol class="list-decimal pl-4 space-y-1 text-slate-400">
+                            <li><strong class="text-slate-300">行動裝置支援：</strong> 表格支援左右指尖流暢滑動，參數區在手機上自動置頂，方便您隨時單手操作微調。</li>
+                            <li><strong class="text-slate-300">Excel 相容導出：</strong> 點擊匯出 CSV，系統會自動在前端檔案置入防亂碼編碼（BOM），讓您匯入 Excel 或 Google 試算表時絕不出現亂碼。</li>
+                        </ol>
+                    </div>
+                `
+            },
+            en: {
+                title: "Luxury Wealth & Retirement Dynamic Simulator",
+                subtitle: "Luxury Dark Theme: Dual Y-Axes, custom mobile layout, auto-scale non-zero boundaries (Unit: 10k).",
+                mockBtn: "💡 Load Demo Data",
+                sec1: "1. Timeline Settings",
+                sec2: "2. Asset Allocation",
+                sec3: "3. Income & Initial Expenses",
+                sec4: "4. Macro & Return Rates",
+                currentAge: "Current Age",
+                retireAge: "Retirement Age",
+                lifeExpectancy: "Life Expectancy",
+                currentAsset: "Current Asset ($)",
+                cashAsset: "Cash Reserves ($)",
+                investAsset: "Invested Assets ($)",
+                annualSalary: "Current Salary ($)",
+                salaryGrowth: "Salary Growth (%)",
+                fixedExpense: "Fixed Expenses ($)",
+                floatingExpense: "Variable Expenses ($)",
+                inflationRate: "Inflation Rate (%)",
+                interestRate: "Investment Return (%)",
+                submitBtn: "Recalculate & Update",
+                chartATitle: "📈 Chart A: Total Net Worth(Left-Y) vs. Cash Reserves(Right-Y2) [Unit: 10k]",
+                chartBTitle: "📊 Chart B: Annual Cash Flow (Salary vs. Inflated Expenses) [Unit: 10k]",
+                tableTitle: "📋 Annual Financial Audit Ledger",
+                exportBtn: "📥 Export to CSV",
+                retiredText: "Retired",
+                ageSuffix: " yo",
+                thAge: "Age",
+                thSalary: "Salary Income",
+                thExpense: "Inflated Expense",
+                thNet: "Net Cashflow",
+                thCash: "Cash Reserve",
+                thInvest: "Investment MV",
+                thCurrentAsset: "Current Asset",
+                thTotal: "Total Wealth",
+                chartTotal: "👑 Total Assets (Left Y)",
+                chartInvest: "Invested Assets (Left Y)",
+                chartCurrentAsset: "Current Asset (Left Y)",
+                chartCash: "Cash Reserve (Right Y2)",
+                chartSalary: "Annual Salary",
+                chartExpense: "Inflated Annual Expense",
+                unitWan: " W",
+                healthTitle: "Retirement Feasibility & Advice",
+                readme: `
+                    <div>
+                        <h3 class="text-amber-400 font-bold mb-2 text-xs uppercase tracking-wider">💡 Advanced Financial Engine</h3>
+                        <p class="mb-2">This luxury edition utilizes a bespoke wealth accounting framework:</p>
+                        <ul class="list-disc pl-4 space-y-1 text-slate-400">
+                            <li><strong class="text-slate-300">Dual Y-Axes Optimization:</strong> Solves scale compression gaps by plotting Total Wealth & Portfolio on the Left Axis (Y) while pinning Cash on the Right Axis (Y2).</li>
+                            <li><strong class="text-slate-300">Non-Zero Boundary Auto-Scaling:</strong> Chart baselines dynamically clamp to your calculated minimum dataset values instead of forcing a zero baseline, highlighting subtle trend variations.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-amber-400 font-bold mb-2 text-xs uppercase tracking-wider">🛠️ Mobile UX & Excel Export</h3>
+                        <ol class="list-decimal pl-4 space-y-1 text-slate-400">
+                            <li><strong class="text-slate-300">Mobile Responsive Layout:</strong> Fully tailored touch zones with smooth horizontal swiping on the data ledger for perfect single-handed operations.</li>
+                            <li><strong class="text-slate-300">BOM-Encoded CSV:</strong> Injects a secure byte-order mark header into exports to prevent any text corruption inside Microsoft Excel.</li>
+                        </ol>
+                    </div>
+                `
+            }
+        };
+
+        let currentLang = 'zh';
+        let assetChart = null;
+        let flowChart = null;
+        let globalTableData = [];
+        let quoteIndex = 0;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // 初始化巴菲特金句跑馬燈
+            startRollingShow();
+            
+            document.getElementById('langBtn').addEventListener('click', toggleLanguage);
+            document.getElementById('simForm').addEventListener('submit', (e) => { e.preventDefault(); runSimulation(); });
+            document.getElementById('loadMockBtn').addEventListener('click', loadMockData);
+            document.getElementById('exportBtn').addEventListener('click', exportToCSV);
+            
+            updateUIStrings();
+            runSimulation();
+        });
+
+        // 巴菲特金句 Rolling Show 引擎
+        function startRollingShow() {
+            const quoteElem = document.getElementById('buffett-quote');
+            function updateQuote() {
+                quoteElem.classList.replace('opacity-100', 'opacity-0');
+                setTimeout(() => {
+                    const q = buffettQuotes[quoteIndex];
+                    quoteElem.innerText = currentLang === 'zh' ? `${q.zh} —— 華倫·巴菲特` : `${q.en} — Warren Buffett`;
+                    quoteElem.classList.replace('opacity-0', 'opacity-100');
+                    quoteIndex = (quoteIndex + 1) % buffettQuotes.length;
+                }, 600); // 等待淡出動畫完成
+            }
+            updateQuote();
+            setInterval(updateQuote, 5000); // 每 5 秒滾動切換一次
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            document.getElementById('langBtn').innerText = currentLang === 'zh' ? '🌐 English' : '🌐 中文';
+            updateUIStrings();
+            runSimulation();
+        }
+
+        function updateUIStrings() {
+            const dict = i18n[currentLang];
+            document.getElementById('ui-title').innerText = dict.title;
+            document.getElementById('ui-subtitle').innerText = dict.subtitle;
+            document.getElementById('loadMockBtn').innerText = dict.mockBtn;
+            document.getElementById('ui-sec1').innerText = dict.sec1;
+            document.getElementById('ui-sec2').innerText = dict.sec2;
+            document.getElementById('ui-sec3').innerText = dict.sec3;
+            document.getElementById('ui-sec4').innerText = dict.sec4;
+            
+            document.getElementById('lbl-currentAge').innerText = dict.currentAge;
+            document.getElementById('lbl-retireAge').innerText = dict.retireAge;
+            document.getElementById('lbl-lifeExpectancy').innerText = dict.lifeExpectancy;
+            document.getElementById('lbl-currentAsset').innerText = dict.currentAsset;
+            document.getElementById('lbl-cashAsset').innerText = dict.cashAsset;
+            document.getElementById('lbl-investAsset').innerText = dict.investAsset;
+            document.getElementById('lbl-annualSalary').innerText = dict.annualSalary;
+            document.getElementById('lbl-salaryGrowth').innerText = dict.salaryGrowth;
+            document.getElementById('lbl-fixedExpense').innerText = dict.fixedExpense;
+            document.getElementById('lbl-floatingExpense').innerText = dict.floatingExpense;
+            document.getElementById('lbl-inflationRate').innerText = dict.inflationRate;
+            document.getElementById('lbl-interestRate').innerText = dict.interestRate;
+            document.getElementById('submitBtn').innerText = dict.submitBtn;
+
+            document.getElementById('ui-chartA-title').innerText = dict.chartATitle;
+            document.getElementById('ui-chartB-title').innerText = dict.chartBTitle;
+            document.getElementById('ui-table-title').innerText = dict.tableTitle;
+            document.getElementById('ui-health-title').innerText = dict.healthTitle;
+            document.getElementById('exportBtn').innerText = dict.exportBtn;
+            document.getElementById('readme-content').innerHTML = dict.readme;
+
+            document.getElementById('table-th-row').innerHTML = `
+                <th class="p-2.5 border-b border-slate-800 text-slate-300">${dict.thAge}</th>
+                <th class="p-2.5 border-b border-slate-800 text-right text-slate-300">${dict.thSalary}</th>
+                <th class="p-2.5 border-b border-slate-800 text-right text-slate-300">${dict.thExpense}</th>
+                <th class="p-2.5 border-b border-slate-800 text-right text-slate-300">${dict.thNet}</th>
+                <th class="p-2.5 border-b border-slate-800 text-right text-slate-300">${dict.thCash}</th>
+                <th class="p-2.5 border-b border-slate-800 text-right text-slate-300">${dict.thInvest}</th>
+                <th class="p-2.5 border-b border-slate-800 text-right text-slate-300">${dict.thCurrentAsset}</th>
+                <th class="p-2.5 border-b border-slate-800 text-right font-bold text-amber-400">${dict.thTotal}</th>
+            `;
+        }
+
+        function loadMockData() {
+            document.getElementById('currentAge').value = 45;
+            document.getElementById('retireAge').value = 60;
+            document.getElementById('lifeExpectancy').value = 95;
+            document.getElementById('currentAsset').value = 500000;
+            document.getElementById('cashAsset').value = 1000000;
+            document.getElementById('investAsset').value = 800000;
+            document.getElementById('annualSalary').value = 2000000;
+            document.getElementById('salaryGrowth').value = 2.0;
+            document.getElementById('fixedExpense').value = 600000;
+            document.getElementById('floatingExpense').value = 250000;
+            document.getElementById('inflationRate').value = 2.2;
+            document.getElementById('interestRate').value = 6.0;
+            runSimulation();
+        }
+
+        function runSimulation() {
+            const dict = i18n[currentLang];
+            const currentAge = parseInt(document.getElementById('currentAge').value);
+            const retireAge = parseInt(document.getElementById('retireAge').value);
+            const lifeExpectancy = parseInt(document.getElementById('lifeExpectancy').value);
+            
+            let currentAsset = parseFloat(document.getElementById('currentAsset').value) || 0;
+            let cash = parseFloat(document.getElementById('cashAsset').value) || 0;
+            let investments = parseFloat(document.getElementById('investAsset').value) || 0;
+            let currentSalary = parseFloat(document.getElementById('annualSalary').value);
+            const salaryGrowth = parseFloat(document.getElementById('salaryGrowth').value) / 100;
+            let currentExpenses = parseFloat(document.getElementById('fixedExpense').value) + parseFloat(document.getElementById('floatingExpense').value);
+            const inflationRate = parseFloat(document.getElementById('inflationRate').value) / 100;
+            const interestRate = parseFloat(document.getElementById('interestRate').value) / 100;
+
+            const labels = [];
+            const salaryHistory = [];
+            const expenseHistory = [];
+            const cashHistory = [];
+            const investHistory = [];
+            const currentAssetHistory = [];
+            const totalAssetsHistory = [];
+            globalTableData = [];
+
+            for (let age = currentAge; age <= lifeExpectancy; age++) {
+                labels.push(`${age}${dict.ageSuffix}`);
+                
+                let activeSalary = age < retireAge ? currentSalary : 0;
+                let netSavings = activeSalary - currentExpenses;
+                let currentTotalAssets = cash + investments + currentAsset;
+
+                // 智慧換算：以「萬」為單位存入圖表陣列 (除以 10000 并保留小數點一位)
+                salaryHistory.push(Number((activeSalary / 10000).toFixed(1)));
+                expenseHistory.push(Number((currentExpenses / 10000).toFixed(1)));
+                cashHistory.push(Number((cash / 10000).toFixed(1)));
+                investHistory.push(Number((investments / 10000).toFixed(1)));
+                currentAssetHistory.push(Number((currentAsset / 10000).toFixed(1)));
+                totalAssetsHistory.push(Number((currentTotalAssets / 10000).toFixed(1)));
+
+                globalTableData.push({
+                    age: age,
+                    salary: activeSalary,
+                    expense: currentExpenses,
+                    net: netSavings,
+                    cash: cash,
+                    invest: investments,
+                    currentAsset: currentAsset,
+                    total: currentTotalAssets
+                });
+
+                if (age < retireAge) {
+                    if (netSavings > 0) {
+                        investments += netSavings;
+                    } else {
+                        cash += netSavings;
+                        if (cash < 0) {
+                            investments += cash;
+                            cash = 0;
+                            if (investments < 0) {
+                                currentAsset += investments;
+                                investments = 0;
+                                if (currentAsset < 0) currentAsset = 0;
+                            }
+                        }
+                    }
+                    investments = investments * (1 + interestRate);
+                    currentAsset = currentAsset * (1 + interestRate);
+                    currentSalary = currentSalary * (1 + salaryGrowth);
+                } else {
+                    let deficit = currentExpenses;
+                    if (cash >= deficit) {
+                        cash -= deficit;
+                    } else {
+                        let remainDeficit = deficit - cash;
+                        cash = 0;
+                        if (investments >= remainDeficit) {
+                            investments -= remainDeficit;
+                        } else {
+                            remainDeficit -= investments;
+                            investments = 0;
+                            currentAsset -= remainDeficit;
+                            if (currentAsset < 0) currentAsset = 0;
+                        }
+                    }
+                    investments = investments * (1 + interestRate);
+                    currentAsset = currentAsset * (1 + interestRate);
+                }
+                currentExpenses = currentExpenses * (1 + inflationRate);
+            }
+
+            // 退休可行性評估計算
+            let bankruptAge = null;
+            for (let i = 0; i < globalTableData.length; i++) {
+                if (globalTableData[i].total <= 0) {
+                    bankruptAge = globalTableData[i].age;
+                    break;
+                }
+            }
+
+            const healthIcon = document.getElementById('healthIcon');
+            const healthSummary = document.getElementById('healthSummary');
+            const healthAdvice = document.getElementById('healthAdvice');
+
+            if (bankruptAge !== null) {
+                healthIcon.innerText = "⚠️";
+                if (currentLang === 'zh') {
+                    healthSummary.innerHTML = `<span class="text-rose-400">🔴 資產枯竭警告：</span>您的資產預計將在 <span class="text-rose-300 font-bold">${bankruptAge} 歲</span>時用盡，無法支應預期壽命至 ${lifeExpectancy} 歲的開銷。`;
+                    healthAdvice.innerHTML = `
+                        <ul class="list-disc pl-4 space-y-1">
+                            <li><strong>延後退休時間：</strong>嘗試將預計退休年齡從 ${retireAge} 歲延後（例如延至 62~65 歲），以利累積更充裕的常規投資規模。</li>
+                            <li><strong>控制變動年支出：</strong>在工作期間或退休後，稍微降低變動支出（目前為 $${(parseFloat(document.getElementById('floatingExpense').value) || 0).toLocaleString()}），即可大幅減緩資金消耗速率。</li>
+                            <li><strong>優化資產配置與年回報率：</strong>在風險承受度範圍內，可調高常規投資或目前資產的獲利效率，爭取更高的投資年報酬（目前為 ${document.getElementById('interestRate').value}%）。</li>
+                        </ul>
+                    `;
+                } else {
+                    healthSummary.innerHTML = `<span class="text-rose-400">🔴 Asset Depletion Warning:</span> Your assets are projected to run out at <span class="text-rose-300 font-bold">age ${bankruptAge}</span>, failing to sustain you until your life expectancy of ${lifeExpectancy}.`;
+                    healthAdvice.innerHTML = `
+                        <ul class="list-disc pl-4 space-y-1">
+                            <li><strong>Delay retirement:</strong> Consider extending your retirement age beyond ${retireAge} (e.g. to 62-65) to build a larger regular investment base.</li>
+                            <li><strong>Control variable expenses:</strong> Reducing variable annual expenses (currently $${(parseFloat(document.getElementById('floatingExpense').value) || 0).toLocaleString()}) can significantly decelerate cash depletion.</li>
+                            <li><strong>Optimize portfolio yield:</strong> Within your risk tolerance, adjust asset weights to achieve higher annual investment returns (currently ${document.getElementById('interestRate').value}%).</li>
+                        </ul>
+                    `;
+                }
+            } else {
+                const finalTotal = globalTableData[globalTableData.length - 1].total;
+                healthIcon.innerText = "👑";
+                if (currentLang === 'zh') {
+                    healthSummary.innerHTML = `<span class="text-emerald-400">🟢 財務規劃安全：</span>恭喜！您的退休規劃非常安全。在預期壽命 ${lifeExpectancy} 歲時，您仍保有約 <span class="text-emerald-300 font-bold">$${Math.round(finalTotal / 10000).toLocaleString()} 萬</span>的總資產。`;
+                    healthAdvice.innerHTML = `
+                        <ul class="list-disc pl-4 space-y-1">
+                            <li><strong>評估提早退休：</strong>由於您的財務安全邊際非常寬裕，您可以評估提早退休（如提前至 55 歲），或適度提高生活支出預算以提升生活品質。</li>
+                            <li><strong>資產傳承規劃：</strong>若預估壽命終點仍有充裕剩餘資產，可提前規劃資產傳承、公益捐贈或合理的稅務佈局。</li>
+                        </ul>
+                    `;
+                } else {
+                    healthSummary.innerHTML = `<span class="text-emerald-400">🟢 Financial Plan Secure:</span> Congratulations! Your retirement plan is highly secure. At your life expectancy of ${lifeExpectancy}, you will still have approximately <span class="text-emerald-300 font-bold">$${Math.round(finalTotal / 10000).toLocaleString()} W</span> in total assets.`;
+                    healthAdvice.innerHTML = `
+                        <ul class="list-disc pl-4 space-y-1">
+                            <li><strong>Explore early retirement:</strong> With a robust safety margin, you could consider retiring earlier (e.g., age 55) or increase your annual variable expenses to enjoy a better lifestyle.</li>
+                            <li><strong>Estate and legacy planning:</strong> Since significant funds remain at your life expectancy, early estate planning and legacy options are recommended.</li>
+                        </ul>
+                    `;
+                }
+            }
+
+            // 1. 渲染明細表
+            const tableBody = document.getElementById('financialTableBody');
+            tableBody.innerHTML = '';
+            
+            globalTableData.forEach(row => {
+                const tr = document.createElement('tr');
+                if(row.age >= retireAge) {
+                    tr.className = "bg-amber-500/5 hover:bg-amber-500/10 font-medium border-slate-800";
+                } else {
+                    tr.className = "hover:bg-slate-800/30 border-slate-800/50";
+                }
+
+                const netColorClass = row.net >= 0 ? "text-emerald-400" : "text-rose-400";
+                const displaySalary = row.age >= retireAge ? `<span class="text-slate-600 font-normal italic">${dict.retiredText}</span>` : '$' + Math.round(row.salary / 10000).toLocaleString() + dict.unitWan;
+
+                tr.innerHTML = `
+                    <td class="p-2.5 border-b border-slate-800 font-medium">${row.age} ${dict.ageSuffix}</td>
+                    <td class="p-2.5 border-b border-slate-800 text-right font-mono">${displaySalary}</td>
+                    <td class="p-2.5 border-b border-slate-800 text-right font-mono">$${Math.round(row.expense / 10000).toLocaleString()}${dict.unitWan}</td>
+                    <td class="p-2.5 border-b border-slate-800 text-right font-mono ${netColorClass}">$${Math.round(row.net / 10000).toLocaleString()}${dict.unitWan}</td>
+                    <td class="p-2.5 border-b border-slate-800 text-right font-mono">$${Math.round(row.cash / 10000).toLocaleString()}${dict.unitWan}</td>
+                    <td class="p-2.5 border-b border-slate-800 text-right font-mono">$${Math.round(row.invest / 10000).toLocaleString()}${dict.unitWan}</td>
+                    <td class="p-2.5 border-b border-slate-800 text-right font-mono text-emerald-400">$${Math.round(row.currentAsset / 10000).toLocaleString()}${dict.unitWan}</td>
+                    <td class="p-2.5 border-b border-slate-800 text-right font-bold text-indigo-300 font-mono">$${Math.round(row.total / 10000).toLocaleString()}${dict.unitWan}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+
+            // 2. 呼叫雙圖表渲染
+            renderCharts(labels, totalAssetsHistory, investHistory, currentAssetHistory, cashHistory, salaryHistory, expenseHistory);
+        }
+
+        function renderCharts(labels, totalAsset, invest, currentAsset, cash, salary, expense) {
+            const dict = i18n[currentLang];
+            const ctxAsset = document.getElementById('assetChart').getContext('2d');
+            const ctxFlow = document.getElementById('flowChart').getContext('2d');
+            
+            if (assetChart) assetChart.destroy();
+            if (flowChart) flowChart.destroy();
+
+            // 完美的起點對齊與消除留白配置
+            const xAxisConfig = {
+                grid: { display: false },
+                bounds: 'data',
+                ticks: { align: 'start', color: '#64748b', font: { size: 10 } }
+            };
+
+            // 智慧計算最小值：不要強制從0開始（非0初始點），讓圖表聚焦波動細節
+            const minTotalAsset = Math.min(...totalAsset) * 0.95;
+            const minInvest = Math.min(...invest) * 0.95;
+            const minCurrentAsset = Math.min(...currentAsset) * 0.95;
+            const leftAxisMin = Math.min(minTotalAsset, minInvest, minCurrentAsset);
+
+            const minCash = Math.min(...cash) * 0.95;
+            const rightAxisMin = minCash;
+
+            const flowMin = Math.min(...salary, ...expense) * 0.95;
+
+            // 圖表 A：總資產 (豪華雙 Y 軸 y 與 y2 獨立刻度)
+            assetChart = new Chart(ctxAsset, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: dict.chartTotal, data: totalAsset, borderColor: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.05)', borderWidth: 3, fill: true, pointRadius: 0, tension: 0.1, yAxisID: 'y' },
+                        { label: dict.chartInvest, data: invest, borderColor: '#3b82f6', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.1, yAxisID: 'y' },
+                        { label: dict.chartCurrentAsset, data: currentAsset, borderColor: '#ec4899', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.1, yAxisID: 'y' },
+                        { label: dict.chartCash, data: cash, borderColor: '#10b981', backgroundColor: 'transparent', borderWidth: 1.5, borderDash: [4, 4], pointRadius: 0, tension: 0.1, yAxisID: 'y2' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { position: 'top', labels: { boxWidth: 10, color: '#94a3b8', font: { size: 10 } } } },
+                    scales: {
+                        x: xAxisConfig,
+                        y: {
+                            // 左軸：負責百萬級別的總資產和投資
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            grid: { color: '#1e293b' },
+                            ticks: { color: '#94a3b8', callback: function(val) { return val + dict.unitWan; }, font: { size: 10 } },
+                            min: leftAxisMin // 【關鍵】：起點智慧縮放，不從0開始
+                        },
+                        y2: {
+                            // 右軸 (Y2)：負責獨立級距的現金預備金
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false }, // 防止右軸格線干擾左軸
+                            ticks: { color: '#10b981', callback: function(val) { return val + dict.unitWan; }, font: { size: 10 } },
+                            min: rightAxisMin // 【關鍵】：起點智慧縮放
+                        }
+                    }
+                }
+            });
+
+            // 圖表 B：年度收支動態
+            flowChart = new Chart(ctxFlow, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: dict.chartSalary, data: salary, borderColor: '#f59e0b', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.1 },
+                        { label: dict.chartExpense, data: expense, borderColor: '#ef4444', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.1 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { position: 'top', labels: { boxWidth: 10, color: '#94a3b8', font: { size: 10 } } } },
+                    scales: {
+                        x: xAxisConfig,
+                        y: {
+                            grid: { color: '#1e293b' },
+                            ticks: { color: '#94a3b8', callback: function(val) { return val + dict.unitWan; }, font: { size: 10 } },
+                            min: flowMin // 【關鍵】：起點智慧縮放
+                        }
+                    }
+                }
+            });
+        }
+
+        // CSV 完美相容匯出引擎
+        function exportToCSV() {
+            const dict = i18n[currentLang];
+            const headers = [dict.thAge, dict.thSalary, dict.thExpense, dict.thNet, dict.thCash, dict.thInvest, dict.thCurrentAsset, dict.thTotal];
+            
+            let csvContent = "\uFEFF"; // 注入強大 BOM 頭防止 Excel 亂碼
+            csvContent += headers.join(",") + "\n";
+
+            globalTableData.forEach(row => {
+                const rowData = [
+                    `${row.age}`,
+                    Math.round(row.salary),
+                    Math.round(row.expense),
+                    Math.round(row.net),
+                    Math.round(row.cash),
+                    Math.round(row.invest),
+                    Math.round(row.currentAsset),
+                    Math.round(row.total)
+                ];
+                csvContent += rowData.join(",") + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            const filename = currentLang === 'zh' ? "終身財務模擬審計明細表.csv" : "lifelong_financial_simulation_ledger.csv";
+            link.setAttribute("download", filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+
+    <script>
+      window.FTK_ROOT = '../../';
+      window.FTK_PAGE = 'retirement';
+    </script>
+    <script src="../../assets/shared.js"></script>
+</body>
+</html>

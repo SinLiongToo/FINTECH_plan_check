@@ -1,0 +1,122 @@
+/* ==========================================================================
+   FinTech Toolkit — Shared Shell (nav / footer / theme tokens / dashboard)
+   Namespaced with "ftk-" so it never collides with each tool's own CSS.
+   ========================================================================== */
+
+:root{
+  --ftk-bg:#0b0e14;
+  --ftk-bg-elev:#12161f;
+  --ftk-border:#232936;
+  --ftk-text:#e7ebf0;
+  --ftk-text-dim:#8b95a5;
+  --ftk-accent:#c9a24d;
+  --ftk-accent-2:#2f9e8f;
+  --ftk-success:#3ecf8e;
+  --ftk-danger:#e5534b;
+  --ftk-shadow:0 8px 24px rgba(0,0,0,.35);
+  --ftk-radius:10px;
+  --ftk-font:'Segoe UI','Noto Sans TC',-apple-system,BlinkMacSystemFont,Arial,sans-serif;
+}
+
+:root[data-theme="light"]{
+  --ftk-bg:#f5f6f8;
+  --ftk-bg-elev:#ffffff;
+  --ftk-border:#dde1e7;
+  --ftk-text:#161a20;
+  --ftk-text-dim:#5b6472;
+  --ftk-accent:#9c7a2e;
+  --ftk-accent-2:#1f8072;
+  --ftk-success:#1f9d64;
+  --ftk-danger:#c93a32;
+  --ftk-shadow:0 8px 24px rgba(0,0,0,.08);
+}
+
+/* ── Nav bar ─────────────────────────────────────────────────────────── */
+.ftk-nav{
+  position:sticky; top:0; z-index:1000;
+  background:var(--ftk-bg-elev);
+  border-bottom:1px solid var(--ftk-border);
+  box-shadow:var(--ftk-shadow);
+  font-family:var(--ftk-font);
+}
+.ftk-nav-inner{
+  max-width:1180px; margin:0 auto;
+  display:flex; align-items:center; gap:16px;
+  padding:10px 16px;
+}
+.ftk-brand{
+  font-weight:700; font-size:15px; letter-spacing:.02em;
+  color:var(--ftk-text); text-decoration:none; white-space:nowrap;
+}
+.ftk-brand::before{ content:"◆ "; color:var(--ftk-accent); }
+.ftk-nav-links{
+  display:flex; align-items:center; gap:4px; margin-left:auto; flex-wrap:wrap;
+}
+.ftk-nav-link{
+  color:var(--ftk-text-dim); text-decoration:none;
+  font-size:13.5px; padding:7px 12px; border-radius:var(--ftk-radius);
+  white-space:nowrap; transition:background .15s,color .15s;
+}
+.ftk-nav-link:hover{ background:var(--ftk-border); color:var(--ftk-text); }
+.ftk-nav-link.ftk-active{ color:var(--ftk-accent); font-weight:600; }
+.ftk-theme-btn{
+  border:1px solid var(--ftk-border); background:var(--ftk-bg);
+  color:var(--ftk-text); border-radius:999px; width:34px; height:34px;
+  font-size:15px; cursor:pointer; margin-left:6px; flex-shrink:0;
+}
+.ftk-theme-btn:hover{ border-color:var(--ftk-accent); }
+.ftk-burger{
+  display:none; border:1px solid var(--ftk-border); background:var(--ftk-bg);
+  color:var(--ftk-text); border-radius:var(--ftk-radius); width:36px; height:34px;
+  font-size:16px; cursor:pointer; margin-left:auto;
+}
+
+@media (max-width:760px){
+  .ftk-nav-inner{ flex-wrap:wrap; }
+  .ftk-burger{ display:inline-block; }
+  .ftk-nav-links{
+    display:none; width:100%; margin-left:0;
+    flex-direction:column; align-items:stretch; gap:2px;
+    padding-top:8px; border-top:1px solid var(--ftk-border); margin-top:8px;
+  }
+  .ftk-nav-links.ftk-open{ display:flex; }
+  .ftk-nav-link{ padding:10px 12px; }
+  .ftk-theme-btn{ margin:6px 0 0; align-self:flex-start; }
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────── */
+.ftk-footer{
+  font-family:var(--ftk-font);
+  color:var(--ftk-text-dim); background:var(--ftk-bg-elev);
+  border-top:1px solid var(--ftk-border);
+  text-align:center; padding:18px 16px; font-size:12.5px;
+}
+.ftk-footer a{ color:var(--ftk-accent); text-decoration:none; }
+
+/* ── Dashboard (index.html) ─────────────────────────────────────────── */
+.ftk-page{ background:var(--ftk-bg); min-height:100vh; }
+.ftk-hero{
+  font-family:var(--ftk-font); color:var(--ftk-text);
+  max-width:1180px; margin:0 auto; padding:48px 16px 8px;
+}
+.ftk-hero h1{ font-size:28px; margin:0 0 8px; }
+.ftk-hero p{ color:var(--ftk-text-dim); font-size:14.5px; margin:0; }
+
+.ftk-card-grid{
+  max-width:1180px; margin:0 auto; padding:24px 16px 56px;
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px;
+}
+.ftk-card{
+  display:block; text-decoration:none; color:var(--ftk-text);
+  background:var(--ftk-bg-elev); border:1px solid var(--ftk-border);
+  border-radius:14px; padding:22px; transition:transform .15s,border-color .15s;
+  font-family:var(--ftk-font);
+}
+.ftk-card:hover{ transform:translateY(-3px); border-color:var(--ftk-accent); }
+.ftk-card .ftk-card-icon{ font-size:26px; margin-bottom:10px; display:block; }
+.ftk-card h3{ margin:0 0 6px; font-size:16.5px; }
+.ftk-card p{ margin:0; color:var(--ftk-text-dim); font-size:13px; line-height:1.5; }
+.ftk-card .ftk-card-tag{
+  display:inline-block; margin-top:12px; font-size:11px; letter-spacing:.05em;
+  text-transform:uppercase; color:var(--ftk-accent-2);
+}

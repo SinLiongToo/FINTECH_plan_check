@@ -1,0 +1,2031 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>智慧資產再平衡配置系統 (Rebalance Engine)</title>
+    <link rel="stylesheet" href="../../assets/shared.css">
+    <!-- Import Outfit font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --panel-bg: #121826;
+            --panel-bg-hover: #171f30;
+            --panel-border: #1f2a45;
+            --input-bg: #070a12;
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --primary: #f59e0b; /* Amber */
+            --primary-hover: #d97706;
+            --success: #10b981; /* Emerald */
+            --danger: #ef4444; /* Rose */
+            --blue: #3b82f6;
+            --purple: #8b5cf6;
+            --glow: rgba(245, 158, 11, 0.15);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-lang="en"] .lang-zh { display: none !important; }
+        .lang-en { display: none !important; }
+        [data-lang="en"] .lang-en { display: block !important; }
+        [data-lang="en"] .lang-en-inline { display: inline !important; }
+        .lang-zh-inline { display: inline; }
+        [data-lang="en"] .lang-zh-inline { display: none !important; }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Outfit', 'Noto Sans TC', sans-serif;
+            min-height: min-content;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: 2rem;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--panel-border);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Header */
+        header {
+            background: rgba(18, 24, 38, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--panel-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0.8rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo-section h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+        .logo-section p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .header-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+        .btn {
+            background: var(--panel-border);
+            border: 1px solid transparent;
+            color: var(--text-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn:hover {
+            background: var(--panel-bg-hover);
+            border-color: var(--text-muted);
+        }
+        .btn:active {
+            transform: scale(0.97);
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #0b0f19;
+        }
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+        .btn-success {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+        .btn-success:hover {
+            background: rgba(16, 185, 129, 0.25);
+        }
+        .btn-blue {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--blue);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        .btn-blue:hover {
+            background: rgba(59, 130, 246, 0.25);
+        }
+
+        /* Quotes Ticker */
+        .quote-ticker {
+            background: rgba(245, 158, 11, 0.03);
+            border-bottom: 1px solid rgba(245, 158, 11, 0.1);
+            padding: 0.5rem 1.5rem;
+            text-align: center;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .quote-text {
+            font-size: 0.75rem;
+            color: var(--primary);
+            font-style: italic;
+            opacity: 0;
+            transform: translateY(3px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .quote-text.fade-in {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Main Container */
+        main {
+            max-width: 1200px;
+            margin: 1.5rem auto 0 auto;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        @media(min-width: 1024px) {
+            main {
+                grid-template-columns: 2.1fr 0.9fr;
+            }
+        }
+
+        /* Cards/Panels */
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            padding: 1.25rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 0.75rem;
+        }
+        .panel-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Status & FX Bar */
+        .status-bar {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.8rem;
+        }
+        .fx-rate-display {
+            font-family: 'Outfit', monospace;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* Form Controls */
+        .grid-inputs {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+        @media(min-width: 640px) {
+            .grid-inputs {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+        .input-group label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        .input-control {
+            background: var(--input-bg);
+            border: 1px solid var(--panel-border);
+            color: var(--text-primary);
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            font-family: 'Outfit', monospace;
+            font-size: 0.85rem;
+            width: 100%;
+            outline: none;
+            transition: var(--transition);
+        }
+        .input-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.15);
+        }
+        .input-group.twd-theme label { color: var(--success); }
+        .input-group.twd-theme .input-control { border-color: rgba(16, 185, 129, 0.3); color: var(--success); }
+        .input-group.twd-theme .input-control:focus { border-color: var(--success); }
+        .input-group.usd-theme label { color: var(--blue); }
+        .input-group.usd-theme .input-control { border-color: rgba(59, 130, 246, 0.3); color: var(--blue); }
+        .input-group.usd-theme .input-control:focus { border-color: var(--blue); }
+
+        /* Table CSS */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 0.5rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        th {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            padding: 0.75rem 0.5rem;
+            border-bottom: 2px solid var(--panel-border);
+        }
+        td {
+            padding: 0.75rem 0.5rem;
+            border-bottom: 1px solid var(--panel-border);
+            font-size: 0.8rem;
+            vertical-align: middle;
+        }
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.01);
+        }
+        .badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .badge-tw {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+        .badge-us {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--blue);
+        }
+        .asset-ticker {
+            font-family: 'Outfit', monospace;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        .asset-name {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .table-input {
+            background: var(--input-bg);
+            border: 1px solid var(--panel-border);
+            color: var(--text-primary);
+            padding: 0.3rem 0.5rem;
+            border-radius: 6px;
+            width: 70px;
+            font-family: 'Outfit', monospace;
+            font-size: 0.8rem;
+            text-align: center;
+            outline: none;
+            transition: var(--transition);
+        }
+        .table-input:focus {
+            border-color: var(--primary);
+        }
+        .table-input-name {
+            width: 140px;
+            text-align: left;
+        }
+        .btn-delete {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 0.25rem 0.5rem;
+            transition: var(--transition);
+        }
+        .btn-delete:hover {
+            color: var(--danger);
+        }
+
+        /* Control Mode Selector */
+        .mode-toggle-container {
+            display: flex;
+            background: var(--input-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 0.2rem;
+            gap: 0.2rem;
+        }
+        .mode-toggle-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.35rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+            flex: 1;
+        }
+        .mode-toggle-btn.active {
+            background: var(--primary);
+            color: #0b0f19;
+        }
+
+        /* Display base currency selector */
+        .currency-selector {
+            display: inline-flex;
+            background: var(--input-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+            padding: 0.15rem;
+        }
+        .currency-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .currency-btn.active {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--primary);
+        }
+
+        /* Decision Section */
+        .decision-card {
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.01);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+        }
+        .decision-title {
+            font-weight: 700;
+        }
+        .decision-amount-buy {
+            font-weight: 700;
+            font-family: 'Outfit', monospace;
+            color: var(--success);
+        }
+        .decision-amount-sell {
+            font-weight: 700;
+            font-family: 'Outfit', monospace;
+            color: var(--danger);
+        }
+        .decision-row-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-height: 250px;
+            overflow-y: auto;
+            padding-right: 2px;
+        }
+        .decision-row {
+            padding: 0.6rem 0.8rem;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--panel-border);
+        }
+        .decision-row.buy {
+            background: rgba(16, 185, 129, 0.03);
+            border-color: rgba(16, 185, 129, 0.15);
+        }
+        .decision-row.sell {
+            background: rgba(239, 68, 68, 0.03);
+            border-color: rgba(239, 68, 68, 0.15);
+        }
+
+        /* Chart container */
+        .chart-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.5rem 0;
+            position: relative;
+        }
+        .chart-wrapper {
+            position: relative;
+            width: 100%;
+            height: 180px;
+        }
+
+        /* Alerts and Warnings */
+        .alert {
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+        }
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            color: var(--primary);
+        }
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+        .alert-info {
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: var(--blue);
+        }
+
+        /* Total Weight Status */
+        .weight-status-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            background: var(--input-bg);
+            border: 1px solid var(--panel-border);
+        }
+        .weight-indicator {
+            font-weight: 700;
+            font-family: 'Outfit', monospace;
+        }
+        .weight-indicator.correct {
+            color: var(--success);
+        }
+        .weight-indicator.incorrect {
+            color: var(--danger);
+        }
+
+        /* Help panel details */
+        .help-panel ul {
+            list-style-type: none;
+        }
+        .help-panel li {
+            position: relative;
+            padding-left: 1rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+        .help-panel li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* Spinner */
+        .spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            border-top-color: currentColor;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Layout panels spacing */
+        .col-left {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .col-right {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        /* Help Tabs */
+        .help-nav-tabs {
+            display: flex;
+            background: var(--input-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 0.2rem;
+            gap: 0.25rem;
+            margin-bottom: 0.75rem;
+        }
+        .help-tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.4rem 0.5rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+            flex: 1;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+        .help-tab-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .help-tab-btn.active {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--primary);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        .help-tab-pane {
+            display: none;
+        }
+        .help-tab-pane.active {
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+            animation: fadeIn 0.25s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(3px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Help Cards & FAQ */
+        .help-step-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 0.65rem 0.75rem;
+            font-size: 0.72rem;
+        }
+        .help-step-title {
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .help-step-desc {
+            color: var(--text-secondary);
+            line-height: 1.45;
+        }
+        .help-faq-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 0.65rem 0.75rem;
+            font-size: 0.72rem;
+        }
+        .help-faq-q {
+            font-weight: 700;
+            color: var(--blue);
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .help-faq-a {
+            color: var(--text-secondary);
+            line-height: 1.45;
+        }
+
+        /* Help Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(11, 15, 25, 0.75);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 1rem;
+            animation: fadeIn 0.2s ease-out;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-container {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 680px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+        .modal-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--panel-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .modal-close-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            line-height: 1;
+            border-radius: 6px;
+            transition: var(--transition);
+        }
+        .modal-close-btn:hover {
+            color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+        .modal-body {
+            padding: 1.25rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body data-lang="zh">
+
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <div class="logo-section">
+                <h1>
+                    <span class="lang-zh">全球跨市場智慧再平衡系統</span>
+                    <span class="lang-en">Global Multi-Market Rebalance Engine</span>
+                </h1>
+                <p>
+                    <span class="lang-zh">雙幣別獨立加碼 • 資產精準回歸</span>
+                    <span class="lang-en">Isolated Injections & Precise Asset Re-allocation</span>
+                </p>
+            </div>
+            <div class="header-actions">
+                <button id="helpModalBtn" class="btn btn-blue" onclick="toggleHelpModal(true)" title="查看完整使用說明">
+                    ❓ <span class="lang-zh-inline">使用說明</span><span class="lang-en-inline">User Guide</span>
+                </button>
+                <button id="langToggle" class="btn">
+                    🌐 EN / 中文
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Munger Quote Ticker -->
+    <div class="quote-ticker">
+        <p id="mungerQuote" class="quote-text"></p>
+    </div>
+
+    <!-- Main Workspace -->
+    <main>
+        
+        <!-- Left Column: Controls & Assets -->
+        <div class="col-left">
+            
+            <!-- Parameters Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        ⚙️ <span class="lang-zh">基本參數與原幣加碼資金</span>
+                        <span class="lang-en">Parameters & New Capital Inflow</span>
+                    </div>
+                </div>
+                <div class="grid-inputs">
+                    <div class="input-group" style="grid-column: span 1;">
+                        <label class="lang-zh" style="font-weight: 700; color: var(--primary);">🎯 股債年齡試算配置</label>
+                        <label class="lang-en" style="font-weight: 700; color: var(--primary);">🎯 Age Allocation Tool</label>
+                        <div style="font-size: 0.65rem; color: var(--text-secondary); line-height: 1.3; margin-bottom: 0.25rem;">
+                            <span class="lang-zh">算式：債券 % = 目前年紀 ÷ 退休年紀 × 100%</span>
+                            <span class="lang-en">Formula: Bond % = Current ÷ Retire Age × 100%</span>
+                        </div>
+                        <div style="display: flex; gap: 0.35rem; align-items: flex-end;">
+                            <div style="flex: 1; display: flex; flex-direction: column; gap: 0.2rem;">
+                                <span class="lang-zh" style="font-size: 0.6rem; color: var(--text-secondary); font-weight: bold; text-align: center;">目前年紀</span>
+                                <span class="lang-en" style="font-size: 0.6rem; color: var(--text-secondary); font-weight: bold; text-align: center;">Current Age</span>
+                                <input type="number" id="currentAge" value="45" class="input-control" style="padding: 0.4rem; font-size: 0.8rem; text-align: center;" placeholder="目前年齡" title="現有年齡（歲）">
+                            </div>
+                            <div style="flex: 1; display: flex; flex-direction: column; gap: 0.2rem;">
+                                <span class="lang-zh" style="font-size: 0.6rem; color: var(--text-secondary); font-weight: bold; text-align: center;">退休年紀</span>
+                                <span class="lang-en" style="font-size: 0.6rem; color: var(--text-secondary); font-weight: bold; text-align: center;">Retire Age</span>
+                                <input type="number" id="expectedAge" value="65" class="input-control" style="padding: 0.4rem; font-size: 0.8rem; text-align: center;" placeholder="退休年齡" title="預期退休年齡（歲）">
+                            </div>
+                            <button onclick="applyAgeAllocation()" class="btn btn-primary" style="padding: 0.4rem 0.5rem; font-size: 0.7rem; font-weight: 700; align-self: flex-end; height: 32px; justify-content: center; align-items: center;" title="點擊套用股債比率">
+                                <span class="lang-zh">套用</span>
+                                <span class="lang-en">Apply</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="input-group twd-theme">
+                        <label class="lang-zh">加碼台幣 (TWD)</label>
+                        <label class="lang-en">New Capital (TWD)</label>
+                        <input type="number" id="extraTwd" value="100000" oninput="calculateRebalance()" class="input-control" placeholder="TWD 新資金">
+                    </div>
+                    <div class="input-group usd-theme">
+                        <label class="lang-zh">加碼美金 (USD)</label>
+                        <label class="lang-en">New Capital (USD)</label>
+                        <input type="number" id="extraUsd" value="3000" oninput="calculateRebalance()" class="input-control" placeholder="USD 新資金">
+                    </div>
+                    <div class="input-group">
+                        <label class="lang-zh">USD/TWD 匯率</label>
+                        <label class="lang-en">FX USD/TWD</label>
+                        <input type="number" id="manualFxRate" value="32.50" step="0.01" oninput="updateFxRate(this.value)" class="input-control" placeholder="手動匯率">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Asset Details Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        📈 <span class="lang-zh">資產明細與配置權重</span>
+                        <span class="lang-en">Asset Holdings & Target Weights</span>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button onclick="addAsset('US')" class="btn btn-blue">
+                            + <span class="lang-zh">美股 (USD)</span><span class="lang-en">US (USD)</span>
+                        </button>
+                        <button onclick="addAsset('TW')" class="btn btn-success">
+                            + <span class="lang-zh">台股 (TWD)</span><span class="lang-en">TW (TWD)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 18%;"><span class="lang-zh">標的 (市場)</span><span class="lang-en">Asset (Market)</span></th>
+                                <th style="width: 27%;"><span class="lang-zh">標的中文名稱 / 英文簡稱</span><span class="lang-en">Security Name</span></th>
+                                <th style="width: 15%; text-align: center;"><span class="lang-zh">原幣現價</span><span class="lang-en">Price (Local)</span></th>
+                                <th style="width: 15%; text-align: center;">
+                                    <span class="lang-zh">持有數量</span>
+                                    <span class="lang-en">Holdings</span>
+                                    <div style="font-size: 0.65rem; color: var(--text-muted); font-weight: normal; margin-top: 2px;">
+                                        <span class="lang-zh">(美股:股/台股:張)</span>
+                                        <span class="lang-en">(US:Shs/TW:Lots)</span>
+                                    </div>
+                                </th>
+                                <th style="width: 15%; text-align: center;"><span class="lang-zh">目標 %</span><span class="lang-en">Target %</span></th>
+                                <th style="width: 10%; text-align: center;"><span class="lang-zh">操作</span><span class="lang-en">Action</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="portfolioBody"></tbody>
+                    </table>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+                    <div class="weight-status-container">
+                        <span class="lang-zh" style="margin-right: 0.5rem;">目標權重總和：</span>
+                        <span class="lang-en" style="margin-right: 0.5rem;">Target Weight Sum:</span>
+                        <span id="weightSumDisplay" class="weight-indicator">0%</span>
+                    </div>
+                    <button id="fetchPricesBtn" onclick="fetchAllLatestPrices()" class="btn btn-primary">
+                        <span class="lang-zh">🔄 自動抓取即時股價</span>
+                        <span class="lang-en">🔄 Auto Fetch Prices</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Decision & Summary -->
+        <div class="col-right">
+
+            <!-- Rebalance Engine Decision -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        ⚡ <span class="lang-zh">再平衡下單決策</span>
+                        <span class="lang-en">Rebalance Orders</span>
+                    </div>
+                    <div class="currency-selector">
+                        <button id="setBaseTwd" onclick="changeBaseCurrency('TWD')" class="currency-btn active">TWD</button>
+                        <button id="setBaseUsd" onclick="changeBaseCurrency('USD')" class="currency-btn">USD</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label class="lang-zh" style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600; display: block; margin-bottom: 0.35rem;">再投入演算法模式 (Algorithmic Mode)</label>
+                    <label class="lang-en" style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600; display: block; margin-bottom: 0.35rem;">Rebalance Algorithm Mode</label>
+                    <div class="mode-toggle-container">
+                        <button id="modeIsolated" onclick="changeRebalanceMode('ISOLATED')" class="mode-toggle-btn active">
+                            <span class="lang-zh">雙幣別獨立投入</span>
+                            <span class="lang-en">Isolated Flows</span>
+                        </button>
+                        <button id="modeGlobal" onclick="changeRebalanceMode('GLOBAL')" class="mode-toggle-btn">
+                            <span class="lang-zh">全球統一再平衡</span>
+                            <span class="lang-en">Global Mode</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.75rem; margin-bottom: 1rem; padding: 0.75rem; background: var(--input-bg); border-radius: 10px; border: 1px solid var(--panel-border);">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span class="lang-zh text-secondary" style="color: var(--text-secondary);">現有資產總值：</span>
+                        <span class="lang-en text-secondary" style="color: var(--text-secondary);">Current Portfolio Value:</span>
+                        <span id="totalCurrentValue" style="font-family: 'Outfit', monospace; font-weight: 700;">-</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span class="lang-zh text-secondary" style="color: var(--text-secondary);">加碼新資金總計：</span>
+                        <span class="lang-en text-secondary" style="color: var(--text-secondary);">Total New Capital Added:</span>
+                        <span id="totalNewCapital" style="font-family: 'Outfit', monospace; font-weight: 700; color: var(--success);">-</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; border-top: 1px dashed var(--panel-border); padding-top: 0.5rem; margin-top: 0.25rem;">
+                        <span class="lang-zh" style="font-weight: 700;">加碼後預期總值：</span>
+                        <span class="lang-en" style="font-weight: 700;">Post-Injection Value:</span>
+                        <span id="totalNewValue" style="font-family: 'Outfit', monospace; font-weight: 700; color: var(--primary);">-</span>
+                    </div>
+                </div>
+
+                <!-- FX Exchange Warning Banner -->
+                <div id="fxWarningContainer"></div>
+
+                <!-- Trade Actions List -->
+                <div id="tradeActionList" class="decision-row-container"></div>
+            </div>
+
+            <!-- Visualization Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        📊 <span class="lang-zh">資產配置分析圖表</span>
+                        <span class="lang-en">Asset Allocation Charts</span>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 1.25rem;">
+                    <div class="chart-box">
+                        <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.5rem; text-align: center;">
+                            <span class="lang-zh">目標 vs 加碼後實際權重 %</span>
+                            <span class="lang-en">Target vs Post-Injection Actual %</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="weightChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-box" style="border-top: 1px dashed var(--panel-border); padding-top: 1rem;">
+                        <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.5rem; text-align: center;">
+                            <span class="lang-zh">加碼後實際配置分佈</span>
+                            <span class="lang-en">Post-Injection Actual Distribution</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="distributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Help & Documentation Panel -->
+            <div class="panel help-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        📖 <span class="lang-zh">系統使用說明與運算規則</span>
+                        <span class="lang-en">User Guide & Rules</span>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <div class="help-nav-tabs">
+                    <button class="help-tab-btn active" onclick="switchHelpTab('quickstart', this)">
+                        🚀 <span class="lang-zh">快速上手</span><span class="lang-en">Quick Start</span>
+                    </button>
+                    <button class="help-tab-btn" onclick="switchHelpTab('rules', this)">
+                        ⚖️ <span class="lang-zh">運算規則</span><span class="lang-en">Rules</span>
+                    </button>
+                    <button class="help-tab-btn" onclick="switchHelpTab('faq', this)">
+                        💡 <span class="lang-zh">常見問題</span><span class="lang-en">FAQ</span>
+                    </button>
+                </div>
+
+                <!-- Tab 1: Quick Start -->
+                <div id="helpTab-quickstart" class="help-tab-pane active">
+                    <div class="lang-zh" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div class="help-step-card">
+                            <div class="help-step-title">① 輸入新加碼資金</div>
+                            <div class="help-step-desc">填入欲加碼的台幣 (TWD) 與美金 (USD)。若目前不投入新資金純做資產平衡，直接輸入 <code>0</code> 即可。</div>
+                        </div>
+                        <div class="help-step-card">
+                            <div class="help-step-title">② 設定與確認資產明細</div>
+                            <div class="help-step-desc">
+                                • <strong>持有量單位</strong>：美股填「股」，<strong>台股請填「張」</strong>（1張 = 1,000股）。<br>
+                                • <strong>目標權重</strong>：各標的目標 % 加總必須剛好等於 <code>100%</code>。<br>
+                                • <strong>即時行情</strong>：點擊「🔄 自動抓取即時股價」更新收盤價與中文名稱。
+                            </div>
+                        </div>
+                        <div class="help-step-card">
+                            <div class="help-step-title">③ 選擇再平衡演算模式</div>
+                            <div class="help-step-desc">
+                                • <strong>雙幣別獨立投入 (預設)</strong>：台幣只買台股、美金只買美股，<strong>免換匯手續費</strong>。<br>
+                                • <strong>全球統一再平衡</strong>：跨國平衡，系統精確提示換匯需求 (FX Transfer)。
+                            </div>
+                        </div>
+                        <div class="help-step-card">
+                            <div class="help-step-title">④ 查看決策並前往券商下單</div>
+                            <div class="help-step-desc">依右側綠色（買入）與紅色（賣出）建議至券商下單。台股會同時標註股數與張數。</div>
+                        </div>
+                    </div>
+                    <div class="lang-en" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div class="help-step-card">
+                            <div class="help-step-title">① Enter New Capital Inflow</div>
+                            <div class="help-step-desc">Enter TWD and USD amounts you wish to invest. If rebalancing existing holdings with zero new funds, enter <code>0</code>.</div>
+                        </div>
+                        <div class="help-step-card">
+                            <div class="help-step-title">② Review Asset Holdings & Weights</div>
+                            <div class="help-step-desc">
+                                • <strong>Holding Units</strong>: US stocks in shares; <strong>TW stocks in lots (張)</strong> (1 lot = 1,000 shares).<br>
+                                • <strong>Target Weights</strong>: The sum of Target % must equal exactly <code>100%</code>.<br>
+                                • <strong>Live Quotes</strong>: Click "🔄 Auto Fetch Prices" to load prices and official security names.
+                            </div>
+                        </div>
+                        <div class="help-step-card">
+                            <div class="help-step-title">③ Select Algorithm Mode</div>
+                            <div class="help-step-desc">
+                                • <strong>Isolated Flows (Default)</strong>: TWD into TW, USD into US. <strong>Zero FX fees</strong>.<br>
+                                • <strong>Global Mode</strong>: Strict global targets; shows exact FX currency conversion alert.
+                            </div>
+                        </div>
+                        <div class="help-step-card">
+                            <div class="help-step-title">④ Execute Brokerage Orders</div>
+                            <div class="help-step-desc">Check the green (Buy) and red (Sell) order suggestions on the right to execute trades at your broker.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Rules -->
+                <div id="helpTab-rules" class="help-tab-pane">
+                    <div class="lang-zh" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div class="help-step-card">
+                            <div class="help-step-title" style="color: var(--primary);">1. 雙幣別獨立投入模式 (Isolated Flows - 預設)</div>
+                            <div class="help-step-desc">台幣新資金僅投入台股，美金新資金僅投入美股。再平衡時僅在該幣別市場內部調整，絕不進行跨幣別匯兌，適合定期定額指數投資人避開高額跨國換匯成本。</div>
+                        </div>
+                        <div class="help-step-card">
+                            <div class="help-step-title" style="color: var(--blue);">2. 全球統一再平衡模式 (Global Mode)</div>
+                            <div class="help-step-desc">將所有資產換算為全球單一資金池，嚴格按照目標權重分配。若幣別流入比例與目標不符，系統自動計算並提示跨國匯兌金額。</div>
+                        </div>
+                        <div class="help-step-card">
+                            <div class="help-step-title" style="color: var(--purple);">3. 股債年齡配置試算 (Bogle 法則)</div>
+                            <div class="help-step-desc">依經典公式計算：<code>債券 % = 目前年紀 ÷ 退休年紀 × 100%</code>。點擊「套用」按鈕後，自動將債券比分配給 BND，其餘股票比例按 75% : 25% 分配給 VT 與 0050。</div>
+                        </div>
+                        <div class="help-step-card">
+                            <div class="help-step-title" style="color: var(--success);">4. 即時資料整合與雙層代理</div>
+                            <div class="help-step-desc">整合 TWSE 官方 OpenAPI (含中文名與收盤價) 與 Yahoo Finance。啟動本機 <code>python server.py</code> 即可享有零 CORS 限制的即時行情查詢。</div>
+                        </div>
+                    </div>
+                    <div class="lang-en" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div class="help-step-card">
+                            <div class="help-step-title" style="color: var(--primary);">1. Isolated Flows Mode (Default)</div>
+                            <div class="help-step-desc">TWD capital is invested in TW assets only; USD capital in US assets only. Trades remain within their respective currency pool, completely avoiding currency conversion fees.</div>
+                        </div>
+                        <div class="help-step-card">
+                            <div class="help-step-title" style="color: var(--blue);">2. Global Rebalance Mode</div>
+                            <div class="help-step-desc">Consolidates global portfolio into a single pool to match target percentages strictly. Notifies you of the exact FX exchange needed if cash inflows differ from target weights.</div>
+                        </div>
+                        <div class="help-step-card">
+                            <div class="help-step-title" style="color: var(--purple);">3. Age-Based Allocation Rule</div>
+                            <div class="help-step-desc">Calculates <code>Bond % = Current ÷ Retirement Age × 100%</code>. Clicking Apply assigns this to BND, and splits remaining stock weight into VT (75%) and 0050 (25%).</div>
+                        </div>
+                        <div class="help-step-card">
+                            <div class="help-step-title" style="color: var(--success);">4. Real-Time Data Proxy</div>
+                            <div class="help-step-desc">Connects with TWSE OpenAPI (official names and closing prices) and Yahoo Finance. Running <code>python server.py</code> bypasses browser CORS limits.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: FAQ -->
+                <div id="helpTab-faq" class="help-tab-pane">
+                    <div class="lang-zh" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div class="help-faq-item">
+                            <div class="help-faq-q">Q: 台股為什麼用「張」？交易建議為什麼有「股」？</div>
+                            <div class="help-faq-a">台股 1 張 = 1,000 股。輸入格以「張」為單位讓數字簡短、表格不變形；而建議下單處同時提供股數與張數，方便盤中零股或盤後整張下單。</div>
+                        </div>
+                        <div class="help-faq-item">
+                            <div class="help-faq-q">Q: 出現「權重錯誤：目標權重總和必須剛好等於 100%」？</div>
+                            <div class="help-faq-a">請檢查表格中「目標 %」欄位。所有標的之目標百分比加總必須剛好等於 100%，系統才能計算出正確的數學分配。</div>
+                        </div>
+                        <div class="help-faq-item">
+                            <div class="help-faq-q">Q: 右上方 TWD / USD 切換會影響下單結果嗎？</div>
+                            <div class="help-faq-a">不會。該切換僅改變「看板總資產折算為哪種幣別顯示」，不會改變各標的本身的計價幣別，亦不影響下單建議。</div>
+                        </div>
+                        <div class="help-faq-item">
+                            <div class="help-faq-q">Q: 可以自訂新增其他台股或美股嗎？</div>
+                            <div class="help-faq-a">可以！點擊表格右上角「+ 美股 (USD)」或「+ 台股 (TWD)」，輸入股票代號（如 2330, QQQ, NVDA）即可自由加入。</div>
+                        </div>
+                    </div>
+                    <div class="lang-en" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div class="help-faq-item">
+                            <div class="help-faq-q">Q: Why are TW stocks entered in lots (張)?</div>
+                            <div class="help-faq-a">1 TW lot = 1,000 shares. Using lots keeps number inputs compact and tidy. Trade suggestions show both shares and lots for convenience.</div>
+                        </div>
+                        <div class="help-faq-item">
+                            <div class="help-faq-q">Q: What if "Weight Error: Sum must be 100%" appears?</div>
+                            <div class="help-faq-a">Verify the Target % column. The sum of all target weights must equal exactly 100% for mathematical rebalance consistency.</div>
+                        </div>
+                        <div class="help-faq-item">
+                            <div class="help-faq-q">Q: Does toggling TWD/USD currency affect orders?</div>
+                            <div class="help-faq-a">No. It only alters the display currency for summary figures (Total Value). It does not force real-world currency conversions.</div>
+                        </div>
+                        <div class="help-faq-item">
+                            <div class="help-faq-q">Q: Can I add custom US or TW tickers?</div>
+                            <div class="help-faq-a">Yes! Click "+ US (USD)" or "+ TW (TWD)" above the table and enter any ticker (e.g. 2330, QQQ, NVDA) to expand your portfolio.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Help Modal Dialog -->
+    <div id="helpModal" class="modal-overlay" onclick="handleModalOverlayClick(event)">
+        <div class="modal-container" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">
+                    📖 <span class="lang-zh">全球資產再平衡系統 - 使用指南</span>
+                    <span class="lang-en">System User Guide & FAQ</span>
+                </div>
+                <button class="modal-close-btn" onclick="toggleHelpModal(false)" title="關閉 (Esc)">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="lang-zh" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div>
+                        <h3 style="font-size: 0.85rem; color: var(--primary); margin-bottom: 0.4rem;">🎯 快速上手 4 步驟</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <div class="help-step-card">
+                                <div class="help-step-title">步驟 1：輸入新加碼資金</div>
+                                <div class="help-step-desc">在左上方「基本參數」區填寫欲投入的台幣 (TWD) 與美金 (USD)。若目前無新資金純做現有資產平衡，可填 0。系統自動取得即時 USD/TWD 匯率，亦支援手動調整。</div>
+                            </div>
+                            <div class="help-step-card">
+                                <div class="help-step-title">步驟 2：設定或檢查資產組合</div>
+                                <div class="help-step-desc">
+                                    • <strong>台股持股單位</strong>：請以「<strong>張</strong>」（1張 = 1,000股）為單位輸入，版面緊湊整齊。<br>
+                                    • <strong>美股持股單位</strong>：以「<strong>股</strong>」為單位輸入。<br>
+                                    • <strong>目標權重</strong>：各資產之目標 % 總和必須等於 <strong>100%</strong>。<br>
+                                    • <strong>自動抓取即時行情</strong>：點擊「🔄 自動抓取即時股價」即可自動更新現價與台股中文名。
+                                </div>
+                            </div>
+                            <div class="help-step-card">
+                                <div class="help-step-title">步驟 3：選擇再平衡演算模式</div>
+                                <div class="help-step-desc">
+                                    • <strong>雙幣別獨立投入 (Isolated Flows - 預設)</strong>：台幣新資金僅投入台股，美金新資金僅投入美股。各自市場內部調整，<strong>絕不產生跨國換匯費用</strong>。<br>
+                                    • <strong>全球統一再平衡 (Global Mode)</strong>：跨國平衡，精確符合目標比例；若加碼金額比例與目標不符，系統自動計算並提示換匯需求。
+                                </div>
+                            </div>
+                            <div class="help-step-card">
+                                <div class="help-step-title">步驟 4：查看建議並前往券商下單</div>
+                                <div class="help-step-desc">檢視右側「再平衡下單決策」：綠色代表「買入 (+)」，紅色代表「賣出 (-)」。台股同時列出股數與張數，方便於證券 App 進行整張或零股委託。</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 style="font-size: 0.85rem; color: var(--blue); margin-bottom: 0.4rem;">💡 重要功能說明</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <div class="help-step-card">
+                                <div class="help-step-title" style="color: var(--purple);">🎯 伯格 (Bogle) 股債年齡試算</div>
+                                <div class="help-step-desc">依公式 <code>債券 % = 目前年紀 ÷ 退休年紀 × 100%</code>，點擊「套用」按鈕後自動將債券比分配給 BND，其餘股票比例按 75% : 25% 分配給全球美股 VT 與台股 0050。</div>
+                            </div>
+                            <div class="help-step-card">
+                                <div class="help-step-title" style="color: var(--success);">📊 雙重視覺化圖表</div>
+                                <div class="help-step-desc">提供「目標 vs 加碼後實際權重 % (長條圖)」與「加碼後實際配置分佈 (甜甜圈圖)」，動態反映再平衡前後的資產分佈狀況。</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 style="font-size: 0.85rem; color: var(--primary); margin-bottom: 0.4rem;">❓ 常見問題 (FAQ)</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <div class="help-faq-item">
+                                <div class="help-faq-q">Q: 為什麼出現「權重錯誤」紅字提示？</div>
+                                <div class="help-faq-a">為保證數學平衡的嚴謹性，所有標的的目標 % 總和必須剛好為 100%。請調整各標的權重直到下方顯示綠色 100%。</div>
+                            </div>
+                            <div class="help-faq-item">
+                                <div class="help-faq-q">Q: 右上角 TWD / USD 基準幣別切換是什麼作用？</div>
+                                <div class="help-faq-a">僅改變總資產看板的匯總顯示單位（如總市值是以 NT$ 還是以 $ 呈現），不會強制進行真實換匯，也不會改變下單數量。</div>
+                            </div>
+                            <div class="help-faq-item">
+                                <div class="help-faq-q">Q: 離線時或伺服器未啟動時可以使用嗎？</div>
+                                <div class="help-faq-a">可以！系統內建常見台股中文名稱字典與匯率備援機制，您亦可隨時在「原幣現價」欄位手動修改價格。</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lang-en" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div>
+                        <h3 style="font-size: 0.85rem; color: var(--primary); margin-bottom: 0.4rem;">🎯 4-Step Quick Start</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <div class="help-step-card">
+                                <div class="help-step-title">Step 1: Enter New Inflow Funds</div>
+                                <div class="help-step-desc">Enter TWD and USD amounts you plan to add. Enter 0 if you are only rebalancing existing capital. FX rate is fetched automatically or adjustable manually.</div>
+                            </div>
+                            <div class="help-step-card">
+                                <div class="help-step-title">Step 2: Configure Holdings & Target Weights</div>
+                                <div class="help-step-desc">
+                                    • <strong>Holding Units</strong>: US stocks in shares; <strong>TW stocks in lots (張)</strong> (1 lot = 1,000 shares).<br>
+                                    • <strong>Target % Sum</strong>: The sum of Target % must equal exactly <strong>100%</strong>.<br>
+                                    • <strong>Fetch Live Prices</strong>: Click "🔄 Auto Fetch Prices" to load prices and official names.
+                                </div>
+                            </div>
+                            <div class="help-step-card">
+                                <div class="help-step-title">Step 3: Choose Rebalance Mode</div>
+                                <div class="help-step-desc">
+                                    • <strong>Isolated Flows (Default)</strong>: TWD into TW, USD into US. <strong>Zero FX fees</strong>.<br>
+                                    • <strong>Global Mode</strong>: Strict global targets; notifies you of exact currency conversions required.
+                                </div>
+                            </div>
+                            <div class="help-step-card">
+                                <div class="help-step-title">Step 4: Review Orders & Trade</div>
+                                <div class="help-step-desc">Check the order recommendations: Green for Buy (+), Red for Sell (-). Both share and lot counts are provided for TW stocks.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 style="font-size: 0.85rem; color: var(--blue); margin-bottom: 0.4rem;">💡 Key Features</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <div class="help-step-card">
+                                <div class="help-step-title" style="color: var(--purple);">🎯 Bogle Age-Based Allocation</div>
+                                <div class="help-step-desc">Uses <code>Bond % = Current ÷ Retire Age × 100%</code>. Clicking Apply assigns this to BND, and splits stock allocation between VT (75%) and 0050 (25%).</div>
+                            </div>
+                            <div class="help-step-card">
+                                <div class="help-step-title" style="color: var(--success);">📊 Dual Visual Charts</div>
+                                <div class="help-step-desc">Displays both a Target vs. Actual grouped bar chart and an actual asset distribution doughnut chart.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 style="font-size: 0.85rem; color: var(--primary); margin-bottom: 0.4rem;">❓ Frequently Asked Questions (FAQ)</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <div class="help-faq-item">
+                                <div class="help-faq-q">Q: What causes "Weight Error"?</div>
+                                <div class="help-faq-a">For mathematical consistency, the sum of all Target % must equal exactly 100%. Adjust weights until the indicator turns green 100%.</div>
+                            </div>
+                            <div class="help-faq-item">
+                                <div class="help-faq-q">Q: Does toggling Base Currency (TWD/USD) affect trades?</div>
+                                <div class="help-faq-a">No. It only changes the display unit of portfolio summary values. It does not force any currency exchange or change trade quantities.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Logic -->
+    <script>
+        // Munger Quotes Library
+        const quotes = [
+            { zh: "「等待能幫你賺大錢，而這往往是多數人做不到的。」", en: '"The big money is not in the buying and the selling, but in the waiting."' },
+            { zh: "「想得到你想要的東西，最可靠的辦法是讓自己配得上它。」", en: '"To get what you want, you have to deserve what you want."' },
+            { zh: "「反過來想，總是反過來想。」", en: '"Invert, always invert."' },
+            { zh: "「承認自己的無知是智慧的開端。」", en: '"Acknowledging what you don\'t know is the dawning of wisdom."' },
+            { zh: "「與其去買一個價格划算的平庸公司，不如用平庸價格買入卓越公司。」", en: '"A great business at a fair price is superior to a fair business at a great price."' },
+            { zh: "「如果你看清世界的方式全部建立在單一專業上，這就像手裡拿著鐵鎚，看什麼都是釘子。」", en: '"To a man with a hammer, everything looks like a nail."' },
+            { zh: "「釣魚的第一條規則是：在有魚的地方釣。第二條規則是：不要忘記第一條規則。」", en: '"The first rule of fishing is \"fish where the fish are.\" The second rule is \"don\'t forget the first rule.\""' },
+            { zh: "「如果我知道我會死在哪裡，那我一輩子都不會去那個地方。」", en: '"All I want to know is where I\'m going to die so I’ll never go there."' },
+            { zh: "「連續成功的人，不一定是最聰明的，但一定是熱愛學習的機器。」", en: '"Those who keep learning, will keep rising in life."' },
+            { zh: "「每天起床時，試著比昨天更聰明一點點。」", en: '"Go to bed smarter than when you woke up."' },
+            { zh: "「在漫長的投資生涯中，你需要學會如何在面對波動時保持冷靜與毫無波瀾。」", en: '"If you can\'t react with equanimity to a 50% market decline, you get the performance you deserve."' }
+        ];
+
+        let currentQuoteIndex = 0;
+        function updateQuoteRolling() {
+            const quoteEl = document.getElementById('mungerQuote');
+            if (!quoteEl) return;
+            const isZh = document.body.getAttribute('data-lang') === 'zh';
+            
+            quoteEl.classList.remove('fade-in');
+            
+            setTimeout(() => {
+                quoteEl.innerHTML = isZh ? quotes[currentQuoteIndex].zh : quotes[currentQuoteIndex].en;
+                quoteEl.classList.add('fade-in');
+                currentQuoteIndex = (currentQuoteIndex + 1) % quotes.length;
+            }, 300);
+        }
+        
+        // Initial quote
+        updateQuoteRolling();
+        setInterval(updateQuoteRolling, 8000);
+
+        // Help Navigation Tabs Handler
+        function switchHelpTab(tabName, btnEl) {
+            const container = btnEl.closest('.help-panel') || document;
+            container.querySelectorAll('.help-tab-btn').forEach(btn => btn.classList.remove('active'));
+            container.querySelectorAll('.help-tab-pane').forEach(pane => pane.classList.remove('active'));
+            btnEl.classList.add('active');
+            const targetPane = document.getElementById(`helpTab-${tabName}`);
+            if (targetPane) targetPane.classList.add('active');
+        }
+
+        // Help Modal Toggle
+        function toggleHelpModal(show) {
+            const modal = document.getElementById('helpModal');
+            if (!modal) return;
+            if (show) {
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            } else {
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        function handleModalOverlayClick(e) {
+            if (e.target.id === 'helpModal') {
+                toggleHelpModal(false);
+            }
+        }
+
+        // Close modal on Escape key
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                toggleHelpModal(false);
+            }
+        });
+
+        // Common TW Stock names mapping for offline/standalone mode
+        const TW_STOCK_NAMES_OFFLINE = {
+            '0050': '元大台灣50',
+            '0056': '元大高股息',
+            '006208': '富邦台50',
+            '00878': '國泰永續高股息',
+            '00919': '群益台灣精選高息',
+            '2330': '台積電',
+            '2317': '鴻海',
+            '2454': '聯發科',
+            '2308': '台達電',
+            '2881': '富邦金',
+            '2882': '國泰金',
+            '2891': '中信金'
+        };
+
+        // Core State
+        // [[DEMO_DATA_START]]
+        let portfolio = [
+            { market: 'US', ticker: 'VT', price: 158.55, name: 'Vanguard Total World Stock Index Fund ETF Shares', shares: 300, targetWeight: 60 },
+            { market: 'US', ticker: 'BND', price: 71.20, name: 'Vanguard Total Bond Market Index Fund ETF Shares', shares: 100, targetWeight: 20 },
+            { market: 'TW', ticker: '0050', price: 109.85, name: '元大台灣50', shares: 2.00, targetWeight: 20 }
+        ];
+        // [[DEMO_DATA_END]]
+
+        // [[FX_RATE_START]]
+        let globalFxRate = 31.84;
+        // [[FX_RATE_END]]
+        
+        let currentBaseCurrency = 'TWD';
+        let rebalanceMode = 'ISOLATED'; // 'ISOLATED' or 'GLOBAL'
+        let chartInstance = null;
+        let distChartInstance = null;
+
+        // Fetch exchange rate on load
+        async function fetchExchangeRate() {
+            try {
+                // Try local proxy first
+                let response = await fetch('/api/fx');
+                if (!response.ok) {
+                    // Fall back to direct request
+                    response = await fetch('https://open.er-api.com/v6/latest/USD');
+                }
+                const data = await response.json();
+                if (data && data.rates && data.rates.TWD) {
+                    globalFxRate = data.rates.TWD;
+                    document.getElementById('manualFxRate').value = globalFxRate.toFixed(2);
+                    calculateRebalance();
+                }
+            } catch (e) {
+                console.log("Failed to fetch exchange rate, using default:", globalFxRate);
+            }
+        }
+
+        function updateFxRate(val) {
+            globalFxRate = parseFloat(val) || 32.50;
+            calculateRebalance();
+        }
+
+        function changeBaseCurrency(currency) {
+            currentBaseCurrency = currency;
+            document.getElementById('setBaseTwd').classList.toggle('active', currency === 'TWD');
+            document.getElementById('setBaseUsd').classList.toggle('active', currency === 'USD');
+            calculateRebalance();
+        }
+
+        function changeRebalanceMode(mode) {
+            rebalanceMode = mode;
+            document.getElementById('modeIsolated').classList.toggle('active', mode === 'ISOLATED');
+            document.getElementById('modeGlobal').classList.toggle('active', mode === 'GLOBAL');
+            calculateRebalance();
+        }
+
+        // Toggle language
+        document.getElementById('langToggle').addEventListener('click', () => {
+            const currentLang = document.body.getAttribute('data-lang');
+            const newLang = currentLang === 'zh' ? 'en' : 'zh';
+            document.body.setAttribute('data-lang', newLang);
+            updateQuoteRolling();
+            renderTable();
+            calculateRebalance();
+        });
+
+        // Age weights auto allocation (triggered by button click)
+        function applyAgeAllocation() {
+            const currentAge = parseFloat(document.getElementById('currentAge').value) || 45;
+            const expectedAge = parseFloat(document.getElementById('expectedAge').value) || 65;
+            const isZh = document.body.getAttribute('data-lang') === 'zh';
+
+            if (currentAge <= 0 || expectedAge <= 0 || currentAge >= expectedAge) {
+                alert(isZh 
+                    ? "請輸入正確的年齡（現有年齡須小於退休年齡且大於零）！" 
+                    : "Please enter valid ages (Current age must be less than Expected age and greater than zero)!");
+                return;
+            }
+            
+            // Munger/Bogle rule of thumb: Bond allocation = Current Age / Expected Age * 100 (capped at 100)
+            let bondWeight = Math.round((currentAge / expectedAge) * 100);
+            bondWeight = Math.min(Math.max(bondWeight, 0), 100);
+            let stockWeight = 100 - bondWeight;
+
+            // Apply automatically to demo data if matching VT/BND/0050
+            const vtIndex = portfolio.findIndex(a => a.ticker === 'VT');
+            const bndIndex = portfolio.findIndex(a => a.ticker === 'BND');
+            const twIndex = portfolio.findIndex(a => a.ticker === '0050');
+
+            if (vtIndex !== -1 && bndIndex !== -1 && twIndex !== -1) {
+                portfolio[bndIndex].targetWeight = bondWeight;
+                portfolio[vtIndex].targetWeight = Math.round(stockWeight * 0.75);
+                portfolio[twIndex].targetWeight = stockWeight - portfolio[vtIndex].targetWeight;
+                renderTable();
+                calculateRebalance();
+                alert(isZh
+                    ? `套用成功！依年齡分配比：債券(BND)為 ${bondWeight}%，美股(VT)為 ${portfolio[vtIndex].targetWeight}%，台股(0050)為 ${portfolio[twIndex].targetWeight}%。`
+                    : `Applied successfully! Bond (BND) weight: ${bondWeight}%, US Stock (VT) weight: ${portfolio[vtIndex].targetWeight}%, TW Stock (0050) weight: ${portfolio[twIndex].targetWeight}%.`);
+            } else {
+                alert(isZh
+                    ? "⚠️ 無法套用年齡配置比例！此功能目前僅支援內含 VT、BND 及 0050 的預設組合。若已自訂標的，請手動在表格中設定目標權重。"
+                    : "⚠️ Cannot apply age target weights! This feature currently only supports portfolios containing VT, BND, and 0050. Please manually set your target weights in the table.");
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('portfolioBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            portfolio.forEach((asset, idx) => {
+                const tr = document.createElement('tr');
+                const isUS = asset.market === 'US';
+                
+                tr.innerHTML = `
+                    <td>
+                        <div class="asset-ticker">${asset.ticker}</div>
+                        <span class="badge ${isUS ? 'badge-us' : 'badge-tw'}">
+                            ${isUS ? 'USD • 美股' : 'TWD • 台股'}
+                        </span>
+                    </td>
+                    <td>
+                        <input type="text" value="${asset.name || ''}" onchange="updateAssetField(${idx}, 'name', this.value)" class="table-input table-input-name" placeholder="標的名稱">
+                    </td>
+                    <td style="text-align: center;">
+                        <input type="number" step="0.01" value="${asset.price}" oninput="updateAssetField(${idx}, 'price', this.value)" class="table-input">
+                    </td>
+                    <td style="text-align: center;">
+                        <input type="number" value="${asset.shares}" oninput="updateAssetField(${idx}, 'shares', this.value)" class="table-input">
+                    </td>
+                    <td style="text-align: center;">
+                        <input type="number" value="${asset.targetWeight}" oninput="updateAssetField(${idx}, 'targetWeight', this.value)" class="table-input" style="width: 55px;">
+                    </td>
+                    <td style="text-align: center;">
+                        <button onclick="deleteAsset(${idx})" class="btn-delete" title="刪除標的">✕</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateAssetField(idx, field, val) {
+            if (field === 'price' || field === 'shares' || field === 'targetWeight') {
+                portfolio[idx][field] = parseFloat(val) || 0;
+            } else {
+                portfolio[idx][field] = val;
+            }
+            calculateRebalance();
+        }
+
+        function deleteAsset(idx) {
+            portfolio.splice(idx, 1);
+            renderTable();
+            calculateRebalance();
+        }
+
+        function addAsset(market) {
+            const isUS = market === 'US';
+            const promptMsg = isUS 
+                ? (document.body.getAttribute('data-lang') === 'zh' ? "請輸入美股代號 (例如: VOO, QQQ, TSLA):" : "Enter US Stock Ticker (e.g. VOO, QQQ, TSLA):")
+                : (document.body.getAttribute('data-lang') === 'zh' ? "請輸入台股代碼 (例如: 2330, 0056, 2454):" : "Enter TW Stock Code (e.g. 2330, 0056, 2454):");
+            
+            const ticker = prompt(promptMsg);
+            if (ticker) {
+                const cleanTicker = ticker.trim().toUpperCase();
+                const exists = portfolio.some(a => a.ticker === cleanTicker);
+                if (exists) {
+                    alert(document.body.getAttribute('data-lang') === 'zh' ? "此標的已存在於投資組合中！" : "This security already exists!");
+                    return;
+                }
+
+                // Temporary name & price mapping for offline Taiwan stocks
+                let defaultName = cleanTicker;
+                if (market === 'TW' && TW_STOCK_NAMES_OFFLINE[cleanTicker]) {
+                    defaultName = TW_STOCK_NAMES_OFFLINE[cleanTicker];
+                }
+
+                portfolio.push({
+                    market,
+                    ticker: cleanTicker,
+                    price: isUS ? 100 : 50,
+                    name: defaultName,
+                    shares: 0,
+                    targetWeight: 0
+                });
+                
+                renderTable();
+                calculateRebalance();
+                // Trigger auto fetch for the new stock
+                fetchSingleStock(portfolio.length - 1);
+            }
+        }
+
+        // Fetch a single stock price/name
+        async function fetchSingleStock(idx) {
+            const asset = portfolio[idx];
+            const originalBtn = document.getElementById('fetchPricesBtn');
+            originalBtn.disabled = true;
+            
+            try {
+                // Try local proxy API
+                let res = await fetch(`/api/stock?symbol=${asset.ticker}`);
+                if (!res.ok && asset.market === 'TW') {
+                    // Try .TW suffix for local server
+                    res = await fetch(`/api/stock?symbol=${asset.ticker}.TW`);
+                }
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && !data.error) {
+                        portfolio[idx].price = parseFloat(data.price) || portfolio[idx].price;
+                        portfolio[idx].name = data.name || portfolio[idx].name;
+                        renderTable();
+                        calculateRebalance();
+                        originalBtn.disabled = false;
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.log("Local API proxy offline. Trying fallback proxy...");
+            }
+
+            // Fallback: CORS proxy to Yahoo Finance
+            let yahooSymbol = asset.ticker;
+            if (asset.market === 'TW' && /^\d+$/.test(asset.ticker)) {
+                yahooSymbol = `${asset.ticker}.TW`;
+            }
+            try {
+                const encodedUrl = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}`);
+                const res = await fetch(`https://api.allorigins.win/get?url=${encodedUrl}`);
+                if (res.ok) {
+                    const wrapper = await res.json();
+                    const data = JSON.parse(wrapper.contents);
+                    const result = data.chart.result[0];
+                    if (result) {
+                        const meta = result.meta;
+                        const price = meta.regularMarketPrice !== undefined ? meta.regularMarketPrice : meta.chartPreviousClose;
+                        const name = meta.longName || meta.shortName || asset.ticker;
+                        portfolio[idx].price = parseFloat(price) || portfolio[idx].price;
+                        if (!portfolio[idx].name || portfolio[idx].name === asset.ticker) {
+                            portfolio[idx].name = name;
+                        }
+                        renderTable();
+                        calculateRebalance();
+                    }
+                }
+            } catch (e) {
+                console.log("AllOrigins CORS proxy failed for symbol:", yahooSymbol);
+            }
+            originalBtn.disabled = false;
+        }
+
+        // Fetch all stock prices and names
+        async function fetchAllLatestPrices() {
+            const btn = document.getElementById('fetchPricesBtn');
+            const isZh = document.body.getAttribute('data-lang') === 'zh';
+            btn.innerHTML = `<span class="spinner"></span> ${isZh ? '讀取價格中...' : 'Fetching...'}`;
+            btn.disabled = true;
+
+            const fetchPromises = portfolio.map((asset, idx) => fetchSingleStock(idx));
+            await Promise.all(fetchPromises);
+
+            btn.innerHTML = `🔄 ${isZh ? '自動抓取即時股價' : 'Auto Fetch Prices'}`;
+            btn.disabled = false;
+        }
+
+        function calculateRebalance() {
+            const extraTwd = parseFloat(document.getElementById('extraTwd').value) || 0;
+            const extraUsd = parseFloat(document.getElementById('extraUsd').value) || 0;
+            const isZh = document.body.getAttribute('data-lang') === 'zh';
+            const baseSymbol = currentBaseCurrency === 'TWD' ? 'NT$ ' : '$ ';
+
+            let totalCurrentConvertedVal = 0;
+            let weightSum = 0;
+            let twStocks = [];
+            let usStocks = [];
+
+            // Calculate current values and classify
+            portfolio.forEach(asset => {
+                const multiplier = asset.market === 'TW' ? 1000 : 1;
+                asset.localValue = asset.price * asset.shares * multiplier;
+                
+                let valueInBase = asset.localValue;
+                if (asset.market === 'US' && currentBaseCurrency === 'TWD') {
+                    valueInBase = asset.localValue * globalFxRate;
+                } else if (asset.market === 'TW' && currentBaseCurrency === 'USD') {
+                    valueInBase = asset.localValue / globalFxRate;
+                }
+                asset.valueInBase = valueInBase;
+                totalCurrentConvertedVal += valueInBase;
+                weightSum += asset.targetWeight;
+
+                if (asset.market === 'TW') {
+                    twStocks.push(asset);
+                } else {
+                    usStocks.push(asset);
+                }
+            });
+
+            // Target weight sum validation
+            const sumDisplay = document.getElementById('weightSumDisplay');
+            sumDisplay.innerText = `${weightSum}%`;
+            if (weightSum === 100) {
+                sumDisplay.className = "weight-indicator correct";
+            } else {
+                sumDisplay.className = "weight-indicator incorrect";
+            }
+
+            // Total New Capital calculation
+            let totalNewCapitalVal = 0;
+            if (currentBaseCurrency === 'TWD') {
+                totalNewCapitalVal = extraTwd + (extraUsd * globalFxRate);
+            } else {
+                totalNewCapitalVal = extraUsd + (extraTwd / globalFxRate);
+            }
+
+            const totalNewConvertedVal = totalCurrentConvertedVal + totalNewCapitalVal;
+
+            document.getElementById('totalCurrentValue').innerText = `${baseSymbol}${totalCurrentConvertedVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('totalNewCapital').innerText = `+ ${baseSymbol}${totalNewCapitalVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('totalNewValue').innerText = `${baseSymbol}${totalNewConvertedVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+            const actionContainer = document.getElementById('tradeActionList');
+            const fxWarningContainer = document.getElementById('fxWarningContainer');
+            actionContainer.innerHTML = '';
+            fxWarningContainer.innerHTML = '';
+
+            // Handle invalid weights sum
+            if (weightSum !== 100 && weightSum > 0) {
+                actionContainer.innerHTML = `
+                    <div class="alert alert-danger" style="width: 100%;">
+                        ⚠️ <strong>${isZh ? '權重錯誤' : 'Weight Error'}:</strong> 
+                        ${isZh ? '目標權重總和必須剛好等於 100% 才能進行運算。' : 'Total target weight must sum to exactly 100% to run calculations.'}
+                    </div>
+                `;
+                updateCharts(portfolio.map(a => ({
+                    ticker: a.ticker,
+                    target: a.targetWeight,
+                    actual: (a.valueInBase / (totalCurrentConvertedVal || 1)) * 100
+                })));
+                return;
+            }
+
+            let tradeResults = [];
+
+            if (rebalanceMode === 'ISOLATED') {
+                // 1. ISOLATED INJECTIONS MODE
+                // TW stocks rebalance within TWD market (current TW assets total + TWD inflow)
+                // US stocks rebalance within USD market (current US assets total + USD inflow)
+                
+                const currentTwdTotal = twStocks.reduce((sum, a) => sum + a.localValue, 0);
+                const currentUsdTotal = usStocks.reduce((sum, a) => sum + a.localValue, 0);
+
+                const newTwdTotal = currentTwdTotal + extraTwd;
+                const newUsdTotal = currentUsdTotal + extraUsd;
+
+                const twWeightSum = twStocks.reduce((sum, a) => sum + a.targetWeight, 0);
+                const usWeightSum = usStocks.reduce((sum, a) => sum + a.targetWeight, 0);
+
+                portfolio.forEach(asset => {
+                    let targetValueInLocal = asset.localValue;
+                    if (asset.market === 'TW') {
+                        if (twWeightSum > 0) {
+                            const relativeWeight = asset.targetWeight / twWeightSum;
+                            targetValueInLocal = relativeWeight * newTwdTotal;
+                        }
+                    } else {
+                        if (usWeightSum > 0) {
+                            const relativeWeight = asset.targetWeight / usWeightSum;
+                            targetValueInLocal = relativeWeight * newUsdTotal;
+                        }
+                    }
+
+                    const multiplier = asset.market === 'TW' ? 1000 : 1;
+                    const idealShares = asset.price > 0 ? (targetValueInLocal / asset.price) : 0;
+                    const shareDiff = idealShares - (asset.shares * multiplier);
+                    const localValueDiff = shareDiff * asset.price;
+                    
+                    let valueInBase = localValueDiff;
+                    if (asset.market === 'US' && currentBaseCurrency === 'TWD') {
+                        valueInBase = localValueDiff * globalFxRate;
+                    } else if (asset.market === 'TW' && currentBaseCurrency === 'USD') {
+                        valueInBase = localValueDiff / globalFxRate;
+                    }
+
+                    tradeResults.push({
+                        ...asset,
+                        targetValueInLocal,
+                        shareDiff,
+                        localValueDiff,
+                        valueInBase
+                    });
+                });
+
+                // Display info alert that cash flows are isolated
+                fxWarningContainer.innerHTML = `
+                    <div class="alert alert-info" style="width: 100%;">
+                        🛡️ <strong>${isZh ? '雙幣分流保護中' : 'Isolated Flows Active'}:</strong> 
+                        ${isZh ? '台幣加碼資金已鎖定台股，美金加碼資金已鎖定美股。未產生任何跨國匯兌成本。' : 'TWD inflow is locked to TW market; USD inflow is locked to US market. No FX fees incurred.'}
+                    </div>
+                `;
+
+            } else {
+                // 2. GLOBAL REBALANCE MODE
+                // Rebalances globally to match exact target percentages
+                // Calculates target values based on totalNewConvertedVal
+
+                portfolio.forEach(asset => {
+                    const targetValueInBase = totalNewConvertedVal * (asset.targetWeight / 100);
+                    let targetValueInLocal = targetValueInBase;
+                    if (asset.market === 'US' && currentBaseCurrency === 'TWD') {
+                        targetValueInLocal = targetValueInBase / globalFxRate;
+                    } else if (asset.market === 'TW' && currentBaseCurrency === 'USD') {
+                        targetValueInLocal = targetValueInBase * globalFxRate;
+                    }
+
+                    const multiplier = asset.market === 'TW' ? 1000 : 1;
+                    const idealShares = asset.price > 0 ? (targetValueInLocal / asset.price) : 0;
+                    const shareDiff = idealShares - (asset.shares * multiplier);
+                    const localValueDiff = shareDiff * asset.price;
+
+                    let valueInBase = localValueDiff;
+                    if (asset.market === 'US' && currentBaseCurrency === 'TWD') {
+                        valueInBase = localValueDiff * globalFxRate;
+                    } else if (asset.market === 'TW' && currentBaseCurrency === 'USD') {
+                        valueInBase = localValueDiff / globalFxRate;
+                    }
+
+                    tradeResults.push({
+                        ...asset,
+                        targetValueInLocal,
+                        shareDiff,
+                        localValueDiff,
+                        valueInBase
+                    });
+                });
+
+                // Calculate Net FX Exchange required
+                // Net TWD flow required = Sum of TWD trades (localValueDiff of TW stocks)
+                const twdRequired = tradeResults.filter(a => a.market === 'TW').reduce((sum, a) => sum + a.localValueDiff, 0);
+                const exchangedTwd = twdRequired - extraTwd;
+                const exchangedUsd = -exchangedTwd / globalFxRate;
+
+                if (Math.abs(exchangedTwd) > 1) {
+                    const exchangedTwdAbs = Math.abs(exchangedTwd).toLocaleString(undefined, {maximumFractionDigits: 0});
+                    const exchangedUsdAbs = Math.abs(exchangedUsd).toLocaleString(undefined, {maximumFractionDigits: 1});
+                    
+                    if (exchangedTwd > 0) {
+                        fxWarningContainer.innerHTML = `
+                            <div class="alert alert-warning" style="width: 100%;">
+                                ⚠️ <strong>${isZh ? '匯兌提醒' : 'FX Transfer Required'}:</strong> 
+                                ${isZh ? `此全球配置需要將美金大約 <strong>USD ${exchangedUsdAbs}</strong> 兌換為 <strong>TWD ${exchangedTwdAbs}</strong> 投入台股部位。` : `This configuration requires converting approximately <strong>USD ${exchangedUsdAbs}</strong> to <strong>TWD ${exchangedTwdAbs}</strong> to fulfill TW stock allocation.`}
+                            </div>
+                        `;
+                    } else {
+                        fxWarningContainer.innerHTML = `
+                            <div class="alert alert-warning" style="width: 100%;">
+                                ⚠️ <strong>${isZh ? '匯兌提醒' : 'FX Transfer Required'}:</strong> 
+                                ${isZh ? `此全球配置需要將台幣大約 <strong>TWD ${exchangedTwdAbs}</strong> 兌換為 <strong>USD ${exchangedUsdAbs}</strong> 投入美股部位。` : `This configuration requires converting approximately <strong>TWD ${exchangedTwdAbs}</strong> to <strong>USD ${exchangedUsdAbs}</strong> to fulfill US stock allocation.`}
+                            </div>
+                        `;
+                    }
+                } else {
+                    fxWarningContainer.innerHTML = `
+                        <div class="alert alert-success" style="width: 100%;">
+                            ✅ <strong>${isZh ? '收支平衡' : 'Perfect Balance'}:</strong> 
+                            ${isZh ? '全球資產分佈與投入資金比例剛好符合，無須進行額外匯兌。' : 'Your asset weights match your cash inflow proportions. No FX required.'}
+                        </div>
+                    `;
+                }
+            }
+
+            // Render Trade Actions
+            if (tradeResults.length === 0) {
+                actionContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.75rem; padding: 1rem 0;">${isZh ? '無持股資料' : 'No Assets Found'}</div>`;
+            } else {
+                tradeResults.forEach(asset => {
+                    const localSymbol = asset.market === 'US' ? 'USD $' : 'TWD NT$';
+                    const isBuy = asset.shareDiff >= 0;
+                    
+                    const actionCard = document.createElement('div');
+                    actionCard.className = `decision-row ${isBuy ? 'buy' : 'sell'}`;
+                    
+                    let actionLabel = '';
+                    if (asset.market === 'TW') {
+                        const lotsDiff = asset.shareDiff / 1000;
+                        const sign = isBuy ? '+' : '';
+                        actionLabel = isBuy
+                            ? `<span class="decision-amount-buy">${isZh ? '買入 +' : 'Buy +'}${asset.shareDiff.toFixed(0)} ${isZh ? '股' : 'shares'} (${sign}${lotsDiff.toFixed(3)} ${isZh ? '張' : 'lots'})</span>`
+                            : `<span class="decision-amount-sell">${isZh ? '賣出 ' : 'Sell '}${Math.abs(asset.shareDiff).toFixed(0)} ${isZh ? '股' : 'shares'} (${lotsDiff.toFixed(3)} ${isZh ? '張' : 'lots'})</span>`;
+                    } else {
+                        actionLabel = isBuy 
+                            ? `<span class="decision-amount-buy">${isZh ? '買入 +' : 'Buy +'}${asset.shareDiff.toFixed(1)} ${isZh ? '股' : 'shares'}</span>`
+                            : `<span class="decision-amount-sell">${isZh ? '賣出 ' : 'Sell '}${Math.abs(asset.shareDiff).toFixed(1)} ${isZh ? '股' : 'shares'}</span>`;
+                    }
+
+                    const localizedDiff = Math.abs(asset.localValueDiff).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+
+                    actionCard.innerHTML = `
+                        <div>
+                            <div class="asset-ticker">${asset.ticker}</div>
+                            <div class="asset-name" style="max-width: 180px;">${asset.name || ''}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div>${actionLabel}</div>
+                            <div style="font-family: 'Outfit', monospace; font-size: 0.7rem; color: var(--text-muted);">${localSymbol} ${localizedDiff}</div>
+                        </div>
+                    `;
+                    actionContainer.appendChild(actionCard);
+                });
+            }
+
+            // Calculate post-rebalance actual weights for chart visualization
+            const chartData = tradeResults.map(asset => {
+                let postValueInBase = asset.localValue + asset.localValueDiff; // Start with current value + trade value
+                if (asset.market === 'US' && currentBaseCurrency === 'TWD') {
+                    postValueInBase = (asset.localValue + asset.localValueDiff) * globalFxRate;
+                } else if (asset.market === 'TW' && currentBaseCurrency === 'USD') {
+                    postValueInBase = (asset.localValue + asset.localValueDiff) / globalFxRate;
+                }
+
+                const actualWeight = totalNewConvertedVal > 0 ? (postValueInBase / totalNewConvertedVal) * 100 : 0;
+                return {
+                    ticker: asset.ticker,
+                    target: asset.targetWeight,
+                    actual: actualWeight
+                };
+            });
+
+            updateCharts(chartData);
+        }
+
+        // Draw and update comparison chart (Grouped bar chart is better to show target vs actual!)
+        function updateCharts(data) {
+            const ctx = document.getElementById('weightChart').getContext('2d');
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const labels = data.map(d => d.ticker);
+            const targetWeights = data.map(d => d.target);
+            const actualWeights = data.map(d => d.actual);
+            const isZh = document.body.getAttribute('data-lang') === 'zh';
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: isZh ? '目標權重 %' : 'Target %',
+                            data: targetWeights,
+                            backgroundColor: 'rgba(245, 158, 11, 0.75)', // Amber
+                            borderColor: '#f59e0b',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        },
+                        {
+                            label: isZh ? '加碼後實際 %' : 'Actual %',
+                            data: actualWeights,
+                            backgroundColor: 'rgba(59, 130, 246, 0.75)', // Blue
+                            borderColor: '#3b82f6',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { size: 9, family: 'Outfit' },
+                                color: '#9ca3af',
+                                boxWidth: 10
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw.toFixed(1)}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { font: { size: 9, family: 'Outfit' }, color: '#9ca3af' },
+                            grid: { color: 'rgba(31, 42, 69, 0.3)' }
+                        },
+                        y: {
+                            ticks: { 
+                                font: { size: 8, family: 'Outfit' }, 
+                                color: '#9ca3af',
+                                callback: function(value) { return value + '%'; }
+                            },
+                            grid: { color: 'rgba(31, 42, 69, 0.3)' },
+                            min: 0,
+                            max: 100
+                        }
+                    }
+                }
+            });
+
+            // Draw and update actual distribution doughnut chart
+            const distCtx = document.getElementById('distributionChart').getContext('2d');
+            if (distChartInstance) {
+                distChartInstance.destroy();
+            }
+
+            const colors = [
+                'rgba(245, 158, 11, 0.75)',  // Amber
+                'rgba(59, 130, 246, 0.75)',  // Blue
+                'rgba(16, 185, 129, 0.75)',  // Emerald
+                'rgba(139, 92, 246, 0.75)',  // Purple
+                'rgba(239, 68, 68, 0.75)',   // Rose
+                'rgba(236, 72, 153, 0.75)',  // Pink
+                'rgba(14, 165, 233, 0.75)'   // Sky
+            ];
+            const borderColors = [
+                '#f59e0b', '#3b82f6', '#10b981', '#8b5cf6', '#ef4444', '#ec4899', '#0ea5e9'
+            ];
+
+            distChartInstance = new Chart(distCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: actualWeights,
+                        backgroundColor: colors.slice(0, labels.length),
+                        borderColor: borderColors.slice(0, labels.length),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                font: { size: 9, family: 'Outfit' },
+                                color: '#9ca3af',
+                                boxWidth: 8
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${context.raw.toFixed(1)}%`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+
+        window.onload = () => {
+            renderTable();
+            fetchExchangeRate();
+            calculateRebalance();
+        };
+    </script>
+
+    <script>
+      window.FTK_ROOT = '../../';
+      window.FTK_PAGE = 'rebalance';
+    </script>
+    <script src="../../assets/shared.js"></script>
+</body>
+</html>
