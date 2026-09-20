@@ -362,6 +362,7 @@ tr:hover td { background: rgba(59,130,246,0.06); }
     <div class="app-title">Loan Investment Decision Simulator</div>
     <div class="app-subtitle">借貸 × 投資 × 提前還款 全方位分析工具 / Loan, Invest, & Prepayment Simulator · Offline Ready</div>
   </div>
+  <button class="btn btn-outline" style="margin-left:auto;flex-shrink:0;" onclick="openHelp()">❓ 使用說明 Help</button>
 </div>
 
 <!-- MODE SELECTOR -->
@@ -794,6 +795,16 @@ function showTab(id, el){
   el.classList.add('active');
   ALL_TABS.forEach(t=>document.getElementById(t).classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
+}
+
+// Jumps straight to the README/Changelog tab (last of 9 tabs, easy to miss)
+// and scrolls it into view, so there's a single obvious "Help" entry point
+// instead of relying on the user to notice/scroll to it in the tab bar.
+function openHelp(){
+  const tabEl = document.querySelector('.tab[onclick*="tabReadme"]');
+  if (tabEl) showTab('tabReadme', tabEl);
+  const target = document.getElementById('tabReadme');
+  if (target) target.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 // ============================================================
