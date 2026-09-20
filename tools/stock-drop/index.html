@@ -157,7 +157,7 @@ button.gst:hover{border-color:var(--accent);color:var(--accent);}
   <div>
     <div class="hd-tag">Taiwan Markets &#xB7; 1967&#x2013;2026</div>
     <h1>Drawdown Explorer</h1>
-    <p class="hd-sub">15 stocks &#xB7; Weekly GBM data (2000&#x2013;2026) &#xB7; Hover to read values &#xB7; Editable labels &#xB7; MD export</p>
+    <p class="hd-sub">14 stocks &#xB7; Weekly GBM/live data &#xB7; Hover to read values &#xB7; Editable labels &#xB7; MD export</p>
   </div>
   <div class="hdr">
     <span class="live-badge" id="liveBadge" style="display:none">&#x25CF; LIVE</span>
@@ -165,7 +165,7 @@ button.gst:hover{border-color:var(--accent);color:var(--accent);}
     <input type="file" id="csvFile" accept=".csv" style="display:none">
     <button class="pbtn" id="refreshBtn">&#x21BB; Fetch live</button>
     <button class="pbtn" id="serverBtn">&#x26A1; Refresh current</button>
-    <button class="pbtn" id="serverAllBtn">&#x26A1;&#x26A1; Refresh all 15</button>
+    <button class="pbtn" id="serverAllBtn">&#x26A1;&#x26A1; Refresh all 14</button>
     <span class="live-badge" id="serverBadge" style="display:none;border-color:var(--blue);color:var(--blue)">&#x25CF; LOCAL</span>
     <button class="pbtn" id="themeBtn" style="display:none">&#x2600; Light</button>
   </div>
@@ -337,7 +337,7 @@ button.gst:hover{border-color:var(--accent);color:var(--accent);}
   <h3>Where to Get the Data</h3>
   <table class="htbl">
     <tr><th>Source</th><th>Best for</th></tr>
-    <tr><td>finance.yahoo.com</td><td><b>All 15 stocks</b> &#x2014; search <code>2330.TW</code>, Historical Data &#x2192; Download CSV</td></tr>
+    <tr><td>finance.yahoo.com</td><td><b>All built-in stocks</b> &#x2014; search <code>2330.TW</code>, Historical Data &#x2192; Download CSV</td></tr>
     <tr><td>twse.com.tw</td><td><b>Official TAIEX</b> daily closes</td></tr>
     <tr><td>stooq.com</td><td><b>Long-history CSV</b> for <code>^TWII</code></td></tr>
     <tr><td>macrotrends.net</td><td><b>Pre-built charts</b> with CSV export</td></tr>
@@ -371,16 +371,20 @@ button.gst:hover{border-color:var(--accent);color:var(--accent);}
     <tr><td>2303.TW</td><td><b>UMC &#x806F;&#x96FB;</b></td><td>2005</td></tr>
     <tr><td>2308.TW</td><td><b>Delta Elec &#x53F0;&#x9054;&#x96FB;</b></td><td>2005</td></tr>
     <tr><td>2382.TW</td><td><b>Quanta &#x5EE3;&#x9054;</b></td><td>2005</td></tr>
-    <tr><td>3008.TW</td><td><b>Largan &#x5927;&#x7ACB;&#x5149;</b></td><td>2008</td></tr>
-    <tr><td>2881.TW</td><td><b>Fubon Financial &#x5BCC;&#x90A6;&#x91D1;</b></td><td>2005</td></tr>
-    <tr><td>2891.TW</td><td><b>CTBC Financial &#x4E2D;&#x4FE1;&#x91D1;</b></td><td>2005</td></tr>
-    <tr><td>2886.TW</td><td><b>Mega Financial &#x5146;&#x8C50;&#x91D1;</b></td><td>2005</td></tr>
     <tr><td>2002.TW</td><td><b>China Steel &#x4E2D;&#x92FC;</b></td><td>2005</td></tr>
     <tr><td>1301.TW</td><td><b>Formosa Plastics &#x53F0;&#x5851;</b></td><td>2005</td></tr>
     <tr><td>3711.TW</td><td><b>ASE Technology &#x65E5;&#x6708;&#x5149;</b></td><td>2008</td></tr>
     <tr><td>2412.TW</td><td><b>Chunghwa Tel &#x4E2D;&#x83EF;&#x96FB;</b></td><td>2005</td></tr>
+    <tr><td>VT</td><td><b>Vanguard Total World ETF</b></td><td>live data only<sup>*</sup></td></tr>
+    <tr><td>BND</td><td><b>Vanguard Total Bond ETF</b></td><td>live data only<sup>*</sup></td></tr>
+    <tr><td>SOXX</td><td><b>iShares Semiconductor ETF</b></td><td>live data only<sup>*</sup></td></tr>
   </table>
+  <p style="font-size:.78rem;color:var(--sub);">* VT/BND/SOXX have no built-in synthetic history &#x2014; they load their weekly price series from <code>data/stock_data.json</code> (the site's automated GitHub Actions data pipeline) the first time you click their chip.</p>
 </div>
+</div>
+
+<div style="text-align:center;padding:16px 0 76px;font-family:var(--mono);font-size:.68rem;color:var(--sub);">
+  Drawdown Explorer v4.2 &middot; FinTech Toolkit build &middot; 2026-09-20
 </div>
 
 <div class="tb">
@@ -417,14 +421,15 @@ const STOCKS=[
   {sym:"2303.TW", name:"UMC",           cn:"\u806f\u96fb",                since:2005},
   {sym:"2308.TW", name:"Delta Elec",    cn:"\u53f0\u9054\u96fb",         since:2005},
   {sym:"2382.TW", name:"Quanta",        cn:"\u5ee3\u9054",                since:2005},
-  {sym:"3008.TW", name:"Largan",        cn:"\u5927\u7acb\u5149",         since:2008},
-  {sym:"2881.TW", name:"Fubon Fin",     cn:"\u5bcc\u90a6\u91d1",         since:2005},
-  {sym:"2891.TW", name:"CTBC Fin",      cn:"\u4e2d\u4fe1\u91d1",         since:2005},
-  {sym:"2886.TW", name:"Mega Fin",      cn:"\u5146\u8c50\u91d1",         since:2005},
   {sym:"2002.TW", name:"China Steel",   cn:"\u4e2d\u92fc",                since:2005},
   {sym:"1301.TW", name:"Formosa Plas",  cn:"\u53f0\u5851",                since:2005},
   {sym:"3711.TW", name:"ASE Tech",      cn:"\u65e5\u6708\u5149",         since:2008},
   {sym:"2412.TW", name:"Chunghwa Tel",  cn:"\u4e2d\u83ef\u96fb",         since:2005},
+  // No built-in synthetic RAW data for these three (US-listed ETFs) \u2014
+  // hydrated from data/stock_data.json on load, see hydrateStaticOnlyStocks().
+  {sym:"VT",       name:"Vanguard Total World", cn:"Global Stock ETF", since:2008, staticOnly:true},
+  {sym:"BND",      name:"Vanguard Total Bond",  cn:"US Bond ETF",      since:2007, staticOnly:true},
+  {sym:"SOXX",     name:"iShares Semiconductor",cn:"Semiconductor ETF",since:2001, staticOnly:true},
 ];
 
 let curSym="^TWII", rangeY=10, thresh=10;
@@ -459,7 +464,14 @@ STOCKS.forEach(s=>{
   c.className="chip"+(s.sym===curSym?" on":"");
   c.dataset.s=s.sym;
   c.innerHTML=`<span class="csym">${s.sym.replace(".TW","")}</span><span class="cname">${s.cn}</span><span class="cprice" id="cp_${s.sym.replace(/\W/g,"_")}">—</span>`;
-  c.addEventListener("click",()=>{ curSym=s.sym; setChip(); liveMode=false; recompute(); });
+  if (s.staticOnly) {
+    // No built-in synthetic RAW data for this one — always load (or
+    // reuse already-loaded) real data from data/stock_data.json instead
+    // of falling through to the normal built-in-data click path.
+    c.addEventListener("click", async () => { await applyStaticDataFor(s.sym); displayStaticSymbol(s.sym); });
+  } else {
+    c.addEventListener("click",()=>{ curSym=s.sym; setChip(); liveMode=false; recompute(); });
+  }
   chipRow.appendChild(c);
 });
 function setChip(){ document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("on",c.dataset.s===curSym)); }
@@ -917,7 +929,7 @@ document.getElementById("serverAllBtn").addEventListener("click", async () => {
   recompute();
 
   btn.disabled = false;
-  btn.textContent = "⚡⚡ Refresh all 15";
+  btn.textContent = "⚡⚡ Refresh all 14";
 
   // Auto-hide progress after 4 seconds
   setTimeout(() => progWrap.classList.remove("open"), 4000);
@@ -1044,6 +1056,22 @@ function loadStockDB() {
   return stockDbPromise;
 }
 loadStockDB(); // kick off in the background on page load
+
+// Built-in chips with no baked-in synthetic RAW data (STOCKS' staticOnly
+// flag — VT/BND/SOXX) need a real fetch before they show a price or chart.
+// Pre-load them in the background so their chip price is already filled in
+// by the time the user clicks, instead of only loading on click.
+async function hydrateStaticOnlyStocks() {
+  for (const s of STOCKS) {
+    if (!s.staticOnly) continue;
+    if (await applyStaticDataFor(s.sym)) {
+      const last = liveRAW[s.sym][liveRAW[s.sym].length - 1];
+      const cp = document.getElementById("cp_" + s.sym.replace(/\W/g, "_"));
+      if (cp && last) cp.textContent = last.close.toLocaleString(undefined, {maximumFractionDigits: 0});
+    }
+  }
+}
+hydrateStaticOnlyStocks();
 
 // Populate liveRAW[sym] from the static DB. Returns true on success.
 async function applyStaticDataFor(sym) {

@@ -71,6 +71,7 @@ TICKER_MAP = {
     "vti":   {"symbol": "VTI",  "name": "Vanguard Total Stock Market", "region": "United States", "currency": "USD", "exchange": "NYSE Arca"},
     "qqq":   {"symbol": "QQQ",  "name": "Invesco QQQ (Nasdaq 100)",    "region": "United States", "currency": "USD", "exchange": "Nasdaq"},
     "spy":   {"symbol": "SPY",  "name": "SPDR S&P 500",                "region": "United States", "currency": "USD", "exchange": "NYSE Arca"},
+    "soxx":  {"symbol": "SOXX", "name": "iShares Semiconductor",       "region": "United States", "currency": "USD", "exchange": "Nasdaq"},
 
     # --- US large-caps: search catalog for "US stock search" ---
     "aapl":  {"symbol": "AAPL",  "name": "Apple",                "region": "United States", "currency": "USD", "exchange": "Nasdaq"},
