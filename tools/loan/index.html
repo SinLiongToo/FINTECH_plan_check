@@ -73,6 +73,24 @@ body {
 .app-title { font-size: 1.35rem; font-weight: 700; line-height: 1.2; }
 .app-subtitle { font-size: 0.78rem; color: var(--text2); margin-top: 2px; }
 
+/* ====== QUOTE BANNER ====== */
+.quote-banner {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(245,158,11,0.10); border: 1px solid rgba(245,158,11,0.28);
+  border-radius: 10px; padding: 9px 14px; margin-bottom: 16px;
+}
+.quote-tag {
+  flex-shrink: 0; font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--warn); background: rgba(245,158,11,0.16); border: 1px solid rgba(245,158,11,0.32);
+  border-radius: 6px; padding: 3px 8px; white-space: nowrap;
+}
+.quote-text {
+  font-size: 0.78rem; color: var(--text2); overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; transition: opacity .5s ease; opacity: 1;
+}
+.quote-text.fade-out { opacity: 0; }
+@media (max-width: 600px) { .quote-text { white-space: normal; } }
+
 /* ====== MODE BADGE ====== */
 .mode-row {
   display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap;
@@ -363,6 +381,12 @@ tr:hover td { background: rgba(59,130,246,0.06); }
     <div class="app-subtitle">借貸 × 投資 × 提前還款 全方位分析工具 / Loan, Invest, & Prepayment Simulator · Offline Ready</div>
   </div>
   <button class="btn btn-outline" style="margin-left:auto;flex-shrink:0;" onclick="openHelp()">❓ 使用說明 Help</button>
+</div>
+
+<!-- QUOTE BANNER -->
+<div class="quote-banner">
+  <span class="quote-tag">💬 金句 Quotes</span>
+  <span class="quote-text" id="quoteText">載入金句中... / Loading quotes...</span>
 </div>
 
 <!-- MODE SELECTOR -->
@@ -806,6 +830,36 @@ function openHelp(){
   const target = document.getElementById('tabReadme');
   if (target) target.scrollIntoView({behavior:'smooth', block:'start'});
 }
+
+// ============================================================
+// QUOTE BANNER (bilingual, rotates every 5s with a fade transition)
+// ============================================================
+const financeQuotes = [
+  { zh: '複利是世界第八大奇蹟，懂的人賺，不懂的人付。', en: 'Compound interest is the eighth wonder of the world. He who understands it, earns it; he who doesn’t, pays it.', author: '愛因斯坦 Einstein' },
+  { zh: '投資的第一原則是不要賠錢；第二原則是永遠不要忘記第一原則。', en: 'Rule No. 1 is never lose money. Rule No. 2 is never forget Rule No. 1.', author: '巴菲特 Warren Buffett' },
+  { zh: '價格是你付出的，價值是你得到的。', en: 'Price is what you pay. Value is what you get.', author: '巴菲特 Warren Buffett' },
+  { zh: '借款人是貸款人的奴隸。', en: 'The borrower is slave to the lender.', author: '箴言 Proverbs 22:7' },
+  { zh: '寧可不吃晚餐上床睡覺，也不要背著債務起床。', en: 'Rather go to bed without dinner than to rise in debt.', author: '富蘭克林 Benjamin Franklin' },
+  { zh: '複利的第一原則：不要無謂地打斷它。', en: 'The first rule of compounding: never interrupt it unnecessarily.', author: '查理·蕃格 Charlie Munger' },
+  { zh: '風險來自於你不知道自己在做什麼。', en: 'Risk comes from not knowing what you’re doing.', author: '巴菲特 Warren Buffett' },
+  { zh: '不要用短期的負債，去換取長期才能實現的夢想。', en: 'Don’t trade short-term debt for a dream that only pays off in the long run.', author: 'FinTech Toolkit' },
+  { zh: '今天有人乘涼，是因為很久以前有人種了一棵樹。', en: 'Someone’s sitting in the shade today because someone planted a tree a long time ago.', author: '巴菲特 Warren Buffett' },
+  { zh: '省下的一塊錢利息，比賺到的一塊錢投資報酬更確定。', en: 'A dollar of interest saved is more certain than a dollar of investment return earned.', author: 'FinTech Toolkit' }
+];
+let quoteIdx = 0;
+function rotateQuote(){
+  const el = document.getElementById('quoteText');
+  if (!el) return;
+  el.classList.add('fade-out');
+  setTimeout(() => {
+    const q = financeQuotes[quoteIdx];
+    el.textContent = `「${q.zh}」 / "${q.en}" — ${q.author}`;
+    el.classList.remove('fade-out');
+    quoteIdx = (quoteIdx + 1) % financeQuotes.length;
+  }, 500);
+}
+rotateQuote();
+setInterval(rotateQuote, 5000);
 
 // ============================================================
 // TABLE MODE TOGGLE
