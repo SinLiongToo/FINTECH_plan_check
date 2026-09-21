@@ -28,7 +28,8 @@
     { href: ROOT + 'tools/stock-drop/index.html', label: '📉 股價下跌追蹤', key: 'stock-drop' },
     { href: ROOT + 'tools/rebalance/index.html', label: '⚖️ 再平衡計算', key: 'rebalance' },
     { href: ROOT + 'tools/retirement/index.html', label: '🏖️ 退休試算', key: 'retirement' },
-    { href: ROOT + 'tools/loan/index.html', label: '💰 貸款投資試算', key: 'loan' }
+    { href: ROOT + 'tools/loan/index.html', label: '💰 貸款投資試算', key: 'loan' },
+    { href: ROOT + 'tools/rules/index.html', label: '📜 人生財務守則', key: 'rules' }
   ];
 
   function buildNav(){

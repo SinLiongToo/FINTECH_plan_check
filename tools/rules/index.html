@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>人生財務守則 Life Financial Rules — FinTech Toolkit</title>
+<meta name="theme-color" content="#0b0e14">
+<link rel="stylesheet" href="../../assets/shared.css">
+<style>
+.rule-grid{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+  gap:18px; max-width:1180px; margin:0 auto; padding:0 16px 56px;
+}
+.rule-card{
+  background:var(--ftk-bg-elev); border:1px solid var(--ftk-border);
+  border-radius:14px; overflow:hidden; box-shadow:var(--ftk-shadow);
+  display:flex; flex-direction:column;
+}
+.rule-card-head{
+  background:var(--ftk-accent); color:#241a05;
+  padding:12px 18px; font-weight:700; font-size:15px; font-family:'Segoe UI',sans-serif;
+}
+.rule-card-head .rule-no{
+  display:inline-block; width:22px; height:22px; line-height:22px; text-align:center;
+  background:rgba(255,255,255,.35); border-radius:50%; font-size:12px; margin-right:8px;
+}
+.rule-card-body{ padding:16px 18px; color:var(--ftk-text); font-size:13.5px; line-height:1.75; flex:1; }
+.rule-card-body .en{ color:var(--ftk-text-dim); font-size:12px; display:block; margin-top:2px; margin-bottom:10px; }
+.rule-card-body ul{ margin:0 0 10px; padding-left:18px; }
+.rule-card-body li{ margin-bottom:4px; }
+.rule-example{
+  font-size:12.5px; color:var(--ftk-text-dim); background:var(--ftk-bg);
+  border:1px dashed var(--ftk-border); border-radius:8px; padding:8px 12px; margin-top:8px;
+}
+.rule-formula{
+  font-family:'Consolas',monospace; font-size:12.5px; color:var(--ftk-accent-2);
+  background:var(--ftk-bg); border:1px solid var(--ftk-border); border-radius:8px;
+  padding:8px 12px; margin-top:8px;
+}
+</style>
+</head>
+<body class="ftk-page">
+
+<div class="ftk-hero">
+  <h1>📜 人生財務守則</h1>
+  <p>7 Personal Finance Rules That Will Help You Save More Money &middot; 七個能幫你有效存錢的個人理財法則。</p>
+</div>
+
+<div class="rule-grid">
+
+  <div class="rule-card">
+    <div class="rule-card-head"><span class="rule-no">1</span>72 法則 Rule of 72</div>
+    <div class="rule-card-body">
+      <span class="en">Rule of 72</span>
+      想知道資產要多久才能翻倍？用 72 除以你的預期報酬率，就能得到答案。
+      <div class="rule-example">範例：預期報酬率 6% → 資產每 12 年翻倍一次。</div>
+      <div class="rule-formula">72 ÷ 報酬率(%) = 翻倍所需年數</div>
+    </div>
+  </div>
+
+  <div class="rule-card">
+    <div class="rule-card-head"><span class="rule-no">2</span>100 減年齡法則 100-Age Rule</div>
+    <div class="rule-card-body">
+      <span class="en">100-Age Rule</span>
+      想知道該把多少比例的資產投入股票（權益）？用 100 減去你的年齡，就能得到答案。
+      <div class="rule-example">範例：30 歲時，應把 70% 的資產投入股票。</div>
+      <div class="rule-formula">100 - 年齡 = 股票投資比例 (%)</div>
+    </div>
+  </div>
+
+  <div class="rule-card">
+    <div class="rule-card-head"><span class="rule-no">3</span>50-30-20 法則</div>
+    <div class="rule-card-body">
+      <span class="en">50-30-20 Rule</span>
+      把稅後收入依比例分配到三個用途：
+      <ul>
+        <li><b>50%</b> 必需支出（帳單、教育、交通、飲食等）</li>
+        <li><b>30%</b> 想要的支出（旅遊、電影、餐廳等）</li>
+        <li><b>20%</b> 儲蓄與投資</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="rule-card">
+    <div class="rule-card-head"><span class="rule-no">4</span>第一週法則 1st Week Rule</div>
+    <div class="rule-card-body">
+      <span class="en">1st Week Rule</span>
+      累積財富最好的方法，就是「先付錢給自己」。每個月第一週，先把收入的 10–20% 存下來、投資出去，剩下的錢才拿來花用。
+    </div>
+  </div>
+
+  <div class="rule-card">
+    <div class="rule-card-head"><span class="rule-no">5</span>40% 月付款法則 40% EMI Rule</div>
+    <div class="rule-card-body">
+      <span class="en">40% EMI Rule</span>
+      你能負擔的最大貸款月付款（房貸／車貸等），不應超過月淨收入的 40%。
+      <div class="rule-example">範例：月收入 $10,000 → 貸款月付款最多不超過 $4,000。</div>
+    </div>
+  </div>
+
+  <div class="rule-card">
+    <div class="rule-card-head"><span class="rule-no">6</span>6 倍緊急預備金 6X Emergency Fund</div>
+    <div class="rule-card-body">
+      <span class="en">6X Emergency Fund</span>
+      開始投資之前，先確保你有一筆緊急預備金，金額應等於 <b>6 倍</b>的每月支出。
+      <div class="rule-example">範例：每月花費 $6,000 → 緊急預備金應準備 $36,000。</div>
+    </div>
+  </div>
+
+  <div class="rule-card">
+    <div class="rule-card-head"><span class="rule-no">7</span>25 倍投資法則 25X Investment Rule</div>
+    <div class="rule-card-body">
+      <span class="en">25X Investment Rule</span>
+      當你累積的資產達到「年支出的 25 倍」時，就可以開始考慮退休。
+      <div class="rule-example">範例：每年需要 $50,000 生活費 → 退休時至少需準備 $1,250,000。</div>
+    </div>
+  </div>
+
+</div>
+
+<script>window.FTK_ROOT = '../../'; window.FTK_PAGE = 'rules';</script>
+<script src="../../assets/shared.js"></script>
+</body>
+</html>
