@@ -7,9 +7,21 @@
 <meta name="theme-color" content="#0b0e14">
 <link rel="stylesheet" href="../../assets/shared.css">
 <style>
+.rules-hero-row{
+  max-width:1180px; margin:0 auto; padding:48px 16px 8px;
+  display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap;
+}
+.rules-hero-row .ftk-hero{ padding:0; max-width:none; flex:1; min-width:240px; }
+.lang-toggle{
+  flex-shrink:0; border:1px solid var(--ftk-border); background:var(--ftk-bg-elev);
+  color:var(--ftk-text); border-radius:999px; padding:8px 16px; font-size:13px;
+  cursor:pointer; white-space:nowrap;
+}
+.lang-toggle:hover{ border-color:var(--ftk-accent); color:var(--ftk-accent); }
+
 .rule-grid{
   display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
-  gap:18px; max-width:1180px; margin:0 auto; padding:0 16px 56px;
+  gap:18px; max-width:1180px; margin:0 auto; padding:24px 16px 56px;
 }
 .rule-card{
   background:var(--ftk-bg-elev); border:1px solid var(--ftk-border);
@@ -25,7 +37,6 @@
   background:rgba(255,255,255,.35); border-radius:50%; font-size:12px; margin-right:8px;
 }
 .rule-card-body{ padding:16px 18px; color:var(--ftk-text); font-size:13.5px; line-height:1.75; flex:1; }
-.rule-card-body .en{ color:var(--ftk-text-dim); font-size:12px; display:block; margin-top:2px; margin-bottom:10px; }
 .rule-card-body ul{ margin:0 0 10px; padding-left:18px; }
 .rule-card-body li{ margin-bottom:4px; }
 .rule-example{
@@ -41,112 +52,101 @@
 </head>
 <body class="ftk-page">
 
-<div class="ftk-hero">
-  <h1>📜 人生財務守則</h1>
-  <p>Personal Finance Rules That Will Help You Save More Money &middot; 九個能幫你有效存錢、控制風險與維持紀律的個人理財法則。</p>
+<div class="rules-hero-row">
+  <div class="ftk-hero">
+    <h1 id="heroTitle">📜 人生財務守則</h1>
+    <p id="heroSub">九個能幫你有效存錢、控制風險與維持紀律的個人理財法則。</p>
+  </div>
+  <button type="button" class="lang-toggle" id="langToggle">🌐 English</button>
 </div>
 
-<div class="rule-grid">
+<div class="rule-grid" id="ruleGrid"></div>
 
-  <div class="rule-card">
-    <div class="rule-card-head"><span class="rule-no">1</span>72 法則 Rule of 72</div>
-    <div class="rule-card-body">
-      <span class="en">Rule of 72</span>
-      想知道資產要多久才能翻倍？用 72 除以你的預期報酬率，就能得到答案。
-      <div class="rule-example">範例：預期報酬率 6% → 資產每 12 年翻倍一次。</div>
-      <div class="rule-formula">72 ÷ 報酬率(%) = 翻倍所需年數</div>
+<script>
+// Each rule's body is stored as ready-to-insert HTML per language (rather
+// than a generic field-by-field template) so the original hand-tuned
+// ordering of explanation / formula / example per rule is preserved
+// exactly, instead of forcing every card into one generic layout.
+const RULES = [
+  {
+    no: 1, head_zh: '72 法則', head_en: 'Rule of 72',
+    zh: '想知道資產要多久才能翻倍？用 72 除以你的預期報酬率，就能得到答案。<div class="rule-example">範例：預期報酬率 6% → 資產每 12 年翻倍一次。</div><div class="rule-formula">72 ÷ 報酬率(%) = 翻倍所需年數</div>',
+    en: 'Wondering how long it takes to double your money? Divide 72 by your expected rate of return to find out.<div class="rule-example">Example: at a 6% expected return, your money doubles about every 12 years.</div><div class="rule-formula">72 &divide; Return Rate (%) = Years to Double</div>'
+  },
+  {
+    no: 2, head_zh: '100 減年齡法則', head_en: '100-Age Rule',
+    zh: '想知道該把多少比例的資產投入股票（權益）？用 100 減去你的年齡，就能得到答案。<div class="rule-example">範例：30 歲時，應把 70% 的資產投入股票。</div><div class="rule-formula">100 - 年齡 = 股票投資比例 (%)</div>',
+    en: 'Wondering what percentage of your assets to put into equities? Subtract your age from 100 to find out.<div class="rule-example">Example: at age 30, you should put 70% of your assets into stocks.</div><div class="rule-formula">100 - Age = Equity Allocation (%)</div>'
+  },
+  {
+    no: 3, head_zh: '50-30-20 法則', head_en: '50-30-20 Rule',
+    zh: '把稅後收入依比例分配到三個用途：<ul><li><b>50%</b> 必需支出（帳單、教育、交通、飲食等）</li><li><b>30%</b> 想要的支出（旅遊、電影、餐廳等）</li><li><b>20%</b> 儲蓄與投資</li></ul>',
+    en: 'Allocate your after-tax income across three categories:<ul><li><b>50%</b> Needs (bills, education, transport, food)</li><li><b>30%</b> Wants (travel, movies, dining out)</li><li><b>20%</b> Savings &amp; investments</li></ul>'
+  },
+  {
+    no: 4, head_zh: '第一週法則', head_en: '1st Week Rule',
+    zh: '累積財富最好的方法，就是「先付錢給自己」。每個月第一週，先把收入的 10–20% 存下來、投資出去，剩下的錢才拿來花用。',
+    en: 'The best way to build wealth is to "pay yourself first." In the first week of every month, set aside and invest 10&ndash;20% of your income before spending the rest.'
+  },
+  {
+    no: 5, head_zh: '40% 月付款法則', head_en: '40% EMI Rule',
+    zh: '你能負擔的最大貸款月付款（房貸／車貸等），不應超過月淨收入的 40%。<div class="rule-example">範例：月收入 $10,000 → 貸款月付款最多不超過 $4,000。</div>',
+    en: 'The maximum monthly loan payment you can afford (mortgage, car loan, etc.) shouldn’t exceed 40% of your net monthly income.<div class="rule-example">Example: at $10,000 monthly income, your loan payment shouldn’t exceed $4,000/month.</div>'
+  },
+  {
+    no: 6, head_zh: '6 倍緊急預備金', head_en: '6X Emergency Fund',
+    zh: '開始投資之前，先確保你有一筆緊急預備金，金額應等於 <b>6 倍</b>的每月支出。<div class="rule-example">範例：每月花費 $6,000 → 緊急預備金應準備 $36,000。</div>',
+    en: 'Before you start investing, make sure you have an emergency fund equal to <b>6x</b> your monthly expenses.<div class="rule-example">Example: at $6,000 in monthly expenses, your emergency fund should be $36,000.</div>'
+  },
+  {
+    no: 7, head_zh: '25 倍投資法則', head_en: '25X Investment Rule',
+    zh: '當你累積的資產達到「年支出的 25 倍」時，就可以開始考慮退休。<div class="rule-example">範例：每年需要 $50,000 生活費 → 退休時至少需準備 $1,250,000。</div>',
+    en: 'You can start considering retirement once your assets reach 25x your annual expenses.<div class="rule-example">Example: needing $50,000/year to live &rarr; you’ll need at least $1,250,000 to retire.</div>'
+  },
+  {
+    no: 8, head_zh: '解套公式', head_en: 'Recovery-from-Loss Rule',
+    zh: '虧損之後，需要「更高」的報酬率才能打平本金，因為計算報酬率的基礎（本金）已經變小了。虧損幅度越大，回本所需的報酬率會不成比例地飆升。<div class="rule-formula">解套所需報酬率 = 虧損% &divide; (1 &minus; 虧損%)</div><ul><li>虧損 10% → 需要 <b>+11.1%</b> 才能回本</li><li>虧損 20% → 需要 <b>+25%</b> 才能回本</li><li>虧損 50% → 需要 <b>+100%</b> 才能回本</li><li>虧損 80% → 需要 <b>+400%</b> 才能回本</li></ul><div class="rule-example">這就是為什麼控制虧損幅度（停損）比追求更高報酬更重要——避免大幅虧損，遠比事後想辦法賺回來容易。</div>',
+    en: 'After a loss, you need a "higher" return just to break even, because the base your return is calculated on (your principal) has shrunk. The bigger the loss, the more disproportionately the required recovery return spikes.<div class="rule-formula">Required Return to Break Even = Loss% &divide; (1 &minus; Loss%)</div><ul><li>A 10% loss needs <b>+11.1%</b> to break even</li><li>A 20% loss needs <b>+25%</b></li><li>A 50% loss needs <b>+100%</b></li><li>An 80% loss needs <b>+400%</b></li></ul><div class="rule-example">This is why controlling downside (stop-losses) matters more than chasing higher returns &mdash; avoiding a big loss is far easier than trying to earn your way back afterward.</div>'
+  },
+  {
+    no: 9, head_zh: '複利成長法則', head_en: '1% Compound Rule',
+    zh: '每天只要進步（或獲利）1%，持續 365 天，最終會成長到原本的 <b>37 倍以上</b>；但如果每天退步 1%，一年後只會剩下原本的 <b>3% 左右</b>。差距的關鍵，不在於某一天進步多少，而在於「絕對不要輕易打斷這個複利循環」。<div class="rule-formula">(1 + 1%)<sup>365</sup> &asymp; 37.8 倍<br>(1 &minus; 1%)<sup>365</sup> &asymp; 0.03 倍</div><ul><li>每天進步 1%，持續一年 → 原本的 1 變成約 <b>37.8</b></li><li>每天退步 1%，持續一年 → 原本的 1 剩下約 <b>0.03</b></li></ul><div class="rule-example">中斷一次、放棄一次，複利循環就得被迫重新計算——這正是為什麼「持續不中斷」比「單次進步的幅度」更重要。</div>',
+    en: 'Improve (or earn) just 1% a day for 365 days, and you’ll end up <b>more than 37x</b> better. But lose 1% a day, and after a year you’re left with only <b>about 3%</b> of where you started. The gap isn’t about how much you improve on any single day &mdash; it’s about never breaking the compounding cycle.<div class="rule-formula">(1 + 1%)<sup>365</sup> &asymp; 37.8x<br>(1 &minus; 1%)<sup>365</sup> &asymp; 0.03x</div><ul><li>Improve 1%/day for a year &rarr; 1 becomes about <b>37.8</b></li><li>Decline 1%/day for a year &rarr; 1 shrinks to about <b>0.03</b></li></ul><div class="rule-example">Break the streak once, give up once, and the compounding has to restart from scratch &mdash; that’s why staying consistent matters more than the size of any single improvement.</div>'
+  }
+];
+
+const HERO = {
+  zh: { title: '📜 人生財務守則', sub: '九個能幫你有效存錢、控制風險與維持紀律的個人理財法則。' },
+  en: { title: '📜 Life Financial Rules', sub: '9 personal finance rules that will help you save more money, manage risk, and stay disciplined.' }
+};
+
+const LANG_KEY = 'ftk-rules-lang';
+let currentLang = 'zh';
+try { currentLang = localStorage.getItem(LANG_KEY) || 'zh'; } catch (e) {}
+
+function render() {
+  document.documentElement.lang = currentLang === 'zh' ? 'zh-Hant' : 'en';
+  document.getElementById('heroTitle').textContent = HERO[currentLang].title;
+  document.getElementById('heroSub').textContent = HERO[currentLang].sub;
+  document.getElementById('langToggle').textContent = currentLang === 'zh' ? '🌐 English' : '🌐 中文';
+
+  const grid = document.getElementById('ruleGrid');
+  grid.innerHTML = RULES.map(r => `
+    <div class="rule-card">
+      <div class="rule-card-head"><span class="rule-no">${r.no}</span>${currentLang === 'zh' ? r.head_zh : r.head_en}</div>
+      <div class="rule-card-body">${currentLang === 'zh' ? r.zh : r.en}</div>
     </div>
-  </div>
+  `).join('');
+}
 
-  <div class="rule-card">
-    <div class="rule-card-head"><span class="rule-no">2</span>100 減年齡法則 100-Age Rule</div>
-    <div class="rule-card-body">
-      <span class="en">100-Age Rule</span>
-      想知道該把多少比例的資產投入股票（權益）？用 100 減去你的年齡，就能得到答案。
-      <div class="rule-example">範例：30 歲時，應把 70% 的資產投入股票。</div>
-      <div class="rule-formula">100 - 年齡 = 股票投資比例 (%)</div>
-    </div>
-  </div>
+document.getElementById('langToggle').addEventListener('click', () => {
+  currentLang = currentLang === 'zh' ? 'en' : 'zh';
+  try { localStorage.setItem(LANG_KEY, currentLang); } catch (e) {}
+  render();
+});
 
-  <div class="rule-card">
-    <div class="rule-card-head"><span class="rule-no">3</span>50-30-20 法則</div>
-    <div class="rule-card-body">
-      <span class="en">50-30-20 Rule</span>
-      把稅後收入依比例分配到三個用途：
-      <ul>
-        <li><b>50%</b> 必需支出（帳單、教育、交通、飲食等）</li>
-        <li><b>30%</b> 想要的支出（旅遊、電影、餐廳等）</li>
-        <li><b>20%</b> 儲蓄與投資</li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="rule-card">
-    <div class="rule-card-head"><span class="rule-no">4</span>第一週法則 1st Week Rule</div>
-    <div class="rule-card-body">
-      <span class="en">1st Week Rule</span>
-      累積財富最好的方法，就是「先付錢給自己」。每個月第一週，先把收入的 10–20% 存下來、投資出去，剩下的錢才拿來花用。
-    </div>
-  </div>
-
-  <div class="rule-card">
-    <div class="rule-card-head"><span class="rule-no">5</span>40% 月付款法則 40% EMI Rule</div>
-    <div class="rule-card-body">
-      <span class="en">40% EMI Rule</span>
-      你能負擔的最大貸款月付款（房貸／車貸等），不應超過月淨收入的 40%。
-      <div class="rule-example">範例：月收入 $10,000 → 貸款月付款最多不超過 $4,000。</div>
-    </div>
-  </div>
-
-  <div class="rule-card">
-    <div class="rule-card-head"><span class="rule-no">6</span>6 倍緊急預備金 6X Emergency Fund</div>
-    <div class="rule-card-body">
-      <span class="en">6X Emergency Fund</span>
-      開始投資之前，先確保你有一筆緊急預備金，金額應等於 <b>6 倍</b>的每月支出。
-      <div class="rule-example">範例：每月花費 $6,000 → 緊急預備金應準備 $36,000。</div>
-    </div>
-  </div>
-
-  <div class="rule-card">
-    <div class="rule-card-head"><span class="rule-no">7</span>25 倍投資法則 25X Investment Rule</div>
-    <div class="rule-card-body">
-      <span class="en">25X Investment Rule</span>
-      當你累積的資產達到「年支出的 25 倍」時，就可以開始考慮退休。
-      <div class="rule-example">範例：每年需要 $50,000 生活費 → 退休時至少需準備 $1,250,000。</div>
-    </div>
-  </div>
-
-  <div class="rule-card">
-    <div class="rule-card-head"><span class="rule-no">8</span>解套公式 Recovery-from-Loss Rule</div>
-    <div class="rule-card-body">
-      <span class="en">Recovery-from-Loss Rule</span>
-      虧損之後，需要「更高」的報酬率才能打平本金，因為計算報酬率的基礎（本金）已經變小了。虧損幅度越大，回本所需的報酬率會不成比例地飆升。
-      <div class="rule-formula">解套所需報酬率 = 虧損% &divide; (1 &minus; 虧損%)</div>
-      <ul>
-        <li>虧損 10% → 需要 <b>+11.1%</b> 才能回本</li>
-        <li>虧損 20% → 需要 <b>+25%</b> 才能回本</li>
-        <li>虧損 50% → 需要 <b>+100%</b> 才能回本</li>
-        <li>虧損 80% → 需要 <b>+400%</b> 才能回本</li>
-      </ul>
-      <div class="rule-example">這就是為什麼控制虧損幅度（停損）比追求更高報酬更重要——避免大幅虧損，遠比事後想辦法賺回來容易。</div>
-    </div>
-  </div>
-
-  <div class="rule-card">
-    <div class="rule-card-head"><span class="rule-no">9</span>複利成長法則 1% Compound Rule</div>
-    <div class="rule-card-body">
-      <span class="en">The Compound Effect / 1% Rule</span>
-      每天只要進步（或獲利）1%，持續 365 天，最終會成長到原本的 <b>37 倍以上</b>；但如果每天退步 1%，一年後只會剩下原本的 <b>3% 左右</b>。差距的關鍵，不在於某一天進步多少，而在於「絕對不要輕易打斷這個複利循環」。
-      <div class="rule-formula">(1 + 1%)<sup>365</sup> &asymp; 37.8 倍<br>(1 &minus; 1%)<sup>365</sup> &asymp; 0.03 倍</div>
-      <ul>
-        <li>每天進步 1%，持續一年 → 原本的 1 變成約 <b>37.8</b></li>
-        <li>每天退步 1%，持續一年 → 原本的 1 剩下約 <b>0.03</b></li>
-      </ul>
-      <div class="rule-example">中斷一次、放棄一次，複利循環就得被迫重新計算——這正是為什麼「持續不中斷」比「單次進步的幅度」更重要。</div>
-    </div>
-  </div>
-
-</div>
+render();
+</script>
 
 <script>window.FTK_ROOT = '../../'; window.FTK_PAGE = 'rules';</script>
 <script src="../../assets/shared.js"></script>
