@@ -46,12 +46,29 @@
   <a class="ftk-card" href="tools/rules/index.html">
     <span class="ftk-card-icon">📜</span>
     <h3>人生財務守則 Life Financial Rules</h3>
-    <p>7 個幫你有效存錢與規劃財務的經典法則：72法則、100減年齡法則、50-30-20法則等。</p>
+    <p>8 個幫你有效存錢與控制風險的經典法則：72法則、100減年齡法則、50-30-20法則、解套公式等。</p>
     <span class="ftk-card-tag">Financial Wisdom</span>
   </a>
 </div>
 
+<div style="text-align:center;padding:4px 0 48px;font-family:monospace;font-size:.68rem;color:var(--ftk-text-dim);">
+  最後更新 Last updated: <span id="lastUpdated">—</span>
+</div>
+
 <script>window.FTK_ROOT = './'; window.FTK_PAGE = 'home';</script>
 <script src="assets/shared.js"></script>
+<script>
+  // document.lastModified reflects this file's actual Last-Modified HTTP
+  // header (GitHub Pages sets it from the file's git history), so this
+  // stays accurate automatically without needing to hand-edit a date
+  // string on every future change.
+  (function(){
+    var d = new Date(document.lastModified);
+    var el = document.getElementById('lastUpdated');
+    if (el && !isNaN(d)) {
+      el.textContent = d.toLocaleString('zh-TW', {year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'});
+    }
+  })();
+</script>
 </body>
 </html>
