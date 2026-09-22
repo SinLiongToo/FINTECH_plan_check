@@ -441,7 +441,7 @@ const STOCKS=[
   {sym:"3711.TW", name:"ASE Tech",      cn:"\u65e5\u6708\u5149",         since:2008},
   {sym:"2412.TW", name:"Chunghwa Tel",  cn:"\u4e2d\u83ef\u96fb",         since:2005},
   // No built-in synthetic RAW data for these three (US-listed ETFs) \u2014
-  // hydrated from data/stock_data.json on load, see hydrateStaticOnlyStocks().
+  // hydrated from data/stock_data.json on load, see hydrateAllStocks().
   {sym:"VT",       name:"Vanguard Total World", cn:"Global Stock ETF", since:2008, staticOnly:true},
   {sym:"BND",      name:"Vanguard Total Bond",  cn:"US Bond ETF",      since:2007, staticOnly:true},
   {sym:"SOXX",     name:"iShares Semiconductor",cn:"Semiconductor ETF",since:2001, staticOnly:true},
@@ -479,14 +479,18 @@ STOCKS.forEach(s=>{
   c.className="chip"+(s.sym===curSym?" on":"");
   c.dataset.s=s.sym;
   c.innerHTML=`<span class="csym">${s.sym.replace(".TW","")}</span><span class="cname">${s.cn}</span><span class="cprice" id="cp_${s.sym.replace(/\W/g,"_")}">—</span>`;
-  if (s.staticOnly) {
-    // No built-in synthetic RAW data for this one — always load (or
-    // reuse already-loaded) real data from data/stock_data.json instead
-    // of falling through to the normal built-in-data click path.
-    c.addEventListener("click", async () => { await applyStaticDataFor(s.sym); displayStaticSymbol(s.sym); });
-  } else {
-    c.addEventListener("click",()=>{ curSym=s.sym; setChip(); liveMode=false; recompute(); });
-  }
+  c.addEventListener("click", async () => {
+    // Prefer real data/stock_data.json data whenever it's available
+    // (cheap no-op if already hydrated) — only chips with no live data at
+    // all (data/stock_data.json unreachable, or a symbol not in it) fall
+    // back to the built-in synthetic GBM history, if one exists for it.
+    await applyStaticDataFor(s.sym);
+    if (liveRAW[s.sym]) {
+      displayStaticSymbol(s.sym);
+    } else if (!s.staticOnly) {
+      curSym = s.sym; setChip(); liveMode = false; recompute();
+    }
+  });
   chipRow.appendChild(c);
 });
 function setChip(){ document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("on",c.dataset.s===curSym)); }
@@ -1090,21 +1094,27 @@ function loadStockDB() {
 }
 loadStockDB(); // kick off in the background on page load
 
-// Built-in chips with no baked-in synthetic RAW data (STOCKS' staticOnly
-// flag — VT/BND/SOXX) need a real fetch before they show a price or chart.
-// Pre-load them in the background so their chip price is already filled in
-// by the time the user clicks, instead of only loading on click.
-async function hydrateStaticOnlyStocks() {
+// Load real data/stock_data.json prices for every built-in chip in the
+// background on page load — not just VT/BND/SOXX (which have no synthetic
+// fallback at all). Without this, every chip defaulted to the baked-in GBM
+// data, whose fixed end date doesn't track "today" — it looked like the
+// pipeline wasn't updating when really the page just hadn't been told to
+// use the fresher data it already had available.
+async function hydrateAllStocks() {
   for (const s of STOCKS) {
-    if (!s.staticOnly) continue;
     if (await applyStaticDataFor(s.sym)) {
       const last = liveRAW[s.sym][liveRAW[s.sym].length - 1];
       const cp = document.getElementById("cp_" + s.sym.replace(/\W/g, "_"));
       if (cp && last) cp.textContent = last.close.toLocaleString(undefined, {maximumFractionDigits: 0});
     }
   }
+  // Refresh whichever chip is currently shown (respects a chip the user
+  // may have already clicked while this was loading) so the first chart
+  // the user actually sees is real data too, not the fixed-date synthetic
+  // history.
+  if (liveRAW[curSym]) displayStaticSymbol(curSym);
 }
-hydrateStaticOnlyStocks();
+hydrateAllStocks();
 
 // Populate liveRAW[sym] from the static DB. Returns true on success.
 async function applyStaticDataFor(sym) {
