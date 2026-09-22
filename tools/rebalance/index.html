@@ -1571,6 +1571,35 @@
         }
 
         // Fetch a single stock price/name
+        // Site-wide static price cache (data/stock_data.json, built by
+        // GitHub Actions + yfinance — see tools/stock-drop for the same
+        // pipeline). Same-origin, so no CORS proxy needed and no rate
+        // limiting risk, unlike the public AllOrigins fallback below.
+        let STATIC_STOCK_DATA = null;
+        async function loadStaticStockData() {
+            if (STATIC_STOCK_DATA === null) {
+                try {
+                    const res = await fetch('../../data/stock_data.json');
+                    STATIC_STOCK_DATA = res.ok ? await res.json() : {};
+                } catch (e) {
+                    STATIC_STOCK_DATA = {};
+                }
+            }
+            return STATIC_STOCK_DATA;
+        }
+        async function applyStaticPriceFor(idx) {
+            const asset = portfolio[idx];
+            const db = await loadStaticStockData();
+            const key = asset.ticker.toLowerCase();
+            const rec = db[key] || db[key.replace(/\.tw$/, '')] || db[key + '.tw'];
+            if (!rec || typeof rec.current_price !== 'number') return false;
+            portfolio[idx].price = rec.current_price;
+            if (rec.name && (!portfolio[idx].name || portfolio[idx].name === asset.ticker)) {
+                portfolio[idx].name = rec.name;
+            }
+            return true;
+        }
+
         async function fetchSingleStock(idx) {
             const asset = portfolio[idx];
             const originalBtn = document.getElementById('fetchPricesBtn');
@@ -1596,10 +1625,22 @@
                     }
                 }
             } catch (e) {
-                console.log("Local API proxy offline. Trying fallback proxy...");
+                console.log("Local API proxy offline. Trying static data pipeline...");
             }
 
-            // Fallback: CORS proxy to Yahoo Finance
+            // Fallback: same-origin static data pipeline (data/stock_data.json)
+            try {
+                if (await applyStaticPriceFor(idx)) {
+                    renderTable();
+                    calculateRebalance();
+                    originalBtn.disabled = false;
+                    return;
+                }
+            } catch (e) {
+                console.log("Static data pipeline lookup failed, trying CORS proxy...");
+            }
+
+            // Last resort: public CORS proxy to Yahoo Finance
             let yahooSymbol = asset.ticker;
             if (asset.market === 'TW' && /^\d+$/.test(asset.ticker)) {
                 yahooSymbol = `${asset.ticker}.TW`;
