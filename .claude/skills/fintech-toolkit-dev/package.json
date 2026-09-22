@@ -1,0 +1,9 @@
+{
+  "name": "fintech-toolkit-dev",
+  "private": true,
+  "description": "Dev-only tooling for testing project_claude_FINTECH (not part of the deployed site).",
+  "type": "module",
+  "devDependencies": {
+    "playwright": "^1.40.0"
+  }
+}
