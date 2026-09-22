@@ -1,6 +1,6 @@
 # Implementation Plan（2026-09-20 建立，隨實作進度持續更新）
 
-狀態：Phase 0～4 已完成並上線。剩下 Phase 5 的「真人手機實機測試」與少數列為刻意不做/後續可選的項目。
+狀態：Phase 0～6 已完成並上線。剩下真人手機實機測試與少數列為刻意不做/後續可選的項目。
 
 ## 目標
 
@@ -10,7 +10,7 @@
 
 ```
 project_claude_FINTECH/
-├── index.html                     ← 入口儀表板，4張卡片連到各工具
+├── index.html                     ← 入口儀表板，5張卡片連到各頁面 + 最後更新時間
 ├── README.md                      ← 專案總覽 + 資料策略決策紀錄
 ├── IMPLEMENTATION_PLAN.md         ← 本文件
 ├── assets/
@@ -20,9 +20,10 @@ project_claude_FINTECH/
 │   ├── stock-drop/index.html      ← 複製自 taiwan_stock_v4.html
 │   ├── rebalance/index.html       ← 複製自 rebalance.html
 │   ├── retirement/index.html      ← 複製自 retirement simulation.html
-│   └── loan/index.html            ← 複製自 fintech_loan_investment_tool.html
+│   ├── loan/index.html            ← 複製自 fintech_loan_investment_tool.html
+│   └── rules/index.html           ← 全新頁面：人生財務守則（9 條，中英文切換）
 ├── data/
-│   └── stock_data.json            ← 方案 D 產生的股價快取（台股 + 美股）
+│   └── stock_data.json            ← 方案 D 產生的股價快取（台股 + 美股，55 檔）
 ├── fetch_stock_data.py            ← 改編自既有 dashboard 專案的抓股價腳本
 ├── .github/workflows/
 │   └── daily_stock_update.yml     ← 排程 Action：跑 fetch_stock_data.py 並 commit 回 repo
@@ -65,7 +66,7 @@ project_claude_FINTECH/
 - [x] 本機實際跑過 `python fetch_stock_data.py --all`：55/55 成功，驗證過 JSON 結構（`data/stock_data.json`，每檔股票同時用 `symbol`／小寫代號／台股去點號代號 3 種 key 存取）。
 - [x] 建立 `.github/workflows/daily_stock_update.yml`：台股收盤（UTC 06:30）與美股收盤（UTC 22:00）各跑一次 + `workflow_dispatch` 手動觸發，跑完用 `github-actions[bot]` 身分 commit + push `data/stock_data.json`。
 - [x] Stock Drawdown Explorer：「⚡ Refresh current」與「⚡⚡ Refresh all 15」現在都會在偵測不到本機 `server.py`（GitHub Pages 上一定偵測不到）時，自動 fallback 改讀 `data/stock_data.json`，用 headless Chromium 實測過兩個按鈕在完全沒有本機伺服器的情況下都能正確載入真實股價、更新圖表與 chip 上的價格。
-- [ ] Rebalance Engine：**刻意沒有另外接 `data/stock_data.json`**。原因：這個工具的「🔄 自動抓取即時股價」本來就已經有 fallback 機制（先試本機 `/api/stock`，失敗後改打公開 CORS proxy `api.allorigins.win` 轉發 Yahoo Finance），也就是我們比較表裡的方案 C，是原工具自己就設計好的行為，不是我引入的。在 GitHub Pages 上這條路徑目前應該能動（取決於 allorigins.win 是否可用/限流），先不重工，列為可選的後續加強項目。
+- [x] Rebalance Engine：原本刻意沒接（理由：本來就有 allorigins.win CORS proxy 當 fallback，先不重工）。**上線後使用者實測回報「還是舊資料」**，用 Playwright 監看正式站的網路請求直接抓到證據：同一批請求裡 VT 抓成功、BND 和 0050.TW 都是 `net::ERR_FAILED`，公開代理不穩定且失敗時沒有任何提示。已改接：本機伺服器 → `data/stock_data.json` → allorigins.win（僅限資料庫沒收錄的自訂代號）。詳見 Phase 6。
 
 ### Phase 4 — 美股搜尋（新功能，已完成）
 - [x] 在 Stock Drawdown Explorer 的 chip 列下方新增「🔍 Search US stocks」輸入框，即時比對 `data/stock_data.json` 裡幣別為 USD 的所有代號 + 公司名稱（大小寫不敏感、代號或名稱局部比對皆可，如打 `nvda` 或 `apple` 都能找到），下拉最多顯示 8 筆結果。
@@ -78,9 +79,24 @@ project_claude_FINTECH/
 - [x] 確認四個工具間可自由切換（導覽列 + 返回總覽按鈕），狀態互不干擾（各工具用獨立 `localStorage`/記憶體狀態，僅共用 `ftk-theme`）
 - [ ] 真人手機（iOS/Android 實機瀏覽器）尚未測試，僅用 headless Chromium 模擬 375px 視窗驗證
 
+### Phase 6 — 上線後的使用者回報修正與強化
+
+上線之後陸續收到的實際使用回報與追加需求，逐項記錄：
+
+- [x] **鴻海錯字**：STOCKS 陣列裡的中文名稱用錯 Unicode 碼點寫成「鉤海」，修正為「鴻海」（正確碼點 U+9D3B，不是 U+9D3F=「鴿」）。
+- [x] **Loan 工具新增 Help 按鈕**：原本就有完整的 README/Changelog 分頁，但排在 9 個分頁裡的最後一個很容易被忽略；標題列加一顆常駐按鈕直接跳過去並捲動到可見範圍。
+- [x] **Loan 工具新增金句跑馬燈**：仿照 Retirement 工具的巴菲特金句跑馬燈，但改成中英文同一行顯示（跟 Loan 工具原本「中文 / English」並列的風格一致，不是切換語言）；先做 10 句，後續依需求擴充到 20 句（愛因斯坦複利、巴菲特、查理蒙格、戴夫·拉姆齊等）。
+- [x] **股價下跌追蹤：日期標籤誤導**：「Static live data」標籤原本顯示的是「腳本抓取當天」的日期（`as_of`），但因為資料是週線，這個日期常常跟圖表最後一筆的實際日期對不上（使用者回報「圖表明明是 9/14，標籤卻寫 9/20」）。改成直接讀圖表最後一筆的實際日期；過程中還修正了一個用 `toISOString()` 造成的時區位移 bug（會因為轉 UTC 而讓日期整個誤差一天）。
+- [x] **股價下跌追蹤：RANGE 篩選在資料略舊時顯示空白**：3M/6M 等範圍原本是用「瀏覽當下的真實時間」往回算，但內建 GBM 資料的最後一筆是固定日期（不會跟著今天走），資料越舊、篩選範圍越窄就越容易整個落在資料範圍之外變成空白。改成以資料本身最後一筆為基準往回算。新增 1W / 1M 兩個更短的範圍選項（因為資料本身是週線，1W 通常只有 1–2 個點，這是資料粒度的先天限制，不是 bug）。
+- [x] **股價下跌追蹤：調整內建股票清單**：移除大立光(3008)、富邦金(2881)、中信金(2891)、兆豐金(2886)；新增 VT、BND、SOXX（這三檔沒有內建的 GBM 模擬資料，改成頁面載入時自動從 `data/stock_data.json` 抓真實資料）。頁面底部加上版本標示。
+- [x] **股價下跌追蹤：chip 列捲動不明顯**：新增的 VT/BND/SOXX 因為 chip 列變寬，超出畫面的部分要靠隱藏捲軸（`scrollbar-width:none`，刻意設計但沒有替代提示）才能滑到，使用者反應「新增的怎麼不見了」。先加了一個淡出漸層提示，使用者又回報「滑過去後滑不回來」——因為單純用滑鼠滾輪本來就無法左右捲動這種容器。最後改成真正的 ‹ › 按鈕，點擊即可雙向捲動，用程式驗證過滑到底再滑回起點確實能回到 `scrollLeft:0`。
+- [x] **新增第 5 個頁面「人生財務守則」**：使用者提供一張「7 Personal Finance Rules」資訊圖，翻譯成中文並建成新頁面（用共用設計系統 `assets/shared.css` 從零寫成，不是搬移既有工具，因此深淺色主題是免費繼承來的）。加進首頁卡片與全站導覽列。後續依需求追加第 8 條（解套公式：`解套所需報酬率 = 虧損% ÷ (1-虧損%)`）與第 9 條（複利成長法則：`(1.01)^365 ≈ 37.8`）。最後把整頁改成 JS 資料驅動（`RULES` 陣列 + `render()`），加上真正的中英文切換按鈕（不是原本只有中文內文 + 英文小標籤，是重新寫了完整的英文翻譯）。
+- [x] **首頁新增最後更新時間**：用 `document.lastModified` 讀取 GitHub Pages 實際回報的檔案更新時間（已用 `curl -I` 驗證過這個 header 準確可靠），不需要每次改動都手動更新日期字串。
+- [x] **股價下跌追蹤：預設只有部分股票是即時資料**：使用者回報「資料倒退回 4-5 月了」——原因是頁面預設一律顯示寫死在 HTML 裡的 GBM 模擬資料（固定停在 2026-06-01 左右），只有手動按 Refresh 或用搜尋加入的股票才會換成即時資料，不是排程沒 push（用 `gh run list` 查過排程一直都成功執行）。改成頁面一載入就在背景把「所有」內建股票（不只是 VT/BND/SOXX）換成 `data/stock_data.json` 的即時資料，點擊任何 chip 都會優先使用即時資料，找不到才退回 GBM 模擬資料。
+- [x] **Rebalance Engine：自動抓取即時股價回報「還是舊資料」**：用 Playwright 監看正式站按下「🔄 自動抓取即時股價」後的實際網路請求，抓到 AllOrigins 公開代理對同一批請求裡部分成功、部分 `net::ERR_FAILED`（BND、0050.TW 失敗），且失敗時完全沒有錯誤提示。改接 `data/stock_data.json` 當中間備援（本機伺服器 → 靜態資料管線 → AllOrigins，AllOrigins 只保留給資料庫沒收錄的自訂代號）。
+
 ## 後續可選的加強項目（非阻塞，未動手做）
 
-- Rebalance Engine 改接 `data/stock_data.json`，取代/補強它現有的 `allorigins.win` CORS proxy fallback，會更穩定但非必要（現有機制已經能動）。
 - 美股搜尋擴大到「任意代號都能即時查」而非侷限在 `fetch_stock_data.py` 內建的清單，需要方案 A（Cloudflare Worker）或擴充 ticker map。
 - Rebalance Engine「股債年齡試算配置」在 375px 手機寬度下的水平溢出（Phase 2 驗證時發現的既有瑕疵，非本次合併造成）。
 - 真人手機（iOS/Android 實機瀏覽器）測試，目前只用 headless Chromium 模擬 375px 視窗驗證過。

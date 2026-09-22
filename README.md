@@ -1,6 +1,6 @@
-# FinTech Toolkit（四合一理財工具箱）
+# FinTech Toolkit（理財工具箱）
 
-把四個原本獨立的理財小工具合併成一個共用外殼（導覽列 / 深淺色主題 / 手機版）的靜態網站，部署在 GitHub Pages。
+把四個原本獨立的理財小工具 + 一份理財觀念參考頁，合併成一個共用外殼（導覽列 / 深淺色主題 / 手機版）的靜態網站，部署在 GitHub Pages。
 
 **上線網址：https://sinliongtoo.github.io/FINTECH_plan_check/**
 Repo：[SinLiongToo/FINTECH_plan_check](https://github.com/SinLiongToo/FINTECH_plan_check)
@@ -13,38 +13,53 @@ Repo：[SinLiongToo/FINTECH_plan_check](https://github.com/SinLiongToo/FINTECH_p
 
 ---
 
-## 四個工具
+## 五個頁面
 
-| 工具 | 來源檔案 | 技術 | 是否需要外部資料 |
+| 頁面 | 來源 | 資料來源 | 備註 |
 |---|---|---|---|
-| 📉 Stock Drawdown Explorer | `taiwan_stock_v4.html` | Vanilla JS + Chart.js | 選用（見下方） |
-| ⚖️ Rebalance Engine | `rebalance.html` | Vanilla JS + Chart.js + Tailwind CDN | 選用（見下方） |
-| 🏖️ Retirement Simulator | `retirement simulation.html` | Vanilla JS + Chart.js | 否，純本地試算 |
-| 💰 Loan Investment Simulator | `fintech_loan_investment_tool.html` | Vanilla JS + Chart.js + Service Worker 離線快取 | 否，純本地試算 |
+| 📉 [股價下跌追蹤](tools/stock-drop/) | `taiwan_stock_v4.html` | `data/stock_data.json`（見下方管線） | 14 檔內建（台股個股 + TAIEX）+ VT/BND/SOXX + 美股搜尋（55 檔資料庫） |
+| ⚖️ [再平衡計算](tools/rebalance/) | `rebalance.html` | `data/stock_data.json` → AllOrigins CORS proxy（僅限資料庫沒收錄的自訂代號） | 雙幣別（TWD/USD）獨立投入 or 全球統一再平衡 |
+| 🏖️ [退休試算](tools/retirement/) | `retirement simulation.html` | 純本地試算 | 內建中英文切換、巴菲特金句跑馬燈 |
+| 💰 [貸款投資試算](tools/loan/) | `fintech_loan_investment_tool.html` | 純本地試算 | 內建 20 句中英雙語理財金句跑馬燈、Help 按鈕直達說明頁 |
+| 📜 [人生財務守則](tools/rules/)（新增） | 全新內容 | 純靜態 | 9 條理財法則（72法則、100減年齡、50-30-20、解套公式、複利成長…），內建中英文切換 |
 
-四個檔案都是**單一 HTML、無 build step**，內嵌全部 CSS/JS，天生適合 GitHub Pages。詳細驗證結果見下方「工具驗證」章節。
+四個原始工具都是**單一 HTML、無 build step**，內嵌全部 CSS/JS，天生適合 GitHub Pages；第 5 個頁面完全用共用設計系統（`assets/shared.css`）新寫。詳細個別驗證結果見下方「工具驗證」章節。
+
+---
+
+## 共用外殼功能
+
+- **導覽列**：所有頁面共用，可在 5 個頁面間自由切換，工具頁另外有常駐的「← 返回總覽」按鈕。
+- **深/淺色模式**：全站共用一顆切換鈕（存在 `localStorage`），四個原始工具 + 新增頁面全部都支援（Rebalance/Loan 原本就用 CSS 變數管理色彩，直接加一組淺色變數；Retirement 是 Tailwind 工具類寫死深色，改成針對實際用到的類別逐一覆寫；Stock Drawdown Explorer 本來就有 light/dark class，直接接上共用按鈕）。
+- **手機版**：所有頁面在 375px 寬度下都可正常操作（表格橫向捲動、輸入區可折疊、股票 chip 列有 ‹ › 按鈕可左右捲動）。
+- **首頁最後更新時間**：用 `document.lastModified` 讀取 GitHub Pages 回報的實際檔案更新時間，不需要手動維護日期字串。
 
 ---
 
 ## 股價資料策略：為什麼選 GitHub Actions + yfinance
 
-GitHub Pages 只能放靜態檔案，不能跑 Python，所以「即時抓股價」（含新增的美股搜尋）不能直接沿用原本兩個工具裡的 `server.py`（本機 CORS 代理）。討論過程中比較了 4 種做法：
+GitHub Pages 只能放靜態檔案，不能跑 Python，所以「即時抓股價」（含美股搜尋）不能直接沿用原本工具裡的 `server.py`（本機 CORS 代理）。討論過程中比較了 4 種做法：
 
 | 方案 | 做法 | 優點 | 缺點 | 是否採用 |
 |---|---|---|---|---|
 | A. 雲端代理 (Cloudflare Worker) | 部署一個免費 Worker，功能等同 `server.py`，前端即時呼叫 | 使用者輸入任意美股代號都能「當下」即時查 | 需要額外的 Cloudflare 帳號、多一個服務要維護 | 否 |
-| B. 純靜態、無即時資料 | 比照 `update_prices.py`，本地先跑腳本把股價寫死進 HTML | 零額外服務、最穩定 | 股價不即時，美股搜尋功能有限 | 否（可當保底 fallback） |
-| C. 公開 CORS Proxy | 直接呼叫 `corsproxy.io` / `allorigins` 等公開代理轉發 Yahoo Finance | 最快實作 | 公開服務不穩定、常被限流或關閉，不適合長期依賴 | 否 |
-| **D. GitHub Actions + yfinance（採用）** | 排程 Action 在 GitHub 自己的伺服器上用 `yfinance` 抓資料，算好指標後把結果寫成靜態 `data/stock_data.json` 並 commit 回 repo；網頁只讀這份預先算好的 JSON | 不需要額外帳號/服務、完全留在 GitHub 生態系內、**已有現成可用的實作可以直接複用**（見下） | 資料是「排程快取」而非使用者輸入當下即時抓，最多落後半個交易日；若要做到任意美股代號的即時 autocomplete 查詢，仍需額外設計「on-demand 觸發」路徑 | ✅ 是 |
+| B. 純靜態、無即時資料 | 比照 `update_prices.py`，本地先跑腳本把股價寫死進 HTML | 零額外服務、最穩定 | 股價不即時，美股搜尋功能有限 | 否（當作內建 fallback 資料，見下） |
+| C. 公開 CORS Proxy | 直接呼叫 `corsproxy.io` / `allorigins` 等公開代理轉發 Yahoo Finance | 最快實作 | **實測證實不穩定**：Rebalance 用這個當備援時，同一批請求裡部分代號成功、部分 `net::ERR_FAILED`，且失敗時沒有任何提示，會靜默顯示舊資料 | 僅保留給不在方案 D 資料庫裡的自訂代號當最後備援 |
+| **D. GitHub Actions + yfinance（主要方案）** | 排程 Action 在 GitHub 自己的伺服器上用 `yfinance` 抓資料，寫成靜態 `data/stock_data.json` 並 commit 回 repo；網頁只讀這份預先算好的 JSON，同源請求、無 CORS 問題 | 不需要額外帳號/服務、完全留在 GitHub 生態系內、同源不受 CORS/流量限制 | 資料是「排程快取」而非使用者輸入當下即時抓，最多落後到下一次排程；覆蓋範圍限定在內建的 55 檔 ticker map | ✅ 是，Stock Drawdown Explorer 與 Rebalance Engine 兩個工具共用 |
 
-**方案 D 的實際運作方式**（沿用並改編自既有專案 `FINICIAL ANNUAL REPORT DOWNLOAD TO MD_dashboard/fetch_stock_data.py` 與 `.github/workflows/daily_stock_update.yml`）：
+**方案 D 的實際運作方式**：
 
-1. `fetch_stock_data.py`（本專案的版本，從 dashboard 專案改編、簡化）用 `yfinance` 抓每檔股票的**週線**完整歷史（`period="max", interval="1wk"`），計算 52 週高低、漲跌幅，寫進 `data/stock_data.json`。改用週線而非日線是為了跟兩個工具內建的「Weekly GBM data」粒度一致，也讓檔案大小可控（55 檔股票、完整歷史，約 6.8 MB）。內建 ticker map 涵蓋 Stock Drawdown Explorer 的 15 檔台股 + TAIEX、Rebalance 的 VT/BND/0050，再加 6 檔大盤 ETF 與 33 檔美股大型股（共 55 檔）作為美股搜尋的資料庫。
+1. `fetch_stock_data.py` 用 `yfinance` 抓每檔股票的**週線**完整歷史（`period="max", interval="1wk"`），計算 52 週高低、漲跌幅，寫進 `data/stock_data.json`。改用週線而非日線是刻意的選擇：跟兩個工具內建的「Weekly GBM data」粒度一致，也讓檔案大小可控（55 檔股票、完整歷史，約 7 MB）。內建 ticker map 涵蓋 Stock Drawdown Explorer 的 14 檔台股 + TAIEX、Rebalance 的 VT/BND/0050 預設持股，再加 6 檔大盤 ETF 與美股大型股（共 55 檔）作為美股搜尋的資料庫。
 2. GitHub Actions 排程在台股收盤（UTC 06:30）與美股收盤（UTC 22:00）各跑一次，也可手動觸發（`workflow_dispatch`）。
 3. 因為抓資料的動作發生在 **GitHub Actions 的伺服器**、不是使用者瀏覽器，完全沒有 CORS 問題。
-4. Action 用 `github-actions[bot]` 身分把更新後的 `data/stock_data.json` commit + push 回 repo；GitHub Pages 上線的網頁純粹讀取這份寫死的 JSON，頁面載入時不即時打 API。
+4. Action 用 `github-actions[bot]` 身分把更新後的 `data/stock_data.json` commit + push 回 repo；GitHub Pages 上線的網頁純粹讀取這份 JSON，頁面載入時不即時打 API。
+5. **Stock Drawdown Explorer**：頁面一載入就在背景把所有內建股票的資料換成這份即時資料（不用手動按 Refresh），「Refresh current / Refresh all」按鈕偵測不到本機伺服器時也會自動用這份資料當備援；美股搜尋框直接在這份資料集裡比對代號/公司名稱。
+6. **Rebalance Engine**：「🔄 自動抓取即時股價」按鈕依序嘗試本機伺服器 → 這份靜態資料 → AllOrigins 公開代理（僅限資料庫沒收錄的自訂代號）。
 
-合併後的四個工具會共用同一份 `data/stock_data.json` 作為股價資料底層：Stock Drawdown Explorer 用它畫走勢圖、Rebalance Engine 用它抓最新價格試算，新增的「美股搜尋」也是在這份資料集裡做代號/名稱比對搜尋。
+### 已知限制
+
+- **資料新鮮度取決於 Yahoo Finance 自己的發布節奏，不是排程有沒有跑**：實測發現台股個股（如台積電、鴻海）通常比 TAIEX 指數或美股 ETF 更新得快；指數/美股某週的資料有時要等 1–2 天才會出現在 Yahoo 的回應裡（查詢當下是 `NaN`），不是我們的 pipeline 壞掉，下一次排程抓到新資料就會自動更新。
+- 美股搜尋侷限在 `fetch_stock_data.py` 內建的 ticker map（目前 55 檔），沒有做到「輸入任意代號都能即時查」——如果需要，可以改用方案 A（Cloudflare Worker）擴充。
 
 ---
 
@@ -53,34 +68,36 @@ GitHub Pages 只能放靜態檔案，不能跑 Python，所以「即時抓股價
 四個原始檔案在複製進來之前先做過結構檢查，確認是否為「可直接搬遷」的自包含檔案：
 
 ### 📉 Stock Drawdown Explorer (`taiwan_stock_v4.html`)
-- ✅ 完全自包含：股價資料以 `const RAW = {...}` 直接內嵌在 `<script>` 裡，**不是**從外部 `raw_data.js` 載入。
-- ⚠️ 同資料夾裡的 `raw_data.js` 與 `DRAWNDOWN EXPLORER/taiwan_stock_v3 (1).html` 是舊版殘留檔案，目前的 v4 沒有引用它們，合併時**不需要一併複製**。
-- ✅ 「⚡ Refresh current」「⚡⚡ Refresh all 15」已改成：先試本機 `localhost:8765`（`server.py`），偵測不到就自動 fallback 讀 `data/stock_data.json`，部署到 GitHub Pages 後一樣能載入真實股價。
-- ✅ **新增美股搜尋**：chip 列下方新增搜尋框，即時比對 `data/stock_data.json` 裡的美股代號/公司名稱，選取後動態加一個 chip 並載入該股票的真實歷史跌幅分析。
+- ✅ 完全自包含：股價資料以 `const RAW = {...}` 直接內嵌在 `<script>` 裡。
+- ✅ 頁面載入時自動把所有內建股票換成 `data/stock_data.json` 的即時資料（不用手動按 Refresh），「Refresh current / Refresh all」在部署站上一樣能正確 fallback。
+- ✅ 美股搜尋：chip 列下方新增搜尋框，即時比對美股代號/公司名稱，選取後動態加一個 chip 並載入真實歷史跌幅分析。
+- ✅ chip 列加了左右 ‹ › 捲動按鈕（原本靠隱藏捲軸手動滑動，容易滑過去後不知道怎麼滑回來）。
+- ✅ RANGE 篩選（3M/6M/1Y…）改成以資料本身最後一筆日期為基準往回算，而不是用瀏覽當下的真實時間——避免資料略舊時篩窄範圍會整個顯示空白。新增 1W / 1M 兩個更短的範圍選項。
 - ✅ 已有 light/dark class 機制，已接到全站共用的主題切換鈕上。
 
 ### ⚖️ Rebalance Engine (`rebalance.html`)
-- ✅ 完全自包含：只依賴外部 CDN（Chart.js + Google Fonts），沒有任何本地相對路徑檔案依賴。
-- ℹ️ `prototype/REALANCE.html` 是較早期的原型版本，合併時採用根目錄的 `rebalance.html`（新版，含雙模式再平衡邏輯）。
-- ℹ️ 「🔄 自動抓取即時股價」按鈕同樣呼叫本機 `server.py`（TWSE + Yahoo Finance 代理），部署後需改接方案 D。
-- ✅ 已有深色玻璃質感設計系統，可作為共用設計語言的參考基準之一。
+- ✅ 完全自包含：只依賴外部 CDN（Chart.js + Google Fonts）。
+- ✅ 「🔄 自動抓取即時股價」已接上 `data/stock_data.json`（見上方資料策略章節），不再只依賴不穩定的公開 CORS 代理。
+- ✅ 新增淺色模式（含修正一處寫死深色、沒有跟著變數換色的頁首列背景）。
 
 ### 🏖️ Retirement Simulator (`retirement simulation.html`)
-- ✅ 完全自包含：只依賴 Chart.js CDN，純本地試算，無任何外部資料依賴，可直接搬遷、無需改動任何資料串接邏輯。
+- ✅ 完全自包含：只依賴 Chart.js CDN，純本地試算。
+- ✅ 新增淺色模式：這個工具是用 Tailwind CDN 工具類寫死深色（沒有集中的 CSS 變數），改成針對實際用到的深色工具類逐一覆寫，另外處理了 4 個用漸層做視覺效果的元素。
 
 ### 💰 Loan Investment Simulator (`fintech_loan_investment_tool.html`)
 - ✅ 完全自包含：只依賴 Chart.js CDN，純本地試算。
-- ⚠️ **Service Worker 用 Blob URL 動態產生並註冊**（`URL.createObjectURL` + `navigator.serviceWorker.register(swUrl)`），不是外部 `sw.js` 檔案，所以搬移路徑不會有「檔案找不到」問題；但部分瀏覽器對 blob URL 註冊 Service Worker 的支援不一致，可能靜默失敗（程式碼有 `.catch(()=>{})` 吞掉錯誤）——離線快取功能屬於錦上添花，失敗也不影響主功能，可視為已知風險、無需修正。
+- ⚠️ Service Worker 用 Blob URL 動態產生並註冊，不是外部 `sw.js` 檔案；部分瀏覽器可能靜默不支援，離線快取屬於錦上添花，不影響主功能。
+- ✅ 新增淺色模式、常駐的「❓ 使用說明 Help」按鈕（直接跳到原本就有、但藏在 9 個分頁裡容易被忽略的 README/Changelog 分頁）、20 句中英雙語理財金句跑馬燈。
 
-**結論：四個工具都是可以直接複製進新專案、不需要修改內部邏輯的自包含檔案。** 唯二需要新增串接的地方，是把 Stock Drawdown Explorer 與 Rebalance Engine 裡「呼叫 localhost:8765 本機代理」的按鈕，改成讀取方案 D 產生的 `data/stock_data.json`。
+**四個工具都是可以直接複製進新專案、不需要修改內部邏輯的自包含檔案**，唯一的串接工作是把兩個工具裡「呼叫本機 `localhost` 代理」的按鈕改接方案 D 的 `data/stock_data.json`。
 
 ---
 
 ## 部署
 
-- Repo/GitHub Pages 建立在 **SinLiongToo** 這個 GitHub 帳號下（終端機當時已登入這個帳號，且已在對話中跟你確認過直接沿用，不用另外切換帳號）
+- Repo/GitHub Pages 建立在 **SinLiongToo** 這個 GitHub 帳號下
 - 上線網址：https://sinliongtoo.github.io/FINTECH_plan_check/
 - 靜態站台（`index.html` + `tools/*`）由 GitHub Pages 直接發布
-- 股價資料管線（`fetch_stock_data.py` + Actions workflow）與站台在同一個 repo 內，排程自動更新、自動 commit
+- 股價資料管線（`fetch_stock_data.py` + `.github/workflows/daily_stock_update.yml`）與站台在同一個 repo 內，排程自動更新、自動 commit
 
-詳細分期實作步驟見 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)。
+詳細分期實作步驟與每個修正的完整脈絡，見 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)。
