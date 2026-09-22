@@ -118,6 +118,33 @@ HIST_PERIOD = "max"
 HIST_INTERVAL = "1wk"
 
 
+def fetch_daily_quote(symbol):
+    """A short daily-interval fetch used only to freshen current_price /
+    day_change. Observed in practice: Yahoo can take an extra day or two
+    to fill in the current week's bar for some tickers (mainly indices
+    and US-listed ETFs) even once daily closes for those same days are
+    already available -- so the weekly series alone can make the quoted
+    "current price" look stuck for days after real trading has happened.
+    Returns None on any failure; callers must treat that as "no fresher
+    quote available" and keep the weekly-derived values.
+    """
+    try:
+        d = yf.Ticker(symbol).history(period="10d", interval="1d", auto_adjust=True)
+        d = d.dropna(subset=["Close"])
+        if d.empty:
+            return None
+        closes = [round(float(v), 3) for v in d["Close"].tolist()]
+        curr, prev = closes[-1], (closes[-2] if len(closes) >= 2 else closes[-1])
+        return {
+            "date": d.index[-1].strftime("%Y-%m-%d"),
+            "price": curr,
+            "change": round(curr - prev, 3),
+            "change_pct": round((curr - prev) / prev * 100, 2) if prev else 0.0,
+        }
+    except Exception:
+        return None
+
+
 def fetch_single_ticker(slug, meta):
     symbol = meta["symbol"]
     print(f"  [+] Fetching {slug} ({symbol})...", flush=True)
@@ -147,6 +174,13 @@ def fetch_single_ticker(slug, meta):
     prev = close[-2] if len(close) >= 2 else curr
     day_change = round(curr - prev, 3)
     day_change_pct = round((day_change / prev) * 100, 2) if prev else 0.0
+    quote_date = dates[-1]
+
+    # Prefer a same-day-fresher quote from the daily series when one is
+    # actually newer than what the weekly series gave us.
+    daily = fetch_daily_quote(symbol)
+    if daily and daily["date"] > quote_date:
+        curr, day_change, day_change_pct, quote_date = daily["price"], daily["change"], daily["change_pct"], daily["date"]
 
     lookback = min(len(df), 52)
     w52_high = round(float(df["High"].iloc[-lookback:].max()), 3)
@@ -161,6 +195,7 @@ def fetch_single_ticker(slug, meta):
         "currency": meta.get("currency", "USD"),
         "exchange": meta.get("exchange", ""),
         "as_of": date.today().isoformat(),
+        "quote_date": quote_date,
         "current_price": curr,
         "day_change": day_change,
         "day_change_pct": day_change_pct,
