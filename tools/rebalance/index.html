@@ -830,6 +830,24 @@
                                 <span class="lang-en">Apply</span>
                             </button>
                         </div>
+                        <div style="font-size: 0.65rem; color: var(--text-secondary); margin-top: 0.5rem; margin-bottom: 0.25rem;">
+                            <span class="lang-zh">或不依年齡，依風險屬性快速套用：</span>
+                            <span class="lang-en">Or skip age, apply by risk profile:</span>
+                        </div>
+                        <div style="display: flex; gap: 0.35rem;">
+                            <button onclick="applyRiskAllocation('conservative')" class="btn" style="flex:1; padding: 0.4rem 0.3rem; font-size: 0.68rem; font-weight: 700;" title="股 30% / 債 70%">
+                                <span class="lang-zh">保守 30/70</span>
+                                <span class="lang-en">Conservative 30/70</span>
+                            </button>
+                            <button onclick="applyRiskAllocation('balanced')" class="btn" style="flex:1; padding: 0.4rem 0.3rem; font-size: 0.68rem; font-weight: 700;" title="股 60% / 債 40%">
+                                <span class="lang-zh">穩健 60/40</span>
+                                <span class="lang-en">Balanced 60/40</span>
+                            </button>
+                            <button onclick="applyRiskAllocation('aggressive')" class="btn" style="flex:1; padding: 0.4rem 0.3rem; font-size: 0.68rem; font-weight: 700;" title="股 90% / 債 10%">
+                                <span class="lang-zh">積極 90/10</span>
+                                <span class="lang-en">Aggressive 90/10</span>
+                            </button>
+                        </div>
                     </div>
                     <div class="input-group twd-theme">
                         <label class="lang-zh">加碼台幣 (TWD)</label>
@@ -900,6 +918,7 @@
                         <span class="lang-en">🔄 Auto Fetch Prices</span>
                     </button>
                 </div>
+                <div id="lastFetchTime" style="text-align: right; font-size: 0.68rem; color: var(--text-muted); margin-top: 0.35rem;"></div>
             </div>
 
         </div>
@@ -1482,6 +1501,43 @@
             }
         }
 
+        // Alternative to the age-based rule above: classic risk-profile model
+        // portfolios that don't depend on age at all. Reuses the same
+        // VT/BND/0050 stock-split convention (75% global / 25% Taiwan) as
+        // applyAgeAllocation() for consistency.
+        const RISK_PROFILES = {
+            conservative: { bond: 70, label_zh: '保守型', label_en: 'Conservative' },
+            balanced:     { bond: 40, label_zh: '穩健型', label_en: 'Balanced' },
+            aggressive:   { bond: 10, label_zh: '積極型', label_en: 'Aggressive' },
+        };
+        function applyRiskAllocation(profile) {
+            const isZh = document.body.getAttribute('data-lang') === 'zh';
+            const p = RISK_PROFILES[profile];
+            if (!p) return;
+
+            const bondWeight = p.bond;
+            const stockWeight = 100 - bondWeight;
+
+            const vtIndex = portfolio.findIndex(a => a.ticker === 'VT');
+            const bndIndex = portfolio.findIndex(a => a.ticker === 'BND');
+            const twIndex = portfolio.findIndex(a => a.ticker === '0050');
+
+            if (vtIndex !== -1 && bndIndex !== -1 && twIndex !== -1) {
+                portfolio[bndIndex].targetWeight = bondWeight;
+                portfolio[vtIndex].targetWeight = Math.round(stockWeight * 0.75);
+                portfolio[twIndex].targetWeight = stockWeight - portfolio[vtIndex].targetWeight;
+                renderTable();
+                calculateRebalance();
+                alert(isZh
+                    ? `套用成功！${p.label_zh}配置：債券(BND)為 ${bondWeight}%，美股(VT)為 ${portfolio[vtIndex].targetWeight}%，台股(0050)為 ${portfolio[twIndex].targetWeight}%。`
+                    : `Applied successfully! ${p.label_en} allocation: Bond (BND) ${bondWeight}%, US Stock (VT) ${portfolio[vtIndex].targetWeight}%, TW Stock (0050) ${portfolio[twIndex].targetWeight}%.`);
+            } else {
+                alert(isZh
+                    ? "⚠️ 無法套用風險屬性配置比例！此功能目前僅支援內含 VT、BND 及 0050 的預設組合。若已自訂標的，請手動在表格中設定目標權重。"
+                    : "⚠️ Cannot apply risk-profile target weights! This feature currently only supports portfolios containing VT, BND, and 0050. Please manually set your target weights in the table.");
+            }
+        }
+
         function renderTable() {
             const tbody = document.getElementById('portfolioBody');
             if (!tbody) return;
@@ -1670,7 +1726,7 @@
             originalBtn.disabled = false;
         }
 
-        // Fetch all stock prices and names
+        // Fetch all stock prices, names, and the USD/TWD exchange rate
         async function fetchAllLatestPrices() {
             const btn = document.getElementById('fetchPricesBtn');
             const isZh = document.body.getAttribute('data-lang') === 'zh';
@@ -1678,10 +1734,18 @@
             btn.disabled = true;
 
             const fetchPromises = portfolio.map((asset, idx) => fetchSingleStock(idx));
+            fetchPromises.push(fetchExchangeRate());
             await Promise.all(fetchPromises);
 
             btn.innerHTML = `🔄 ${isZh ? '自動抓取即時股價' : 'Auto Fetch Prices'}`;
             btn.disabled = false;
+
+            const now = new Date();
+            const stamp = now.toLocaleString(isZh ? 'zh-TW' : 'en-US', {
+                year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+            });
+            document.getElementById('lastFetchTime').textContent =
+                (isZh ? '最後更新（含匯率）：' : 'Last updated (incl. FX rate): ') + stamp;
         }
 
         function calculateRebalance() {
