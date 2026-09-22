@@ -55,10 +55,11 @@ GitHub Pages 只能放靜態檔案，不能跑 Python，所以「即時抓股價
 4. Action 用 `github-actions[bot]` 身分把更新後的 `data/stock_data.json` commit + push 回 repo；GitHub Pages 上線的網頁純粹讀取這份 JSON，頁面載入時不即時打 API。
 5. **Stock Drawdown Explorer**：頁面一載入就在背景把所有內建股票的資料換成這份即時資料（不用手動按 Refresh），「Refresh current / Refresh all」按鈕偵測不到本機伺服器時也會自動用這份資料當備援；美股搜尋框直接在這份資料集裡比對代號/公司名稱。
 6. **Rebalance Engine**：「🔄 自動抓取即時股價」按鈕依序嘗試本機伺服器 → 這份靜態資料 → AllOrigins 公開代理（僅限資料庫沒收錄的自訂代號）。
+7. **`current_price` 額外用每日資料補新鮮度**：週線本身偶爾會被 Yahoo 延遲 1–2 天才發布最新一週的資料（見下方已知限制），如果「目前股價」也只看週線，會跟著卡住。`fetch_stock_data.py` 另外抓一段短天期的日線，只要比週線新就優先拿來當 `current_price`／`day_change`／`day_change_pct`，並記錄一個 `quote_date` 欄位標明這個價格實際對應哪一天；週線歷史本身（畫圖表用）維持不變。
 
 ### 已知限制
 
-- **資料新鮮度取決於 Yahoo Finance 自己的發布節奏，不是排程有沒有跑**：實測發現台股個股（如台積電、鴻海）通常比 TAIEX 指數或美股 ETF 更新得快；指數/美股某週的資料有時要等 1–2 天才會出現在 Yahoo 的回應裡（查詢當下是 `NaN`），不是我們的 pipeline 壞掉，下一次排程抓到新資料就會自動更新。
+- **資料新鮮度取決於 Yahoo Finance 自己的發布節奏，不是排程有沒有跑**：實測發現台股個股（如台積電、鴻海）通常比 TAIEX 指數或美股 ETF 更新得快；某週的資料有時要等 1–2 天才會出現在 Yahoo 的回應裡（查詢當下是 `NaN`），不是我們的 pipeline 壞掉。這個延遲通常在 1–2 天內就會自行解除（實測驗證過），`current_price` 已經用每日資料墊高新鮮度（見上），只有週線歷史圖表本身還是要等 Yahoo 補資料。
 - 美股搜尋侷限在 `fetch_stock_data.py` 內建的 ticker map（目前 55 檔），沒有做到「輸入任意代號都能即時查」——如果需要，可以改用方案 A（Cloudflare Worker）擴充。
 
 ---

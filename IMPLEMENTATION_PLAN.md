@@ -94,6 +94,7 @@ project_claude_FINTECH/
 - [x] **首頁新增最後更新時間**：用 `document.lastModified` 讀取 GitHub Pages 實際回報的檔案更新時間（已用 `curl -I` 驗證過這個 header 準確可靠），不需要每次改動都手動更新日期字串。
 - [x] **股價下跌追蹤：預設只有部分股票是即時資料**：使用者回報「資料倒退回 4-5 月了」——原因是頁面預設一律顯示寫死在 HTML 裡的 GBM 模擬資料（固定停在 2026-06-01 左右），只有手動按 Refresh 或用搜尋加入的股票才會換成即時資料，不是排程沒 push（用 `gh run list` 查過排程一直都成功執行）。改成頁面一載入就在背景把「所有」內建股票（不只是 VT/BND/SOXX）換成 `data/stock_data.json` 的即時資料，點擊任何 chip 都會優先使用即時資料，找不到才退回 GBM 模擬資料。
 - [x] **Rebalance Engine：自動抓取即時股價回報「還是舊資料」**：用 Playwright 監看正式站按下「🔄 自動抓取即時股價」後的實際網路請求，抓到 AllOrigins 公開代理對同一批請求裡部分成功、部分 `net::ERR_FAILED`（BND、0050.TW 失敗），且失敗時完全沒有錯誤提示。改接 `data/stock_data.json` 當中間備援（本機伺服器 → 靜態資料管線 → AllOrigins，AllOrigins 只保留給資料庫沒收錄的自訂代號）。
+- [x] **美股資料回報「停留在 9/14」**：先用 `gh run list` 確認排程本身一直有成功執行，再直接問 yfinance「現在」的資料，發現 Yahoo 那週的資料回的是 `NaN`（還沒發布），不是我們的問題。等了一段時間後重新查詢，確認 Yahoo 已經補上資料，手動觸發 workflow 兩次讓正式站资料追上（`gh workflow run` + 輪詢 `gh run view --json status`）。順便把 `current_price`／`day_change` 改成優先用短天期日線資料計算（不再單純依賴週線本身，週線的發布節奏比日線慢），新增 `quote_date` 欄位標明價格實際對應日期；同時修正了一個附帶發現的問題：`day_change` 原本其實是週對週差異，被誤標成日漲跌，現在改成真正的日對日變化。
 
 ## 後續可選的加強項目（非阻塞，未動手做）
 
