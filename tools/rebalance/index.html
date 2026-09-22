@@ -1016,8 +1016,13 @@
                         📖 <span class="lang-zh">系統使用說明與運算規則</span>
                         <span class="lang-en">User Guide & Rules</span>
                     </div>
+                    <button id="helpCollapseBtn" onclick="toggleHelpPanel()" class="btn" style="padding: 0.35rem 0.7rem; font-size: 0.68rem;" title="收合／展開此面板 Collapse/Expand">
+                        <span id="helpCollapseIcon">▾</span>
+                        <span id="helpCollapseLabel">收合 Collapse</span>
+                    </button>
                 </div>
 
+                <div id="helpPanelBody">
                 <!-- Navigation Tabs -->
                 <div class="help-nav-tabs">
                     <button class="help-tab-btn active" onclick="switchHelpTab('quickstart', this)">
@@ -1164,6 +1169,7 @@
                         </div>
                     </div>
                 </div>
+                </div><!-- end #helpPanelBody -->
             </div>
 
         </div>
@@ -2143,10 +2149,33 @@
             });
         }
 
+        // Collapse/expand the "系統使用說明與運算規則" help panel. Persisted
+        // via localStorage so a user who collapses it once doesn't have to
+        // do it again on every reload.
+        const HELP_COLLAPSE_KEY = 'rebalance-help-collapsed';
+        function setHelpPanelCollapsed(collapsed) {
+            const body = document.getElementById('helpPanelBody');
+            const icon = document.getElementById('helpCollapseIcon');
+            const label = document.getElementById('helpCollapseLabel');
+            if (!body) return;
+            body.style.display = collapsed ? 'none' : '';
+            icon.textContent = collapsed ? '▸' : '▾';
+            label.textContent = collapsed ? '展開 Expand' : '收合 Collapse';
+            try { localStorage.setItem(HELP_COLLAPSE_KEY, collapsed ? '1' : '0'); } catch (e) {}
+        }
+        function toggleHelpPanel() {
+            const body = document.getElementById('helpPanelBody');
+            const isCollapsed = body && body.style.display === 'none';
+            setHelpPanelCollapsed(!isCollapsed);
+        }
+
         window.onload = () => {
             renderTable();
             fetchExchangeRate();
             calculateRebalance();
+            let startCollapsed = false;
+            try { startCollapsed = localStorage.getItem(HELP_COLLAPSE_KEY) === '1'; } catch (e) {}
+            setHelpPanelCollapsed(startCollapsed);
         };
     </script>
 
