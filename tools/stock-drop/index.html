@@ -399,7 +399,7 @@ button.gst:hover{border-color:var(--accent);color:var(--accent);}
 </div>
 
 <div style="text-align:center;padding:16px 0 76px;font-family:var(--mono);font-size:.68rem;color:var(--sub);">
-  Drawdown Explorer v4.2 &middot; FinTech Toolkit build &middot; 2026-09-20
+  Drawdown Explorer v4.3 &middot; 資料更新 Data updated: <span id="dataAsOf">&mdash;</span>
 </div>
 
 <div class="tb">
@@ -1018,6 +1018,7 @@ document.getElementById("serverBtn").addEventListener("click", async () => {
       close: p[1]
     })).filter(p => !isNaN(p.close) && p.close > 0);
     liveRAW[curSym] = prices; // so buildPrices()/range buttons pick this up too
+    if (window.__staticSyms) window.__staticSyms.delete(curSym); // now local-server data, not static
 
     liveMode = true;
 
@@ -1067,6 +1068,11 @@ function recompute(){
   const s=STOCKS.find(x=>x.sym===curSym)||{};
   document.getElementById("slbl").textContent=liveMode?"Live \u00b7 Yahoo Finance":`Weekly GBM data \u00b7 ${s.name} \u00b7 from ${s.since}`;
   document.getElementById("tbnote").textContent=liveMode?`Live data \u00b7 ${s.name}`:`${s.name} \u00b7 Weekly GBM-interpolated from ${s.since} \u00b7 Open in browser for live prices`;
+  // Static-pipeline symbols keep their "as of <quote_date>" label across
+  // range/threshold changes instead of reverting to the generic one above.
+  // (setStaticLabels lives in the next <script>; guard for the very first
+  // call, which runs before that script has loaded.)
+  if (window.__staticSyms && window.__staticSyms.has(curSym) && typeof setStaticLabels === "function") setStaticLabels(curSym);
   episodes=detectDD(prices,thresh);
   drawChart(); renderStats(); renderCards();
 }
@@ -1092,7 +1098,15 @@ function loadStockDB() {
   }
   return stockDbPromise;
 }
-loadStockDB(); // kick off in the background on page load
+loadStockDB().then(db => {
+  // Footer: when the pipeline last wrote data/stock_data.json (latest as_of
+  // across records), instead of a hand-typed build date.
+  if (!db) return;
+  let latest = "";
+  for (const k in db) { const a = db[k] && db[k].as_of; if (a && a > latest) latest = a; }
+  const el = document.getElementById("dataAsOf");
+  if (el && latest) el.textContent = latest;
+});
 
 // Load real data/stock_data.json prices for every built-in chip in the
 // background on page load — not just VT/BND/SOXX (which have no synthetic
@@ -1127,7 +1141,21 @@ async function applyStaticDataFor(sym) {
     close: rec.weekly.close[i]
   })).filter(p => !isNaN(p.close) && p.close > 0);
   if (!pts.length) return false;
+  // Weekly bars are dated by the week's Monday. If the fresher daily quote
+  // is newer than that, make the chart's last point reflect it: same week
+  // -> relabel/reprice the last bar; a later week not yet published as a
+  // weekly bar -> append it.
+  if (rec.quote_date && typeof rec.current_price === "number") {
+    const qd = new Date(rec.quote_date + "T00:00:00");
+    const last = pts[pts.length - 1];
+    if (qd > last.date) {
+      const point = { date: qd, close: rec.current_price };
+      if (qd - last.date < 7 * 24 * 3600 * 1000) pts[pts.length - 1] = point;
+      else pts.push(point);
+    }
+  }
   liveRAW[sym] = pts;
+  (window.__staticSyms = window.__staticSyms || new Set()).add(sym);
   return true;
 }
 
@@ -1147,25 +1175,22 @@ function displayStaticSymbol(sym) {
   liveMode = true;
   episodes = detectDD(prices, thresh);
   drawChart(); renderStats(); renderCards();
+  setStaticLabels(sym);
+}
+
+// Chip price + "as of" labels for a static-pipeline symbol. Called from
+// displayStaticSymbol() and from recompute(), so range/threshold changes
+// don't overwrite it with the generic "Live · Yahoo Finance" text.
+// The date comes from the last point of the full liveRAW series, which
+// applyStaticDataFor() has already moved from the weekly bar's Monday date
+// to the real last trading day (quote_date) — so chart and label agree.
+function setStaticLabels(sym) {
   const s = STOCKS.find(x => x.sym === sym) || {};
-  const last = prices[prices.length - 1];
+  const series = liveRAW[sym] || prices;
+  const last = series[series.length - 1];
   const cp = document.getElementById("cp_" + sym.replace(/\W/g, "_"));
   if (cp && last) cp.textContent = last.close.toLocaleString(undefined, {maximumFractionDigits: 0});
-  // Prefer STOCK_DB's quote_date over the weekly series' own last date.
-  // yfinance's weekly bars are dated by the *start* of the trading week
-  // (the Monday), not the actual last trading day inside that week — so
-  // when a week ends early (a holiday shortens it, e.g.), the bar's real
-  // closing price is already current but still gets labeled with the
-  // Monday's date, understating how fresh the data actually is (reported
-  // directly: "the close is clearly from 9/24 but the label says 9/21").
-  // quote_date is
-  // set server-side from a same-day-fresher daily-interval fetch (see
-  // fetch_stock_data.py) and reflects the true last trading day.
-  // fmtLocalDate (not toISOString, which converts to UTC and can shift
-  // the date by a day depending on the viewer's timezone) since `date`
-  // was built from a plain "YYYY-MM-DDT00:00:00" local-midnight string.
-  const rec = STOCK_DB && STOCK_DB[sym.toLowerCase()];
-  const lastCloseDate = (rec && rec.quote_date) || (last ? fmtLocalDate(last.date) : "?");
+  const lastCloseDate = last ? fmtLocalDate(last.date) : "?";
   document.getElementById("slbl").textContent = `Static live data · ${s.name} · as of ${lastCloseDate}`;
   document.getElementById("tbnote").textContent = `${s.name} · latest close ${lastCloseDate} from Yahoo Finance, auto-updated by GitHub Actions (not real-time)`;
 }
