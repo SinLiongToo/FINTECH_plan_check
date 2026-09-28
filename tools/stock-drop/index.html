@@ -1151,16 +1151,23 @@ function displayStaticSymbol(sym) {
   const last = prices[prices.length - 1];
   const cp = document.getElementById("cp_" + sym.replace(/\W/g, "_"));
   if (cp && last) cp.textContent = last.close.toLocaleString(undefined, {maximumFractionDigits: 0});
-  // Use the actual date of the last weekly close, not the date the fetch
-  // script last ran (data/stock_data.json's "as_of") — those can differ
-  // by several days since Yahoo's weekly bars close on the prior trading
-  // week, which was confusing when the two dates were shown side by side.
+  // Prefer STOCK_DB's quote_date over the weekly series' own last date.
+  // yfinance's weekly bars are dated by the *start* of the trading week
+  // (the Monday), not the actual last trading day inside that week — so
+  // when a week ends early (a holiday shortens it, e.g.), the bar's real
+  // closing price is already current but still gets labeled with the
+  // Monday's date, understating how fresh the data actually is (reported
+  // directly: "the close is clearly from 9/24 but the label says 9/21").
+  // quote_date is
+  // set server-side from a same-day-fresher daily-interval fetch (see
+  // fetch_stock_data.py) and reflects the true last trading day.
   // fmtLocalDate (not toISOString, which converts to UTC and can shift
   // the date by a day depending on the viewer's timezone) since `date`
   // was built from a plain "YYYY-MM-DDT00:00:00" local-midnight string.
-  const lastCloseDate = last ? fmtLocalDate(last.date) : "?";
-  document.getElementById("slbl").textContent = `Static live data · ${s.name} · week of ${lastCloseDate}`;
-  document.getElementById("tbnote").textContent = `${s.name} · weekly close ${lastCloseDate} from Yahoo Finance, auto-updated by GitHub Actions (not real-time)`;
+  const rec = STOCK_DB && STOCK_DB[sym.toLowerCase()];
+  const lastCloseDate = (rec && rec.quote_date) || (last ? fmtLocalDate(last.date) : "?");
+  document.getElementById("slbl").textContent = `Static live data · ${s.name} · as of ${lastCloseDate}`;
+  document.getElementById("tbnote").textContent = `${s.name} · latest close ${lastCloseDate} from Yahoo Finance, auto-updated by GitHub Actions (not real-time)`;
 }
 
 // Add a chip for a symbol not in the built-in STOCKS list (e.g. a US
