@@ -28,7 +28,8 @@
 .q-btn.primary{ background:var(--ftk-accent); color:#241a05; border-color:var(--ftk-accent); font-weight:700; }
 .q-btn.toggle.on{ border-color:var(--ftk-accent-2); color:var(--ftk-accent-2); font-weight:700; }
 .q-settings{ display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-top:12px; font-size:12.5px; color:var(--ftk-text-dim); }
-.q-settings select, .q-settings input[type=text]{
+.q-settings input[type=number]{ width:64px; }
+.q-settings select, .q-settings input[type=text], .q-settings input[type=number]{
   background:var(--ftk-bg); color:var(--ftk-text); border:1px solid var(--ftk-border); border-radius:8px; padding:5px 8px; font-size:12.5px;
 }
 .q-settings input[type=range]{ vertical-align:middle; accent-color:var(--ftk-accent); }
@@ -79,6 +80,10 @@
     </div>
 
     <div class="q-settings">
+      <label title="輸入句號後按 Enter 或「跳至」，自動播放會從這一句開始">從第
+        <input type="number" id="numStart" min="1" max="500" value="1" inputmode="numeric"> 句
+        <button type="button" class="q-btn" id="btnJump" style="padding:5px 12px">跳至 Go</button>
+      </label>
       <label>朗讀語言
         <select id="selLang">
           <option value="zh">中文</option>
@@ -871,6 +876,29 @@ function renderCurrent(){
   $('qEn').textContent = q ? '“' + q.en + '”' : '';
   $('qAuthor').textContent = q ? '— ' + authorZh(q) + ' ' + authorEn(q) : '';
   document.querySelectorAll('.q-card').forEach(c => c.classList.toggle('current', q && +c.dataset.id === q.id));
+  if (q) {
+    // Keep the "start from #N" box in sync and remember the position so a
+    // reload resumes where the user left off.
+    if (document.activeElement !== $('numStart')) $('numStart').value = q.id + 1;
+    lsSet('last', String(q.id));
+  }
+}
+
+// Jump to quote #n (1-based, the permanent number shown on each card). If an
+// author/keyword filter hides it, clear the filters first so it can be found.
+function jumpTo(n){
+  n = Math.round(n);
+  if (!(n >= 1 && n <= QUOTES.length)) { $('numStart').value = currentQuote() ? currentQuote().id + 1 : 1; return; }
+  const id = n - 1;
+  if (playlist.indexOf(id) < 0) {
+    $('selAuthor').value = ''; $('txtSearch').value = '';
+    rebuildPlaylist(id);
+  } else {
+    pos = playlist.indexOf(id); renderCurrent();
+  }
+  const card = document.querySelector(`.q-card[data-id="${id}"]`);
+  if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (playing) { stop(); autoPlay(); }
 }
 
 function renderGrid(){
@@ -980,8 +1008,14 @@ $('qGrid').addEventListener('click', e => {
   const card = e.target.closest('.q-card'); if (!card) return;
   const idx = playlist.indexOf(+card.dataset.id); if (idx < 0) return;
   pos = idx; renderCurrent();
-  speakCurrentOnce();
+  // While auto-playing, clicking a card continues auto-play from that card
+  // (instead of speaking it once and then repeating it).
+  if (playing) { stop(); autoPlay(); } else speakCurrentOnce();
 });
+
+$('numStart').max = QUOTES.length;
+$('btnJump').addEventListener('click', () => jumpTo(parseFloat($('numStart').value)));
+$('numStart').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); jumpTo(parseFloat(e.target.value)); } });
 
 if (!hasTTS) {
   $('qNote').style.display = 'block';
@@ -989,7 +1023,8 @@ if (!hasTTS) {
 }
 window.addEventListener('beforeunload', () => { if (hasTTS) speechSynthesis.cancel(); });
 
-rebuildPlaylist(null);
+const lastId = parseInt(lsGet('last', ''), 10);
+rebuildPlaylist(lastId >= 0 && lastId < QUOTES.length && !shuffle ? lastId : null);
 setStatus();
 </script>
 
