@@ -29,7 +29,8 @@
     { href: ROOT + 'tools/rebalance/index.html', label: '⚖️ 再平衡計算', key: 'rebalance' },
     { href: ROOT + 'tools/retirement/index.html', label: '🏖️ 退休試算', key: 'retirement' },
     { href: ROOT + 'tools/loan/index.html', label: '💰 貸款投資試算', key: 'loan' },
-    { href: ROOT + 'tools/rules/index.html', label: '📜 人生財務守則', key: 'rules' }
+    { href: ROOT + 'tools/rules/index.html', label: '📜 人生財務守則', key: 'rules' },
+    { href: ROOT + 'tools/quotes/index.html', label: '🎙️ 投資金句', key: 'quotes' }
   ];
 
   function buildNav(){

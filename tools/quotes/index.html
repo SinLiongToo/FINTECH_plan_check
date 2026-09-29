@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>投資名言 100 句 Investment Quotes — FinTech Toolkit</title>
+<meta name="theme-color" content="#0b0e14">
+<link rel="stylesheet" href="../../assets/shared.css">
+<style>
+.q-wrap{ max-width:1180px; margin:0 auto; padding:0 16px 56px; }
+.q-player{
+  background:var(--ftk-bg-elev); border:1px solid var(--ftk-border); border-radius:16px;
+  box-shadow:var(--ftk-shadow); padding:22px 24px; margin:20px 0 18px; position:sticky; top:64px; z-index:5;
+}
+.q-meta{ display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--ftk-text-dim); margin-bottom:10px; gap:8px; flex-wrap:wrap; }
+.q-count{ font-family:Consolas,monospace; color:var(--ftk-accent); font-weight:700; }
+.q-status{ font-size:12px; }
+.q-status.on{ color:var(--ftk-success); }
+.q-zh{ font-size:22px; line-height:1.55; font-weight:700; color:var(--ftk-text); min-height:2.2em; }
+.q-en{ font-size:14.5px; line-height:1.6; color:var(--ftk-text-dim); margin-top:6px; font-style:italic; }
+.q-author{ margin-top:10px; font-size:13px; color:var(--ftk-accent); font-weight:600; }
+.q-controls{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:16px; }
+.q-btn{
+  border:1px solid var(--ftk-border); background:var(--ftk-bg); color:var(--ftk-text);
+  border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer; white-space:nowrap;
+}
+.q-btn:hover{ border-color:var(--ftk-accent); }
+.q-btn.primary{ background:var(--ftk-accent); color:#241a05; border-color:var(--ftk-accent); font-weight:700; }
+.q-btn.toggle.on{ border-color:var(--ftk-accent-2); color:var(--ftk-accent-2); font-weight:700; }
+.q-settings{ display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-top:12px; font-size:12.5px; color:var(--ftk-text-dim); }
+.q-settings select, .q-settings input[type=text]{
+  background:var(--ftk-bg); color:var(--ftk-text); border:1px solid var(--ftk-border); border-radius:8px; padding:5px 8px; font-size:12.5px;
+}
+.q-settings input[type=range]{ vertical-align:middle; accent-color:var(--ftk-accent); }
+.q-note{ margin-top:10px; font-size:12px; color:var(--ftk-danger); display:none; }
+.q-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px; }
+.q-card{
+  background:var(--ftk-bg-elev); border:1px solid var(--ftk-border); border-radius:12px;
+  padding:14px 16px; cursor:pointer; transition:border-color .15s, transform .15s;
+}
+.q-card:hover{ border-color:var(--ftk-accent); transform:translateY(-2px); }
+.q-card.current{ border-color:var(--ftk-accent); box-shadow:0 0 0 2px var(--ftk-accent) inset; }
+.q-card .n{ font-family:Consolas,monospace; font-size:11px; color:var(--ftk-accent); }
+.q-card .z{ font-size:14px; line-height:1.55; color:var(--ftk-text); margin-top:4px; }
+.q-card .e{ font-size:12px; line-height:1.5; color:var(--ftk-text-dim); margin-top:4px; font-style:italic; }
+.q-card .a{ font-size:12px; color:var(--ftk-accent-2); margin-top:6px; }
+.q-empty{ color:var(--ftk-text-dim); font-size:13px; padding:20px 0; }
+@media (max-width:600px){
+  .q-player{ position:static; padding:18px; }
+  .q-zh{ font-size:18px; }
+}
+</style>
+</head>
+<body class="ftk-page">
+
+<div class="ftk-hero">
+  <h1>🎙️ 投資名言 100 句</h1>
+  <p>100 Investment Quotes · 中英雙語 · 語音朗讀 · 自動播放。點任何一句即可朗讀，或按「自動播放」依序聆聽。</p>
+</div>
+
+<div class="q-wrap">
+  <div class="q-player" id="player">
+    <div class="q-meta">
+      <span class="q-count" id="qCount">#1 / 100</span>
+      <span class="q-status" id="qStatus">已停止 Stopped</span>
+    </div>
+    <div class="q-zh" id="qZh"></div>
+    <div class="q-en" id="qEn"></div>
+    <div class="q-author" id="qAuthor"></div>
+
+    <div class="q-controls">
+      <button type="button" class="q-btn" id="btnPrev" title="上一句 Previous">⏮</button>
+      <button type="button" class="q-btn primary" id="btnPlay">▶ 自動播放 Auto-play</button>
+      <button type="button" class="q-btn" id="btnStop">⏹ 停止 Stop</button>
+      <button type="button" class="q-btn" id="btnNext" title="下一句 Next">⏭</button>
+      <button type="button" class="q-btn" id="btnSpeakOne" title="只朗讀目前這一句">🔊 朗讀本句</button>
+      <button type="button" class="q-btn toggle" id="btnShuffle">🔀 隨機</button>
+      <button type="button" class="q-btn toggle" id="btnLoop">🔁 循環</button>
+    </div>
+
+    <div class="q-settings">
+      <label>朗讀語言
+        <select id="selLang">
+          <option value="zh">中文</option>
+          <option value="en">English</option>
+          <option value="both">中 + 英</option>
+        </select>
+      </label>
+      <label>語速 <input type="range" id="rngRate" min="0.6" max="1.4" step="0.1" value="1"> <span id="rateVal">1.0x</span></label>
+      <label>間隔
+        <select id="selGap">
+          <option value="1000">1 秒</option>
+          <option value="2500" selected>2.5 秒</option>
+          <option value="5000">5 秒</option>
+        </select>
+      </label>
+      <label>作者 <select id="selAuthor"><option value="">全部 All</option></select></label>
+      <label>搜尋 <input type="text" id="txtSearch" placeholder="關鍵字 / keyword" size="14"></label>
+    </div>
+    <div class="q-note" id="qNote"></div>
+  </div>
+
+  <div class="q-grid" id="qGrid"></div>
+</div>
+
+<script>
+const AUTHORS = {
+  buffett:  ['華倫·巴菲特', 'Warren Buffett'],
+  munger:   ['查理·蒙格', 'Charlie Munger'],
+  graham:   ['班傑明·葛拉漢', 'Benjamin Graham'],
+  lynch:    ['彼得·林區', 'Peter Lynch'],
+  bogle:    ['約翰·柏格', 'John Bogle'],
+  templeton:['約翰·坦伯頓', 'John Templeton'],
+  soros:    ['喬治·索羅斯', 'George Soros'],
+  fisher:   ['菲利普·費雪', 'Philip Fisher'],
+  keynes:   ['凱因斯', 'John Maynard Keynes'],
+  franklin: ['班傑明·富蘭克林', 'Benjamin Franklin'],
+  marks:    ['霍華·馬克斯', 'Howard Marks'],
+  dalio:    ['瑞·達利歐', 'Ray Dalio'],
+  klarman:  ['賽斯·卡拉曼', 'Seth Klarman'],
+  livermore:['傑西·李佛摩', 'Jesse Livermore'],
+  samuelson:['保羅·薩繆爾森', 'Paul Samuelson'],
+  kiyosaki: ['羅伯特·清崎', 'Robert Kiyosaki'],
+  ramsey:   ['戴夫·拉姆齊', 'Dave Ramsey'],
+  housel:   ['摩根·豪瑟', 'Morgan Housel'],
+  taleb:    ['納西姆·塔雷伯', 'Nassim Taleb'],
+  kostolany:['安德烈·科斯托蘭尼', 'André Kostolany'],
+  proverb:  ['西方諺語', 'Proverb'],
+  bible:    ['箴言 22:7', 'Proverbs 22:7'],
+  einstein: ['愛因斯坦', 'Albert Einstein'],
+};
+
+// [authorKey, 中文, English, attributed?]  — attributed = widely credited to
+// this person but not reliably sourced; shown with "（傳）/ (attributed)".
+const QUOTES = [
+  ['buffett', '投資的第一原則是不要賠錢；第二原則是永遠不要忘記第一原則。', 'Rule No. 1: Never lose money. Rule No. 2: Never forget rule No. 1.'],
+  ['buffett', '在別人貪婪時恐懼，在別人恐懼時貪婪。', 'Be fearful when others are greedy and greedy when others are fearful.'],
+  ['buffett', '價格是你付出的，價值是你得到的。', 'Price is what you pay. Value is what you get.'],
+  ['buffett', '我們最喜歡的持股期間是：永遠。', 'Our favorite holding period is forever.'],
+  ['buffett', '以合理的價格買進一家好公司，遠勝過以便宜的價格買進一家普通的公司。', 'It’s far better to buy a wonderful company at a fair price than a fair company at a wonderful price.'],
+  ['buffett', '潮水退了，才知道誰在裸泳。', 'Only when the tide goes out do you discover who’s been swimming naked.'],
+  ['buffett', '風險來自於你不知道自己在做什麼。', 'Risk comes from not knowing what you’re doing.'],
+  ['buffett', '股市是一個把錢從沒耐心的人手中，轉移到有耐心的人手中的工具。', 'The stock market is a device for transferring money from the impatient to the patient.'],
+  ['buffett', '今天有人坐在樹蔭下乘涼，是因為很久以前有人種下了一棵樹。', 'Someone’s sitting in the shade today because someone planted a tree a long time ago.'],
+  ['buffett', '如果你不打算持有一檔股票十年，那連十分鐘都不要持有。', 'If you aren’t willing to own a stock for ten years, don’t even think about owning it for ten minutes.'],
+  ['buffett', '時間是優秀企業的朋友，平庸企業的敵人。', 'Time is the friend of the wonderful company, the enemy of the mediocre.'],
+  ['buffett', '建立名聲要二十年，毀掉它只要五分鐘。', 'It takes 20 years to build a reputation and five minutes to ruin it.'],
+  ['buffett', '永遠不要投資你看不懂的生意。', 'Never invest in a business you cannot understand.'],
+  ['buffett', '你能做的最重要的投資，就是投資自己。', 'The most important investment you can make is in yourself.'],
+  ['buffett', '只有當投資人不知道自己在做什麼時，才需要廣泛分散。', 'Wide diversification is only required when investors do not understand what they are doing.'],
+  ['buffett', '一生中只要做對少數幾件事就夠了，前提是別做錯太多事。', 'You only have to do a very few things right in your life so long as you don’t do too many things wrong.'],
+  ['buffett', '小心那些贏得掌聲的投資行為；真正偉大的決策，往往只換來哈欠。', 'Beware the investment activity that produces applause; the great moves are usually greeted by yawns.'],
+  ['buffett', '人生就像滾雪球，重要的是找到夠濕的雪和夠長的坡。', 'Life is like a snowball. The important thing is finding wet snow and a really long hill.'],
+  ['buffett', '對我們來說最好的事，就是一家好公司陷入暫時的困境。', 'The best thing that happens to us is when a great company gets into temporary trouble.'],
+  ['buffett', '不要把花剩的錢拿去存，而要把存剩的錢拿去花。', 'Do not save what is left after spending, but spend what is left after saving.', 1],
+  ['buffett', '機會來得不頻繁。當天上下黃金雨時，要拿出水桶，而不是頂針。', 'Opportunities come infrequently. When it rains gold, put out the bucket, not the thimble.'],
+  ['buffett', '危機時刻，現金加上勇氣是無價的。', 'Cash combined with courage in a time of crisis is priceless.'],
+  ['buffett', '如果你發現自己坐在一艘一直漏水的船上，換一艘船比忙著補洞更有效率。', 'Should you find yourself in a chronically leaking boat, energy devoted to changing vessels is likely to be more productive than energy devoted to patching leaks.'],
+  ['buffett', '預測下雨不算數，建好方舟才算數。', 'Predicting rain doesn’t count. Building arks does.'],
+  ['buffett', '把市場波動當成朋友而不是敵人；從別人的愚蠢中獲利，而不是參與其中。', 'Look at market fluctuations as your friend rather than your enemy; profit from folly rather than participate in it.'],
+  ['buffett', '今天的投資人，無法從昨天的成長中獲利。', 'The investor of today does not profit from yesterday’s growth.'],
+  ['buffett', '習慣的鎖鏈輕到讓人察覺不到，直到它重到無法掙脫。', 'Chains of habit are too light to be felt until they are too heavy to be broken.'],
+  ['buffett', '成功的人與非常成功的人的差別，在於非常成功的人幾乎對所有事情說不。', 'The difference between successful people and really successful people is that really successful people say no to almost everything.'],
+  ['buffett', '華爾街是唯一一個人們開著勞斯萊斯，去向搭地鐵的人請教的地方。', 'Wall Street is the only place that people ride to in a Rolls-Royce to get advice from those who take the subway.'],
+  ['buffett', '如果過去的歷史就是一切，那世界上最有錢的人應該是圖書館員。', 'If past history was all there was to the game, the richest people would be librarians.'],
+
+  ['munger', '大錢不是靠買進賣出賺來的，而是靠等待。', 'The big money is not in the buying and selling, but in the waiting.'],
+  ['munger', '複利的第一原則：永遠不要無謂地打斷它。', 'The first rule of compounding: Never interrupt it unnecessarily.'],
+  ['munger', '反過來想，總是反過來想。', 'Invert, always invert.'],
+  ['munger', '像我們這樣的人，靠的是持續地不做蠢事，而不是努力變得非常聰明。', 'It is remarkable how much long-term advantage people like us have gotten by trying to be consistently not stupid, instead of trying to be very intelligent.'],
+  ['munger', '每天都努力讓自己比早上醒來時更有智慧一點。', 'Spend each day trying to be a little wiser than you were when you woke up.'],
+  ['munger', '給我看激勵機制，我就能告訴你結果。', 'Show me the incentive and I will show you the outcome.'],
+  ['munger', '如果你無法在一個世紀內兩三次，平靜面對市價下跌 50%，你就不適合當股東。', 'If you’re not willing to react with equanimity to a market price decline of 50% two or three times a century, you’re not fit to be a common shareholder.'],
+  ['munger', '知道自己不知道什麼，比聰明絕頂更有用。', 'Knowing what you don’t know is more useful than being brilliant.'],
+  ['munger', '得到你想要的東西，最好的方法就是讓自己配得上它。', 'The best way to get what you want is to deserve what you want.'],
+  ['munger', '找一個簡單的想法，然後認真地對待它。', 'Take a simple idea and take it seriously.'],
+
+  ['graham', '投資人最大的問題、甚至最大的敵人，很可能就是他自己。', 'The investor’s chief problem—and even his worst enemy—is likely to be himself.'],
+  ['graham', '短期來看，市場是投票機；長期來看，市場是秤重機。', 'In the short run, the market is a voting machine but in the long run, it is a weighing machine.'],
+  ['graham', '聰明的投資人是現實主義者，把股票賣給樂觀者，向悲觀者買進。', 'The intelligent investor is a realist who sells to optimists and buys from pessimists.'],
+  ['graham', '投資要像經營事業一樣，才是最明智的。', 'Investment is most intelligent when it is most businesslike.'],
+  ['graham', '投資管理的本質是管理風險，而不是管理報酬。', 'The essence of investment management is the management of risks, not the management of returns.'],
+  ['graham', '安全邊際的作用，本質上就是讓你不需要準確預測未來。', 'The function of the margin of safety is, in essence, that of rendering unnecessary an accurate estimate of the future.'],
+  ['graham', '無法掌控自己情緒的人，不適合從投資中獲利。', 'Individuals who cannot master their emotions are ill-suited to profit from the investment process.'],
+
+  ['lynch', '了解你持有什麼，也了解你為什麼持有它。', 'Know what you own, and know why you own it.'],
+  ['lynch', '投資人為了準備或預測修正而損失的錢，遠比修正本身造成的損失多得多。', 'Far more money has been lost by investors preparing for corrections, or trying to anticipate corrections, than has been lost in corrections themselves.'],
+  ['lynch', '在股市賺錢真正的關鍵，是不要被嚇跑。', 'The real key to making money in stocks is not to get scared out of them.'],
+  ['lynch', '每一檔股票背後都是一家公司，去弄清楚它在做什麼。', 'Behind every stock is a company. Find out what it’s doing.'],
+  ['lynch', '不要投資一個你無法用蠟筆畫出來的點子。', 'Never invest in any idea you can’t illustrate with a crayon.'],
+  ['lynch', '在這一行，如果你很厲害，十次裡能對六次。', 'In this business, if you’re good, you’re right six times out of ten.'],
+  ['lynch', '去找一家連笨蛋都能經營的公司，因為遲早會有笨蛋來經營它。', 'Go for a business that any idiot can run – because sooner or later, any idiot probably is going to run it.'],
+  ['lynch', '每個人都有在股市賺錢的腦力，但不是每個人都有那個膽量。', 'Everyone has the brainpower to make money in stocks. Not everyone has the stomach.'],
+  ['lynch', '翻開最多石頭的人，才會贏得這場遊戲。', 'The person that turns over the most rocks wins the game.'],
+
+  ['bogle', '不要在乾草堆裡找針，直接把整個乾草堆買下來！', 'Don’t look for the needle in the haystack. Just buy the haystack!'],
+  ['bogle', '時間是你的朋友，衝動是你的敵人。', 'Time is your friend; impulse is your enemy.'],
+  ['bogle', '股市是讓人從投資這件事上分心的巨大干擾。', 'The stock market is a giant distraction to the business of investing.'],
+  ['bogle', '在投資上，你沒有付出的成本，才是你真正得到的。', 'In investing, you get what you don’t pay for.'],
+  ['bogle', '如果你無法想像股市下跌 20%，你就不該持有股票。', 'If you have trouble imagining a 20% loss in the stock market, you shouldn’t be in stocks.'],
+  ['bogle', '投資成功的致勝公式：透過指數基金持有整個股市，然後什麼都不做，堅持到底。', 'The winning formula for success in investing is owning the entire stock market through an index fund, and then doing nothing. Just stay the course.'],
+  ['bogle', '別急著做什麼，就站在那裡！', 'Don’t do something, just stand there!'],
+
+  ['templeton', '投資中最危險的四個字是：「這次不同」。', 'The four most dangerous words in investing are: ‘this time it’s different.’'],
+  ['templeton', '牛市在悲觀中誕生，在懷疑中成長，在樂觀中成熟，在狂喜中死亡。', 'Bull markets are born on pessimism, grow on skepticism, mature on optimism, and die on euphoria.'],
+  ['templeton', '最悲觀的時候是最好的買點，最樂觀的時候是最好的賣點。', 'The time of maximum pessimism is the best time to buy, and the time of maximum optimism is the best time to sell.'],
+  ['templeton', '想要表現得比群眾好，就必須做和群眾不一樣的事。', 'If you want to have a better performance than the crowd, you must do things differently from the crowd.'],
+  ['templeton', '唯一不需要分散投資的人，是那些百分之百都對的人。', 'The only investors who shouldn’t diversify are those who are right 100% of the time.'],
+
+  ['soros', '重要的不是你對或錯，而是對的時候賺多少、錯的時候賠多少。', 'It’s not whether you’re right or wrong that’s important, but how much money you make when you’re right and how much you lose when you’re wrong.'],
+  ['soros', '市場永遠處於不確定與變動之中，賺錢靠的是忽略顯而易見的事，押注意料之外的事。', 'Markets are constantly in a state of uncertainty and flux, and money is made by discounting the obvious and betting on the unexpected.'],
+
+  ['fisher', '股市裡充滿了知道所有東西價格、卻不知道任何東西價值的人。', 'The stock market is filled with individuals who know the price of everything, but the value of nothing.'],
+  ['fisher', '如果買進時功課做得對，賣出的時機幾乎是——永遠不要。', 'If the job has been correctly done when a common stock is purchased, the time to sell it is—almost never.'],
+
+  ['keynes', '市場維持不理性的時間，可能比你維持不破產的時間還長。', 'The market can remain irrational longer than you can remain solvent.', 1],
+  ['keynes', '困難不在於發展新想法，而在於擺脫舊想法。', 'The difficulty lies not so much in developing new ideas as in escaping from old ones.'],
+
+  ['franklin', '投資知識，能得到最好的利息。', 'An investment in knowledge pays the best interest.'],
+  ['franklin', '小心小開銷，一個小漏洞就能讓大船沉沒。', 'Beware of little expenses; a small leak will sink a great ship.'],
+  ['franklin', '寧可不吃晚餐就上床，也不要一早醒來就負債。', 'Rather go to bed without dinner than to rise in debt.'],
+  ['franklin', '時間就是金錢。', 'Time is money.'],
+
+  ['marks', '你無法預測，但你可以準備。', 'You can’t predict. You can prepare.'],
+  ['marks', '領先時代太多，跟犯錯看起來沒有兩樣。', 'Being too far ahead of your time is indistinguishable from being wrong.'],
+  ['marks', '世界上最危險的事，就是相信沒有風險。', 'The riskiest thing in the world is the belief that there’s no risk.'],
+
+  ['dalio', '靠水晶球過活的人，終將吞下碎玻璃。', 'He who lives by the crystal ball will eat shattered glass.'],
+  ['dalio', '痛苦 + 反思 = 進步。', 'Pain + Reflection = Progress.'],
+  ['dalio', '做好分散，是你為了投資成功最重要的一件事。', 'Diversifying well is the most important thing you need to do in order to invest well.'],
+
+  ['klarman', '價值投資的核心，是逆向思考與計算機的結合。', 'Value investing is at its core the marriage of a contrarian streak and a calculator.'],
+
+  ['livermore', '華爾街沒有新鮮事，今天股市發生的事，過去發生過，未來也會再發生。', 'There is nothing new in Wall Street. Whatever happens in the stock market today has happened before and will happen again.'],
+  ['livermore', '讓我賺大錢的從來不是我的思考，而是我的坐著不動。', 'It never was my thinking that made the big money for me. It always was my sitting.'],
+  ['livermore', '市場永遠不會錯，錯的往往是人的看法。', 'The market is never wrong – opinions often are.'],
+
+  ['samuelson', '投資應該像看油漆變乾、看草生長一樣無聊。想要刺激，就拿 800 美元去拉斯維加斯。', 'Investing should be more like watching paint dry or watching grass grow. If you want excitement, take $800 and go to Las Vegas.'],
+
+  ['kiyosaki', '重點不是你賺多少錢，而是你能留住多少錢。', 'It’s not how much money you make, but how much money you keep.'],
+
+  ['ramsey', '你必須掌控你的錢，否則缺錢將永遠掌控你。', 'You must gain control over your money or the lack of it will forever control you.'],
+  ['ramsey', '負債是愚蠢的，現金為王。', 'Debt is dumb, cash is king.'],
+
+  ['housel', '存錢，就是你的自尊心與收入之間的差距。', 'Saving money is the gap between your ego and your income.'],
+  ['housel', '理財做得好，跟你多聰明關係不大，跟你怎麼做關係很大。', 'Doing well with money has a little to do with how smart you are and a lot to do with how you behave.'],
+
+  ['taleb', '不要涉水過一條平均只有四呎深的河。', 'Don’t cross a river if it is four feet deep on average.'],
+
+  ['kostolany', '買進股票，吃下安眠藥，然後好幾年都不要看報紙。', 'Buy stocks, take sleeping pills, and don’t look at the paper for years.'],
+  ['kostolany', '經濟是主人，股市是狗：狗會前後亂跑，但最終會和主人一起抵達終點。', 'The economy is the man and the stock market is his dog: the dog runs back and forth, but they arrive together.'],
+
+  ['proverb', '不要把所有的雞蛋放在同一個籃子裡。', 'Don’t put all your eggs in one basket.'],
+  ['bible', '欠債的是債主的僕人。', 'The borrower is slave to the lender.'],
+  ['einstein', '複利是世界第八大奇蹟，懂的人賺它，不懂的人付它。', 'Compound interest is the eighth wonder of the world. He who understands it, earns it; he who doesn’t, pays it.', 1],
+].map((q, i) => ({ id: i, a: q[0], zh: q[1], en: q[2], att: !!q[3] }));
+
+function authorZh(q){ return AUTHORS[q.a][0] + (q.att ? '（傳）' : ''); }
+function authorEn(q){ return AUTHORS[q.a][1] + (q.att ? ' (attributed)' : ''); }
+
+// ─── state ───────────────────────────────────────────────────────────────
+const LS = 'ftk-quotes-';
+function lsGet(k, d){ try { const v = localStorage.getItem(LS + k); return v === null ? d : v; } catch (e) { return d; } }
+function lsSet(k, v){ try { localStorage.setItem(LS + k, v); } catch (e) {} }
+
+let playlist = QUOTES.map(q => q.id);
+let pos = 0;
+let playing = false;
+let runToken = 0;            // bumped on every stop/restart so stale async loops exit
+let shuffle = lsGet('shuffle', '0') === '1';
+let loop = lsGet('loop', '1') === '1';
+
+const $ = id => document.getElementById(id);
+const hasTTS = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+
+// ─── voices ──────────────────────────────────────────────────────────────
+let voices = [];
+function loadVoices(){ if (hasTTS) voices = speechSynthesis.getVoices() || []; }
+if (hasTTS) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+function pickVoice(prefixes){
+  for (const p of prefixes) {
+    const v = voices.find(v => (v.lang || '').replace('_', '-').toLowerCase().startsWith(p));
+    if (v) return v;
+  }
+  return null;
+}
+
+// Speak one piece of text; resolves on end/error, or after a safety timeout
+// (some browsers never fire onend, which would otherwise stall auto-play).
+function speakText(text, lang){
+  return new Promise(resolve => {
+    const rate = parseFloat($('rngRate').value) || 1;
+    const fallbackMs = Math.max(3000, text.length * (lang === 'zh' ? 260 : 75) / rate) + 1500;
+    let done = false;
+    const finish = () => { if (!done) { done = true; clearTimeout(t); resolve(); } };
+    const t = setTimeout(finish, fallbackMs);
+    if (!hasTTS) return; // text-only mode: just wait out the timer
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang === 'zh' ? 'zh-TW' : 'en-US';
+    const v = lang === 'zh' ? pickVoice(['zh-tw', 'zh-hk', 'zh']) : pickVoice(['en-us', 'en']);
+    if (v) u.voice = v;
+    u.rate = rate;
+    u.onend = finish;
+    u.onerror = finish;
+    // If speak() throws, fall back to the timer instead of letting the
+    // rejection kill the whole auto-play loop.
+    try { speechSynthesis.speak(u); } catch (e) { console.warn('speak failed', e); }
+  });
+}
+
+async function speakQuote(q, token){
+  if (hasTTS) speechSynthesis.cancel();
+  const mode = $('selLang').value;
+  if (mode === 'zh' || mode === 'both') {
+    await speakText(q.zh.replace(/[。！？!?]+$/, '') + '。' + authorZh(q), 'zh');
+    if (token !== runToken) return;
+  }
+  if (mode === 'en' || mode === 'both') {
+    await speakText(q.en + ' — ' + authorEn(q), 'en');
+  }
+}
+
+function sleep(ms, token){
+  return new Promise(resolve => {
+    const start = Date.now();
+    const tick = () => (token !== runToken || Date.now() - start >= ms) ? resolve() : setTimeout(tick, 100);
+    tick();
+  });
+}
+
+// ─── playlist / filters ──────────────────────────────────────────────────
+function rebuildPlaylist(keepId){
+  const author = $('selAuthor').value;
+  const kw = $('txtSearch').value.trim().toLowerCase();
+  let ids = QUOTES.filter(q =>
+    (!author || q.a === author) &&
+    (!kw || (q.zh + ' ' + q.en + ' ' + authorZh(q) + ' ' + authorEn(q)).toLowerCase().includes(kw))
+  ).map(q => q.id);
+  if (shuffle) {
+    for (let i = ids.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [ids[i], ids[j]] = [ids[j], ids[i]]; }
+  }
+  playlist = ids;
+  const idx = keepId == null ? -1 : playlist.indexOf(keepId);
+  pos = idx >= 0 ? idx : 0;
+  renderGrid();
+  renderCurrent();
+}
+
+function currentQuote(){ return playlist.length ? QUOTES[playlist[pos]] : null; }
+
+function renderCurrent(){
+  const q = currentQuote();
+  $('qCount').textContent = q ? `#${q.id + 1}  ·  ${pos + 1} / ${playlist.length}` : '0 / 0';
+  $('qZh').textContent = q ? '「' + q.zh + '」' : '沒有符合條件的名言。';
+  $('qEn').textContent = q ? '“' + q.en + '”' : '';
+  $('qAuthor').textContent = q ? '— ' + authorZh(q) + ' ' + authorEn(q) : '';
+  document.querySelectorAll('.q-card').forEach(c => c.classList.toggle('current', q && +c.dataset.id === q.id));
+}
+
+function renderGrid(){
+  const grid = $('qGrid');
+  if (!playlist.length) { grid.innerHTML = '<div class="q-empty">沒有符合條件的名言 No matching quotes.</div>'; return; }
+  grid.innerHTML = playlist.map(id => {
+    const q = QUOTES[id];
+    return `<div class="q-card" data-id="${q.id}">
+      <div class="n">#${q.id + 1}</div>
+      <div class="z">${q.zh}</div>
+      <div class="e">${q.en}</div>
+      <div class="a">— ${authorZh(q)} ${authorEn(q)}</div>
+    </div>`;
+  }).join('');
+}
+
+function setStatus(){
+  $('qStatus').textContent = playing ? '▶ 自動播放中 Playing' : '已停止 Stopped';
+  $('qStatus').classList.toggle('on', playing);
+  $('btnPlay').textContent = playing ? '⏸ 暫停 Pause' : '▶ 自動播放 Auto-play';
+}
+
+// ─── playback ────────────────────────────────────────────────────────────
+async function autoPlay(){
+  const token = ++runToken;
+  playing = true; setStatus();
+  while (playing && token === runToken && playlist.length) {
+    renderCurrent();
+    const card = document.querySelector(`.q-card[data-id="${playlist[pos]}"]`);
+    if (card && window.matchMedia('(min-width:601px)').matches) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    await speakQuote(currentQuote(), token);
+    if (token !== runToken) return;
+    await sleep(parseInt($('selGap').value, 10) || 2500, token);
+    if (token !== runToken) return;
+    if (pos + 1 >= playlist.length) {
+      if (!loop) { stop(); return; }
+      if (shuffle) { rebuildPlaylist(null); } else { pos = 0; }
+    } else {
+      pos++;
+    }
+  }
+}
+
+function stop(){
+  runToken++;
+  playing = false;
+  if (hasTTS) speechSynthesis.cancel();
+  setStatus();
+}
+
+async function speakCurrentOnce(){
+  const wasPlaying = playing;
+  stop();
+  const q = currentQuote(); if (!q) return;
+  const token = runToken;
+  await speakQuote(q, token);
+  if (wasPlaying && token === runToken) autoPlay();
+}
+
+function step(delta){
+  if (!playlist.length) return;
+  pos = (pos + delta + playlist.length) % playlist.length;
+  renderCurrent();
+  if (playing) { stop(); autoPlay(); }
+}
+
+// ─── wiring ──────────────────────────────────────────────────────────────
+Object.keys(AUTHORS).forEach(k => {
+  const n = QUOTES.filter(q => q.a === k).length;
+  if (!n) return;
+  const o = document.createElement('option');
+  o.value = k; o.textContent = `${AUTHORS[k][0]} ${AUTHORS[k][1]} (${n})`;
+  $('selAuthor').appendChild(o);
+});
+
+$('selLang').value = lsGet('lang', 'zh');
+$('rngRate').value = lsGet('rate', '1');
+$('rateVal').textContent = parseFloat($('rngRate').value).toFixed(1) + 'x';
+$('selGap').value = lsGet('gap', '2500');
+$('btnShuffle').classList.toggle('on', shuffle);
+$('btnLoop').classList.toggle('on', loop);
+
+$('btnPlay').addEventListener('click', () => playing ? stop() : autoPlay());
+$('btnStop').addEventListener('click', stop);
+$('btnPrev').addEventListener('click', () => step(-1));
+$('btnNext').addEventListener('click', () => step(1));
+$('btnSpeakOne').addEventListener('click', speakCurrentOnce);
+$('btnShuffle').addEventListener('click', () => {
+  shuffle = !shuffle; lsSet('shuffle', shuffle ? '1' : '0');
+  $('btnShuffle').classList.toggle('on', shuffle);
+  const q = currentQuote(); rebuildPlaylist(q ? q.id : null);
+});
+$('btnLoop').addEventListener('click', () => {
+  loop = !loop; lsSet('loop', loop ? '1' : '0');
+  $('btnLoop').classList.toggle('on', loop);
+});
+$('selLang').addEventListener('change', e => lsSet('lang', e.target.value));
+$('selGap').addEventListener('change', e => lsSet('gap', e.target.value));
+$('rngRate').addEventListener('input', e => {
+  $('rateVal').textContent = parseFloat(e.target.value).toFixed(1) + 'x';
+  lsSet('rate', e.target.value);
+});
+$('selAuthor').addEventListener('change', () => { stop(); rebuildPlaylist(null); });
+$('txtSearch').addEventListener('input', () => { stop(); rebuildPlaylist(null); });
+
+$('qGrid').addEventListener('click', e => {
+  const card = e.target.closest('.q-card'); if (!card) return;
+  const idx = playlist.indexOf(+card.dataset.id); if (idx < 0) return;
+  pos = idx; renderCurrent();
+  speakCurrentOnce();
+});
+
+if (!hasTTS) {
+  $('qNote').style.display = 'block';
+  $('qNote').textContent = '⚠ 此瀏覽器不支援語音朗讀，自動播放將只顯示文字。 This browser has no text-to-speech; auto-play will show text only.';
+}
+window.addEventListener('beforeunload', () => { if (hasTTS) speechSynthesis.cancel(); });
+
+rebuildPlaylist(null);
+setStatus();
+</script>
+
+<script>window.FTK_ROOT = '../../'; window.FTK_PAGE = 'quotes';</script>
+<script src="../../assets/shared.js"></script>
+</body>
+</html>
