@@ -22,7 +22,7 @@ Repo：[SinLiongToo/FINTECH_plan_check](https://github.com/SinLiongToo/FINTECH_p
 | 🏖️ [退休試算](tools/retirement/) | `retirement simulation.html` | 純本地試算 | 內建中英文切換、巴菲特金句跑馬燈 |
 | 💰 [貸款投資試算](tools/loan/) | `fintech_loan_investment_tool.html` | 純本地試算 | 內建 20 句中英雙語理財金句跑馬燈、Help 按鈕直達說明頁 |
 | 📜 [人生財務守則](tools/rules/)（新增） | 全新內容 | 純靜態 | 9 條理財法則（72法則、100減年齡、50-30-20、解套公式、複利成長…），內建中英文切換 |
-| 🎙️ [投資名言 100 句](tools/quotes/)（新增） | 全新內容 | 純靜態 + 瀏覽器內建語音（Web Speech API） | 100 句中英雙語投資金句；語音朗讀（中文／英文／中+英）、自動播放、上一句/下一句、隨機、循環、語速/間隔、作者篩選與搜尋；未能可靠查證出處的句子標示「（傳）」 |
+| 🎙️ [投資名言 200 句](tools/quotes/)（新增） | 全新內容 | 純靜態 + 瀏覽器內建語音（Web Speech API） | 200 句中英雙語投資金句（約 40 位作者）；語音朗讀（中文／英文／中+英）、自動播放、上一句/下一句、隨機、循環、語速/間隔、作者篩選與搜尋；未能可靠查證出處的句子標示「（傳）」 |
 
 四個原始工具都是**單一 HTML、無 build step**，內嵌全部 CSS/JS，天生適合 GitHub Pages；新增的兩個頁面完全用共用設計系統（`assets/shared.css`）新寫。語音使用瀏覽器內建的 `speechSynthesis`，不需要任何外部服務；實際音色取決於使用者裝置上安裝的中/英文語音。詳細個別驗證結果見下方「工具驗證」章節。
 
