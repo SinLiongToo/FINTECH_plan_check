@@ -1,12 +1,12 @@
 ---
 name: fintech-toolkit-dev
-description: Run, test, and deploy changes to the FinTech Toolkit — a 6-page static site (project_claude_FINTECH) on GitHub Pages (SinLiongToo/FINTECH_plan_check) with a GitHub Actions + yfinance stock-data pipeline. Use whenever asked to test this app locally, verify a change before/after committing, check or trigger the stock data workflow, or confirm something is live on GitHub Pages after a push.
+description: Run, test, and deploy changes to the FinTech Toolkit — a 7-page static site (project_claude_FINTECH) on GitHub Pages (SinLiongToo/FINTECH_plan_check) with a GitHub Actions + yfinance stock-data pipeline. Use whenever asked to test this app locally, verify a change before/after committing, check or trigger the stock data workflow, or confirm something is live on GitHub Pages after a push.
 ---
 
 # FinTech Toolkit — dev workflow
 
 Static multi-page site, no build step, no framework. Pages:
-`index.html`, `tools/{stock-drop,rebalance,retirement,loan,rules}/index.html`.
+`index.html`, `tools/{stock-drop,rebalance,retirement,loan,rules,quotes}/index.html`.
 All pages load `assets/shared.css` + `assets/shared.js` for the shared nav,
 dark/light theme toggle, and "← 返回總覽" back button. Each page sets
 `window.FTK_ROOT` (relative path back to repo root) and `window.FTK_PAGE`
@@ -170,6 +170,66 @@ report back once it resolves — don't sit in a foreground sleep loop.
   affordance is not discoverable.** Don't rely on a fade/gradient hint
   alone (users reported it "still not obvious" and "can't scroll back")
   — add real prev/next buttons that call `scrollBy()`.
+- **A `<select>` sizes itself to its longest `<option>`.** Adding one long
+  option (e.g. an author name with a parenthetical) pushed the quotes page
+  to 502px wide at a 375px viewport — horizontal scroll on phones. Give
+  data-driven selects a `max-width`, keep option labels short, and after
+  any content change check `document.documentElement.scrollWidth` equals
+  the viewport width at 375px.
+- **`speechSynthesis.speak()` can throw, and `onend` sometimes never
+  fires.** An uncaught throw killed the whole auto-play loop once. Keep
+  the try/catch around `speak()` and the length-based safety timeout in
+  `speakText()`.
+
+## The quotes page (`tools/quotes/index.html`)
+
+Self-contained (no external data). Everything lives in one inline script:
+
+- `AUTHORS` — `key: [中文名, English name]`. The author dropdown is built
+  from it automatically and only lists keys that actually have quotes, so
+  an unused key is harmless (but remove it anyway to keep things tidy).
+- `QUOTES` — array of `[authorKey, 中文, English, attributed?]`, mapped to
+  `{id, a, zh, en, att}`. **The array index is the permanent quote number**
+  (`#N` = index + 1) that users see, jump to, and have saved as their resume
+  position — only ever *append*; never reorder or delete from the middle.
+  Sections are marked with comments (`// ── #201–500 ──`).
+- Strings are single-quoted JS: write apostrophes as `’` and inner quotes
+  as `“ ”`, never ASCII `'`.
+- Set the 4th element to `1` when a quote is commonly attributed but not
+  reliably sourced (famous misattributions, "Einstein said compound
+  interest…"). It renders with a 「（傳）」 marker. Check for near-duplicates
+  of existing entries before adding; the same idea from two people counts.
+- **When the total count changes**, update every hardcoded count:
+  `tools/quotes/index.html` (`<title>`, `<h1>`, hero `<p>`, `#qCount`
+  placeholder), the home card in `index.html`, and the quotes row in
+  `README.md`. Grep for the old number.
+- localStorage keys use the `ftk-quotes-` prefix: `lang`, `rate`, `gap`,
+  `shuffle`, `loop`, `last` (resume position = quote id).
+- Features that must keep working: auto-play, prev/next, shuffle, loop,
+  author filter + search, "從第 N 句 / 跳至 Go" jump (clears filters that
+  hide the target; restarts auto-play from there if playing), resume on
+  reload, clicking a card during auto-play continues from that card.
+
+Validate after any content change (headless, with the local server up):
+
+```js
+// in page.evaluate — expect n === distinct zh === distinct en, missing = []
+({ n: QUOTES.length,
+   zh: new Set(QUOTES.map(q => q.zh)).size,
+   en: new Set(QUOTES.map(q => q.en.toLowerCase())).size,
+   missing: QUOTES.filter(q => !AUTHORS[q.a]).map(q => q.a) })
+```
+
+To test auto-play headlessly, mock TTS **with `Object.defineProperty`** —
+plain assignment to `window.speechSynthesis` silently fails in Chromium:
+
+```js
+await page.addInitScript(() => {
+  const s = { getVoices: () => [], cancel(){}, speak(u){ setTimeout(() => u.onend && u.onend(), 30); } };
+  Object.defineProperty(window, 'speechSynthesis', { value: s, configurable: true });
+  window.SpeechSynthesisUtterance = function (t) { this.text = t; };
+});
+```
 
 ## Design system quick reference
 
