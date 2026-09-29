@@ -37,6 +37,14 @@ If `git push` is rejected with "fetch first" / "non-fast-forward", that's
 this — just `git pull --rebase origin master` (it cleanly rebases on top
 of the bot's commit almost every time) and push again.
 
+**Don't `git stash -u` when you have new untracked folders.** The repo
+lives under OneDrive, which can hold a lock on a freshly created
+directory: `git stash -u` then deletes the new files but fails to remove
+the folder ("Permission denied") and aborts halfway — files gone from
+disk, only recoverable from `stash@{0}^3`. Safer order: **commit first,
+then** `git pull --rebase origin master`, then push. (Plain `git stash`
+without `-u`, for tracked-file edits only, has been fine.)
+
 ## Local testing loop
 
 Every non-trivial change gets verified with a real headless browser, not
