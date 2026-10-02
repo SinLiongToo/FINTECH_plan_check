@@ -34,11 +34,18 @@ jobs:
       - name: Fetch latest stock data
         run: python fetch_stock_data.py --all
 
+      - name: Fetch latest close for the broad ticker universe
+        # All TWSE/TPEx stocks + S&P 500 + popular US ETFs/ADRs, used by
+        # the Rebalance tool for tickers the user adds. Independent of the
+        # step above, so a failure here doesn't block the main data update.
+        continue-on-error: true
+        run: python fetch_quotes_universe.py
+
       - name: Commit and push updated data
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/stock_data.json
+          git add data/stock_data.json data/quotes.json
           if git diff --staged --quiet; then
             echo "No stock data changes; skipping commit."
           else

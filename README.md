@@ -18,7 +18,7 @@ Repo：[SinLiongToo/FINTECH_plan_check](https://github.com/SinLiongToo/FINTECH_p
 | 頁面 | 來源 | 資料來源 | 備註 |
 |---|---|---|---|
 | 📉 [股價下跌追蹤](tools/stock-drop/) | `taiwan_stock_v4.html` | `data/stock_data.json`（見下方管線） | 14 檔內建（台股個股 + TAIEX）+ VT/BND/SOXX + 美股搜尋（55 檔資料庫） |
-| ⚖️ [再平衡計算](tools/rebalance/) | `rebalance.html` | `data/stock_data.json` → AllOrigins CORS proxy（僅限資料庫沒收錄的自訂代號） | 雙幣別（TWD/USD）獨立投入 or 全球統一再平衡 |
+| ⚖️ [再平衡計算](tools/rebalance/) | `rebalance.html` | `data/stock_data.json` → `data/quotes.json`（全部台股上市櫃 + S&P 500 + 熱門美股 ETF/ADR 最新收盤）→ AllOrigins（目前已不可用）；查不到時畫面會提示手動輸入 | 雙幣別（TWD/USD）獨立投入 or 全球統一再平衡 |
 | 🏖️ [退休試算](tools/retirement/) | `retirement simulation.html` | 純本地試算 | 內建中英文切換、巴菲特金句跑馬燈 |
 | 💰 [貸款投資試算](tools/loan/) | `fintech_loan_investment_tool.html` | 純本地試算 | 內建 20 句中英雙語理財金句跑馬燈、Help 按鈕直達說明頁 |
 | 📜 [人生財務守則](tools/rules/)（新增） | 全新內容 | 純靜態 | 9 條理財法則（72法則、100減年齡、50-30-20、解套公式、複利成長…），內建中英文切換 |
@@ -57,10 +57,12 @@ GitHub Pages 只能放靜態檔案，不能跑 Python，所以「即時抓股價
 5. **Stock Drawdown Explorer**：頁面一載入就在背景把所有內建股票的資料換成這份即時資料（不用手動按 Refresh），「Refresh current / Refresh all」按鈕偵測不到本機伺服器時也會自動用這份資料當備援；美股搜尋框直接在這份資料集裡比對代號/公司名稱。
 6. **Rebalance Engine**：「🔄 自動抓取即時股價」按鈕依序嘗試本機伺服器 → 這份靜態資料 → AllOrigins 公開代理（僅限資料庫沒收錄的自訂代號）。
 7. **`current_price` 額外用每日資料補新鮮度**：週線本身偶爾會被 Yahoo 延遲 1–2 天才發布最新一週的資料（見下方已知限制），如果「目前股價」也只看週線，會跟著卡住。`fetch_stock_data.py` 另外抓一段短天期的日線，只要比週線新就優先拿來當 `current_price`／`day_change`／`day_change_pct`，並記錄一個 `quote_date` 欄位標明這個價格實際對應哪一天；週線歷史本身（畫圖表用）維持不變。
+8. **`data/quotes.json`：廣覆蓋的最新收盤表**（`fetch_quotes_universe.py`，同一個 workflow）。再平衡工具讓使用者自行新增任意代號，但瀏覽器無法直接呼叫 Yahoo / TWSE（沒有 CORS 標頭），公開 CORS 代理（AllOrigins、corsproxy.io、codetabs 等）實測也已全數失效。因此改在 Action 端多抓一份只含「名稱 + 最新收盤 + 日期」的輕量表：TWSE 與 TPEx 官方 Open Data 各一次請求涵蓋全部上市櫃股票/ETF，美股為 S&P 500 成分股 + 約 250 檔熱門 ETF/ADR（一次 yfinance 批次下載）。任一來源失敗時保留上一次的值，不影響主要的 `stock_data.json` 更新。
 
 ### 已知限制
 
 - **資料新鮮度取決於 Yahoo Finance 自己的發布節奏，不是排程有沒有跑**：實測發現台股個股（如台積電、鴻海）通常比 TAIEX 指數或美股 ETF 更新得快；某週的資料有時要等 1–2 天才會出現在 Yahoo 的回應裡（查詢當下是 `NaN`），不是我們的 pipeline 壞掉。這個延遲通常在 1–2 天內就會自行解除（實測驗證過），`current_price` 已經用每日資料墊高新鮮度（見上），只有週線歷史圖表本身還是要等 Yahoo 補資料。
+- 再平衡工具可自動報價的範圍是 `stock_data.json` + `quotes.json`（全部台股上市櫃、S&P 500、熱門美股 ETF/ADR）；範圍外的美股小型股需手動輸入價格，畫面會列出查不到的代號。
 - 美股搜尋侷限在 `fetch_stock_data.py` 內建的 ticker map（目前 55 檔），沒有做到「輸入任意代號都能即時查」——如果需要，可以改用方案 A（Cloudflare Worker）擴充。
 
 ---

@@ -109,6 +109,15 @@ gh run view <RUN_ID> --repo SinLiongToo/FINTECH_plan_check --json status,conclus
 gh run list --workflow="Daily Stock Data Update" --repo SinLiongToo/FINTECH_plan_check --limit 10
 ```
 
+The same workflow also runs `fetch_quotes_universe.py` (step has
+`continue-on-error`), which writes `data/quotes.json`: latest close + name
+for every TWSE/TPEx stock (official open-data APIs) and S&P 500 + the
+`US_EXTRA` list of popular ETFs/ADRs (one batched `yf.download`). The
+Rebalance tool falls back to it for tickers the user adds that aren't in
+`stock_data.json`. To widen US coverage, add symbols to `US_EXTRA`.
+TPEx's API is intermittently down (502 / DNS failures) — the script keeps
+the previous values per market when a source fails.
+
 If a run says "success" but the data looks unchanged, check its log for
 `No stock data changes; skipping commit.` — that means the fetch worked
 but produced byte-identical output (very common: Yahoo just hasn't
@@ -160,6 +169,11 @@ report back once it resolves — don't sit in a foreground sleep loop.
   load (see `hydrateAllStocks()` in `tools/stock-drop/index.html`), with
   the button as an explicit manual refresh, not the only path to fresh
   data.
+- **Public CORS proxies are effectively dead for Yahoo** (checked
+  2026-10: AllOrigins times out/500s, corsproxy.io needs an API key,
+  codetabs 522, cors.eu.org 403). Tickers outside the static JSON files
+  used to fail silently — always surface a visible "no quote found"
+  message (see `showFetchMisses()` in rebalance).
 - **A public CORS proxy (AllOrigins etc.) is not reliable enough to be a
   primary data path** — confirmed in production: identical-looking
   requests in the same batch, some succeed, some `net::ERR_FAILED`, with

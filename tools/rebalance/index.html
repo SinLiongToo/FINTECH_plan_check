@@ -919,6 +919,7 @@
                     </button>
                 </div>
                 <div id="lastFetchTime" style="text-align: right; font-size: 0.68rem; color: var(--text-muted); margin-top: 0.35rem;"></div>
+                <div id="fetchMissNote" style="display: none; text-align: right; font-size: 0.72rem; color: #f59e0b; margin-top: 0.35rem; line-height: 1.5;"></div>
             </div>
 
         </div>
@@ -1628,7 +1629,8 @@
                 renderTable();
                 calculateRebalance();
                 // Trigger auto fetch for the new stock
-                fetchSingleStock(portfolio.length - 1);
+                const newIdx = portfolio.length - 1;
+                fetchSingleStock(newIdx).then(ok => showFetchMisses(ok ? [] : [portfolio[newIdx].ticker]));
             }
         }
 
@@ -1656,9 +1658,43 @@
             const rec = db[key] || db[key.replace(/\.tw$/, '')] || db[key + '.tw'];
             if (!rec || typeof rec.current_price !== 'number') return false;
             portfolio[idx].price = rec.current_price;
-            if (rec.name && (!portfolio[idx].name || portfolio[idx].name === asset.ticker)) {
+            if (rec.name && nameIsPlaceholder(portfolio[idx])) {
                 portfolio[idx].name = rec.name;
             }
+            return true;
+        }
+
+        function nameIsPlaceholder(asset) {
+            const n = (asset.name || '').trim().toUpperCase();
+            return !n || n === asset.ticker.toUpperCase() || n === asset.ticker.replace(/\.TWO?$/i, '').toUpperCase();
+        }
+
+        // Broad latest-close table (data/quotes.json, built by
+        // fetch_quotes_universe.py in the same workflow): every TWSE/TPEx
+        // stock & ETF plus S&P 500 + popular US ETFs/ADRs. Covers tickers a
+        // user adds that aren't in stock_data.json's hand-picked list.
+        let QUOTES_UNIVERSE = null;
+        async function loadQuotesUniverse() {
+            if (QUOTES_UNIVERSE === null) {
+                try {
+                    const res = await fetch('../../data/quotes.json');
+                    QUOTES_UNIVERSE = res.ok ? await res.json() : {};
+                } catch (e) {
+                    QUOTES_UNIVERSE = {};
+                }
+            }
+            return QUOTES_UNIVERSE;
+        }
+        async function applyUniverseQuoteFor(idx) {
+            const asset = portfolio[idx];
+            const db = await loadQuotesUniverse();
+            const t = asset.ticker.toUpperCase();
+            const rec = asset.market === 'TW'
+                ? (db.tw || {})[t.replace(/\.TWO?$/, '')]
+                : (db.us || {})[t] || (db.us || {})[t.replace(/-/g, '.')];
+            if (!rec || typeof rec[1] !== 'number') return false;
+            portfolio[idx].price = rec[1];
+            if (rec[0] && nameIsPlaceholder(portfolio[idx])) portfolio[idx].name = rec[0];
             return true;
         }
 
@@ -1683,7 +1719,7 @@
                         renderTable();
                         calculateRebalance();
                         originalBtn.disabled = false;
-                        return;
+                        return true;
                     }
                 }
             } catch (e) {
@@ -1696,10 +1732,22 @@
                     renderTable();
                     calculateRebalance();
                     originalBtn.disabled = false;
-                    return;
+                    return true;
                 }
             } catch (e) {
-                console.log("Static data pipeline lookup failed, trying CORS proxy...");
+                console.log("Static data pipeline lookup failed, trying quotes universe...");
+            }
+
+            // Fallback 2: broad latest-close table (data/quotes.json)
+            try {
+                if (await applyUniverseQuoteFor(idx)) {
+                    renderTable();
+                    calculateRebalance();
+                    originalBtn.disabled = false;
+                    return true;
+                }
+            } catch (e) {
+                console.log("Quotes universe lookup failed, trying CORS proxy...");
             }
 
             // Last resort: public CORS proxy to Yahoo Finance
@@ -1709,7 +1757,8 @@
             }
             try {
                 const encodedUrl = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}`);
-                const res = await fetch(`https://api.allorigins.win/get?url=${encodedUrl}`);
+                // Public proxy is unreliable (often hangs) — cap the wait.
+                const res = await fetch(`https://api.allorigins.win/get?url=${encodedUrl}`, { signal: AbortSignal.timeout(8000) });
                 if (res.ok) {
                     const wrapper = await res.json();
                     const data = JSON.parse(wrapper.contents);
@@ -1719,17 +1768,32 @@
                         const price = meta.regularMarketPrice !== undefined ? meta.regularMarketPrice : meta.chartPreviousClose;
                         const name = meta.longName || meta.shortName || asset.ticker;
                         portfolio[idx].price = parseFloat(price) || portfolio[idx].price;
-                        if (!portfolio[idx].name || portfolio[idx].name === asset.ticker) {
+                        if (nameIsPlaceholder(portfolio[idx])) {
                             portfolio[idx].name = name;
                         }
                         renderTable();
                         calculateRebalance();
+                        originalBtn.disabled = false;
+                        return true;
                     }
                 }
             } catch (e) {
                 console.log("AllOrigins CORS proxy failed for symbol:", yahooSymbol);
             }
             originalBtn.disabled = false;
+            return false;
+        }
+
+        // Tell the user which tickers got no price instead of failing silently.
+        function showFetchMisses(missed) {
+            const el = document.getElementById('fetchMissNote');
+            if (!el) return;
+            if (!missed.length) { el.textContent = ''; el.style.display = 'none'; return; }
+            const isZh = document.body.getAttribute('data-lang') === 'zh';
+            el.textContent = isZh
+                ? `⚠ 找不到 ${missed.join('、')} 的報價，請手動輸入「原幣現價」。（自動報價涵蓋全部台股上市櫃、S&P 500 與熱門美股 ETF／ADR，每個交易日更新）`
+                : `⚠ No quote found for ${missed.join(', ')} — please enter the price manually. (Auto quotes cover all TWSE/TPEx stocks, the S&P 500 and popular US ETFs/ADRs, updated each trading day.)`;
+            el.style.display = 'block';
         }
 
         // Fetch all stock prices, names, and the USD/TWD exchange rate
@@ -1739,9 +1803,10 @@
             btn.innerHTML = `<span class="spinner"></span> ${isZh ? '讀取價格中...' : 'Fetching...'}`;
             btn.disabled = true;
 
-            const fetchPromises = portfolio.map((asset, idx) => fetchSingleStock(idx));
-            fetchPromises.push(fetchExchangeRate());
-            await Promise.all(fetchPromises);
+            const stockResults = Promise.all(portfolio.map((asset, idx) => fetchSingleStock(idx)));
+            await Promise.all([stockResults, fetchExchangeRate()]);
+            const results = await stockResults;
+            showFetchMisses(portfolio.filter((a, i) => !results[i]).map(a => a.ticker));
 
             btn.innerHTML = `🔄 ${isZh ? '自動抓取即時股價' : 'Auto Fetch Prices'}`;
             btn.disabled = false;
