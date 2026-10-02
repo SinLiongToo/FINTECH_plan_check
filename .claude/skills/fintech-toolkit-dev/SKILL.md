@@ -115,8 +115,10 @@ for every TWSE/TPEx stock (official open-data APIs) and S&P 500 + the
 `US_EXTRA` list of popular ETFs/ADRs (one batched `yf.download`). The
 Rebalance tool falls back to it for tickers the user adds that aren't in
 `stock_data.json`. To widen US coverage, add symbols to `US_EXTRA`.
-TPEx's API is intermittently down (502 / DNS failures) — the script keeps
-the previous values per market when a source fails.
+TPEx's API is often down for hours (502 / DNS failures); the script then
+falls back to the OTC code list from TWSE's ISIN registry
+(isin.twse.com.tw, Big5 HTML) priced via Yahoo `.TWO`. If a source still
+fails, the previous values for that market are kept.
 
 If a run says "success" but the data looks unchanged, check its log for
 `No stock data changes; skipping commit.` — that means the fetch worked
