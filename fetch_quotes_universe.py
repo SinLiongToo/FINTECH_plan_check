@@ -97,6 +97,38 @@ def fetch_tpex():
     return out
 
 
+def fetch_tpex_via_yahoo():
+    """Fallback when the TPEx site is down (it often 502s for hours): take the
+    OTC code list from TWSE's ISIN registry and price it via yfinance (.TWO)."""
+    r = requests.get("https://isin.twse.com.tw/isin/C_public.jsp?strMode=4", headers=UA, timeout=90)
+    r.raise_for_status()
+    html = r.content.decode("big5", errors="ignore")
+    names = {}
+    for code, name in re.findall(r"<td bgcolor=#FAFAD2>(\w+)　([^<]+)</td>", html):
+        # common stocks (4 digits) and ETFs (00xxx / 00xxxA); skip warrants etc.
+        if re.fullmatch(r"\d{4}|00\d{3,4}[A-Z]?", code):
+            names[code] = name.strip()
+    return yahoo_close({c: c + ".TWO" for c in names}, names)
+
+
+def yahoo_close(sym_map, names):
+    """sym_map: our key -> Yahoo symbol. Returns {key: [name, close, date]}."""
+    df = yf.download(sorted(set(sym_map.values())), period="7d", interval="1d", auto_adjust=False,
+                     progress=False, group_by="column", threads=True)
+    closes = df["Close"]
+    out = {}
+    for key, ys in sym_map.items():
+        if ys not in closes:
+            continue
+        col = closes[ys].dropna()
+        if col.empty:
+            continue
+        price = num(round(float(col.iloc[-1]), 4))
+        if price:
+            out[key] = [names.get(key) or key, price, col.index[-1].strftime("%Y-%m-%d")]
+    return out
+
+
 def us_names():
     names = {}
     for url, sym_col in (("https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt", "Symbol"),
@@ -132,24 +164,17 @@ def fetch_us():
     for s in US_EXTRA:
         universe.setdefault(s, s)
     directory = us_names()
-    symbols = sorted(universe)
+    names = {s: directory.get(s) or directory.get(s.replace(".", "-")) or universe[s] for s in universe}
     # Yahoo uses '-' for share classes (BRK.B -> BRK-B)
-    ysyms = [s.replace(".", "-") for s in symbols]
-    df = yf.download(ysyms, period="7d", interval="1d", auto_adjust=False, progress=False,
-                     group_by="column", threads=True)
-    closes = df["Close"]
-    out = {}
-    for s, ys in zip(symbols, ysyms):
-        if ys not in closes:
-            continue
-        col = closes[ys].dropna()
-        if col.empty:
-            continue
-        price = num(round(float(col.iloc[-1]), 4))
-        if price:
-            name = directory.get(s) or directory.get(ys) or universe[s]
-            out[s] = [name, price, col.index[-1].strftime("%Y-%m-%d")]
-    return out
+    return yahoo_close({s: s.replace(".", "-") for s in universe}, names)
+
+
+def fetch_tpex_any():
+    try:
+        return fetch_tpex()
+    except Exception as e:
+        print(f"  ! TPEx open data failed ({e}); falling back to ISIN list + Yahoo .TWO")
+        return fetch_tpex_via_yahoo()
 
 
 def main():
@@ -161,7 +186,7 @@ def main():
     data.setdefault("tw", {})
     data.setdefault("us", {})
 
-    for label, fn, market in (("TWSE", fetch_twse, "tw"), ("TPEx", fetch_tpex, "tw"), ("US", fetch_us, "us")):
+    for label, fn, market in (("TWSE", fetch_twse, "tw"), ("TPEx", fetch_tpex_any, "tw"), ("US", fetch_us, "us")):
         try:
             got = fn()
             data[market].update(got)
