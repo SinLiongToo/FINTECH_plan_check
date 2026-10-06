@@ -1405,8 +1405,9 @@
         // Core State
         // [[DEMO_DATA_START]]
         let portfolio = [
-            { market: 'US', ticker: 'VT', price: 158.55, name: 'Vanguard Total World Stock Index Fund ETF Shares', shares: 300, targetWeight: 60 },
+            { market: 'US', ticker: 'VT', price: 158.55, name: 'Vanguard Total World Stock Index Fund ETF Shares', shares: 300, targetWeight: 50 },
             { market: 'US', ticker: 'BND', price: 71.20, name: 'Vanguard Total Bond Market Index Fund ETF Shares', shares: 100, targetWeight: 20 },
+            { market: 'US', ticker: 'GOOGL', price: 345.87, name: 'Alphabet Inc. (Google)', shares: 15, targetWeight: 10 },
             { market: 'TW', ticker: '0050', price: 109.85, name: '元大台灣50', shares: 2.00, targetWeight: 20 }
         ];
         // [[DEMO_DATA_END]]
@@ -1485,27 +1486,46 @@
             // Munger/Bogle rule of thumb: Bond allocation = Current Age / Expected Age * 100 (capped at 100)
             let bondWeight = Math.round((currentAge / expectedAge) * 100);
             bondWeight = Math.min(Math.max(bondWeight, 0), 100);
-            let stockWeight = 100 - bondWeight;
 
-            // Apply automatically to demo data if matching VT/BND/0050
+            applyBondWeight(bondWeight, '依年齡分配比', 'Age-based allocation', '年齡', 'age');
+        }
+
+        // Shared by the age rule and the risk-profile buttons: BND gets
+        // bondWeight; any other holdings (e.g. GOOGL) keep their own target
+        // weights; whatever equity share remains is split VT 75% / 0050 25%.
+        function applyBondWeight(bondWeight, labelZh, labelEn, featureZh, featureEn) {
+            const isZh = document.body.getAttribute('data-lang') === 'zh';
             const vtIndex = portfolio.findIndex(a => a.ticker === 'VT');
             const bndIndex = portfolio.findIndex(a => a.ticker === 'BND');
             const twIndex = portfolio.findIndex(a => a.ticker === '0050');
 
-            if (vtIndex !== -1 && bndIndex !== -1 && twIndex !== -1) {
-                portfolio[bndIndex].targetWeight = bondWeight;
-                portfolio[vtIndex].targetWeight = Math.round(stockWeight * 0.75);
-                portfolio[twIndex].targetWeight = stockWeight - portfolio[vtIndex].targetWeight;
-                renderTable();
-                calculateRebalance();
+            if (vtIndex === -1 || bndIndex === -1 || twIndex === -1) {
                 alert(isZh
-                    ? `套用成功！依年齡分配比：債券(BND)為 ${bondWeight}%，美股(VT)為 ${portfolio[vtIndex].targetWeight}%，台股(0050)為 ${portfolio[twIndex].targetWeight}%。`
-                    : `Applied successfully! Bond (BND) weight: ${bondWeight}%, US Stock (VT) weight: ${portfolio[vtIndex].targetWeight}%, TW Stock (0050) weight: ${portfolio[twIndex].targetWeight}%.`);
-            } else {
-                alert(isZh
-                    ? "⚠️ 無法套用年齡配置比例！此功能目前僅支援內含 VT、BND 及 0050 的預設組合。若已自訂標的，請手動在表格中設定目標權重。"
-                    : "⚠️ Cannot apply age target weights! This feature currently only supports portfolios containing VT, BND, and 0050. Please manually set your target weights in the table.");
+                    ? `⚠️ 無法套用${featureZh}配置比例！此功能需要組合內含 VT、BND 及 0050。若已自訂標的，請手動在表格中設定目標權重。`
+                    : `⚠️ Cannot apply ${featureEn} target weights! This feature needs VT, BND and 0050 in the portfolio. Please set target weights manually in the table.`);
+                return;
             }
+
+            const others = portfolio.filter((a, i) => i !== vtIndex && i !== bndIndex && i !== twIndex);
+            const othersWeight = others.reduce((s, a) => s + (a.targetWeight || 0), 0);
+            const coreStock = 100 - bondWeight - othersWeight;
+            if (coreStock < 0) {
+                alert(isZh
+                    ? `⚠️ 其他持股的目標權重合計 ${othersWeight}%，加上債券 ${bondWeight}% 已超過 100%。請先調低其他持股的目標 %。`
+                    : `⚠️ Other holdings' targets total ${othersWeight}%, which plus ${bondWeight}% bonds exceeds 100%. Lower those targets first.`);
+                return;
+            }
+
+            portfolio[bndIndex].targetWeight = bondWeight;
+            portfolio[vtIndex].targetWeight = Math.round(coreStock * 0.75);
+            portfolio[twIndex].targetWeight = coreStock - portfolio[vtIndex].targetWeight;
+            renderTable();
+            calculateRebalance();
+            const kept = others.filter(a => a.targetWeight).map(a => `${a.ticker} ${a.targetWeight}%`).join(isZh ? '、' : ', ');
+            alert((isZh
+                ? `套用成功！${labelZh}：債券(BND)為 ${bondWeight}%，美股(VT)為 ${portfolio[vtIndex].targetWeight}%，台股(0050)為 ${portfolio[twIndex].targetWeight}%。`
+                : `Applied successfully! ${labelEn}: Bond (BND) ${bondWeight}%, US Stock (VT) ${portfolio[vtIndex].targetWeight}%, TW Stock (0050) ${portfolio[twIndex].targetWeight}%.`)
+                + (kept ? (isZh ? `\n其他持股維持原目標：${kept}。` : `\nOther holdings keep their targets: ${kept}.`) : ''));
         }
 
         // Alternative to the age-based rule above: classic risk-profile model
@@ -1518,31 +1538,9 @@
             aggressive:   { bond: 10, label_zh: '積極型', label_en: 'Aggressive' },
         };
         function applyRiskAllocation(profile) {
-            const isZh = document.body.getAttribute('data-lang') === 'zh';
             const p = RISK_PROFILES[profile];
             if (!p) return;
-
-            const bondWeight = p.bond;
-            const stockWeight = 100 - bondWeight;
-
-            const vtIndex = portfolio.findIndex(a => a.ticker === 'VT');
-            const bndIndex = portfolio.findIndex(a => a.ticker === 'BND');
-            const twIndex = portfolio.findIndex(a => a.ticker === '0050');
-
-            if (vtIndex !== -1 && bndIndex !== -1 && twIndex !== -1) {
-                portfolio[bndIndex].targetWeight = bondWeight;
-                portfolio[vtIndex].targetWeight = Math.round(stockWeight * 0.75);
-                portfolio[twIndex].targetWeight = stockWeight - portfolio[vtIndex].targetWeight;
-                renderTable();
-                calculateRebalance();
-                alert(isZh
-                    ? `套用成功！${p.label_zh}配置：債券(BND)為 ${bondWeight}%，美股(VT)為 ${portfolio[vtIndex].targetWeight}%，台股(0050)為 ${portfolio[twIndex].targetWeight}%。`
-                    : `Applied successfully! ${p.label_en} allocation: Bond (BND) ${bondWeight}%, US Stock (VT) ${portfolio[vtIndex].targetWeight}%, TW Stock (0050) ${portfolio[twIndex].targetWeight}%.`);
-            } else {
-                alert(isZh
-                    ? "⚠️ 無法套用風險屬性配置比例！此功能目前僅支援內含 VT、BND 及 0050 的預設組合。若已自訂標的，請手動在表格中設定目標權重。"
-                    : "⚠️ Cannot apply risk-profile target weights! This feature currently only supports portfolios containing VT, BND, and 0050. Please manually set your target weights in the table.");
-            }
+            applyBondWeight(p.bond, p.label_zh + '配置', p.label_en + ' allocation', '風險屬性', 'risk-profile');
         }
 
         function renderTable() {
