@@ -202,12 +202,14 @@
             margin: 1.5rem auto 0 auto;
             padding: 0 1.5rem;
             display: grid;
-            grid-template-columns: 1fr;
+            /* minmax(0, …) lets columns shrink below their content's
+               min width (wide table/inputs) instead of overflowing on phones */
+            grid-template-columns: minmax(0, 1fr);
             gap: 1.5rem;
         }
         @media(min-width: 1024px) {
             main {
-                grid-template-columns: 2.1fr 0.9fr;
+                grid-template-columns: minmax(0, 2.1fr) minmax(0, 0.9fr);
             }
         }
 
@@ -262,12 +264,12 @@
         /* Form Controls */
         .grid-inputs {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 0.75rem;
         }
         @media(min-width: 640px) {
             .grid-inputs {
-                grid-template-columns: repeat(4, 1fr);
+                grid-template-columns: repeat(4, minmax(0, 1fr));
             }
         }
         .input-group {
@@ -610,6 +612,7 @@
         }
 
         /* Layout panels spacing */
+        .col-left, .col-right { min-width: 0; }
         .col-left {
             display: flex;
             flex-direction: column;
