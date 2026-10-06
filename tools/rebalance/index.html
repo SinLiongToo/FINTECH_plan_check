@@ -553,6 +553,28 @@
         .weight-indicator.incorrect {
             color: var(--danger);
         }
+        .weight-warn {
+            display: none;
+            margin-top: 0.75rem;
+            padding: 0.6rem 0.85rem;
+            border-radius: 10px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            line-height: 1.5;
+            color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+        }
+        .weight-warn.under {
+            color: #d97706;
+            background: rgba(245, 158, 11, 0.1);
+            border-color: #f59e0b;
+        }
+        .weight-warn.show { display: block; }
+        .table-input.weight-over {
+            border-color: var(--danger) !important;
+            box-shadow: 0 0 0 1px var(--danger);
+        }
 
         /* Help panel details */
         .help-panel ul {
@@ -918,6 +940,7 @@
                         <span class="lang-en">🔄 Auto Fetch Prices</span>
                     </button>
                 </div>
+                <div id="weightWarn" class="weight-warn" role="alert"></div>
                 <div id="lastFetchTime" style="text-align: right; font-size: 0.68rem; color: var(--text-muted); margin-top: 0.35rem;"></div>
                 <div id="fetchMissNote" style="display: none; text-align: right; font-size: 0.72rem; color: #f59e0b; margin-top: 0.35rem; line-height: 1.5;"></div>
             </div>
@@ -939,6 +962,8 @@
                         <button id="setBaseUsd" onclick="changeBaseCurrency('USD')" class="currency-btn">USD</button>
                     </div>
                 </div>
+
+                <div id="weightWarnOrders" class="weight-warn" role="alert" style="margin: 0 0 1rem;"></div>
 
                 <div style="margin-bottom: 1rem;">
                     <label class="lang-zh" style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600; display: block; margin-bottom: 0.35rem;">再投入演算法模式 (Algorithmic Mode)</label>
@@ -1570,7 +1595,7 @@
                         <input type="number" value="${asset.shares}" oninput="updateAssetField(${idx}, 'shares', this.value)" class="table-input">
                     </td>
                     <td style="text-align: center;">
-                        <input type="number" value="${asset.targetWeight}" oninput="updateAssetField(${idx}, 'targetWeight', this.value)" class="table-input" style="width: 55px;">
+                        <input type="number" value="${asset.targetWeight}" oninput="updateAssetField(${idx}, 'targetWeight', this.value)" class="table-input weight-input" style="width: 55px;">
                     </td>
                     <td style="text-align: center;">
                         <button onclick="deleteAsset(${idx})" class="btn-delete" title="刪除標的">✕</button>
@@ -1818,6 +1843,31 @@
                 (isZh ? '最後更新（含匯率）：' : 'Last updated (incl. FX rate): ') + stamp;
         }
 
+        // Visible warning when target weights don't add up to 100%: red when
+        // over (orders would try to allocate more than the whole portfolio),
+        // amber when under. Shown under the table and above the orders.
+        function showWeightWarning(weightSum, isZh) {
+            const sum = Math.round(weightSum * 100) / 100;
+            const diff = Math.round(Math.abs(sum - 100) * 100) / 100;
+            let msg = '', cls = 'weight-warn';
+            if (sum > 100) {
+                cls += ' show';
+                msg = isZh
+                    ? `⚠ 目標權重合計 ${sum}%，超過 100%（多了 ${diff}%）。請調低部分標的的「目標 %」，否則下單建議不正確。`
+                    : `⚠ Target weights total ${sum}%, over 100% by ${diff}%. Lower some targets — the order suggestions are not valid until they sum to 100%.`;
+            } else if (sum < 100) {
+                cls += ' show under';
+                msg = isZh
+                    ? `⚠ 目標權重合計 ${sum}%，不足 100%（少了 ${diff}%）。請把差額分配到某些標的。`
+                    : `⚠ Target weights total ${sum}%, ${diff}% short of 100%. Assign the remainder to some holdings.`;
+            }
+            ['weightWarn', 'weightWarnOrders'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { el.className = cls; el.textContent = msg; }
+            });
+            document.querySelectorAll('.weight-input').forEach(inp => inp.classList.toggle('weight-over', sum > 100));
+        }
+
         function calculateRebalance() {
             const extraTwd = parseFloat(document.getElementById('extraTwd').value) || 0;
             const extraUsd = parseFloat(document.getElementById('extraUsd').value) || 0;
@@ -1859,6 +1909,7 @@
             } else {
                 sumDisplay.className = "weight-indicator incorrect";
             }
+            showWeightWarning(weightSum, isZh);
 
             // Total New Capital calculation
             let totalNewCapitalVal = 0;
