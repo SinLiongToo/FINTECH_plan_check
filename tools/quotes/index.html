@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>投資名言 800 句 Investment Quotes — FinTech Toolkit</title>
+<title>投資名言 1000 句 Investment Quotes — FinTech Toolkit</title>
 <meta name="theme-color" content="#0b0e14">
 <link rel="stylesheet" href="../../assets/shared.css">
 <style>
@@ -55,14 +55,14 @@
 <body class="ftk-page">
 
 <div class="ftk-hero">
-  <h1>🎙️ 投資名言 800 句</h1>
-  <p>800 Investment Quotes · 中英雙語 · 語音朗讀 · 自動播放。點任何一句即可朗讀，或按「自動播放」依序聆聽。</p>
+  <h1>🎙️ 投資名言 1000 句</h1>
+  <p>1000 Investment Quotes · 中英雙語 · 語音朗讀 · 自動播放。點任何一句即可朗讀，或按「自動播放」依序聆聽。</p>
 </div>
 
 <div class="q-wrap">
   <div class="q-player" id="player">
     <div class="q-meta">
-      <span class="q-count" id="qCount">#1 / 800</span>
+      <span class="q-count" id="qCount">#1 / 1000</span>
       <span class="q-status" id="qStatus">已停止 Stopped</span>
     </div>
     <div class="q-zh" id="qZh"></div>
@@ -81,7 +81,7 @@
 
     <div class="q-settings">
       <label title="輸入句號後按 Enter 或「跳至」，自動播放會從這一句開始">從第
-        <input type="number" id="numStart" min="1" max="800" value="1" inputmode="numeric"> 句
+        <input type="number" id="numStart" min="1" max="1000" value="1" inputmode="numeric"> 句
         <button type="button" class="q-btn" id="btnJump" style="padding:5px 12px">跳至 Go</button>
       </label>
       <label>朗讀語言
@@ -225,6 +225,27 @@ const AUTHORS = {
   bk_retire:    ['克莉絲汀·本茲 How to Retire (2024)', 'Christine Benz, How to Retire (2024)'],
   bk_noise:     ['康納曼、席波尼、桑思坦《雜訊》(2021)', 'Kahneman, Sibony & Sunstein, Noise (2021)'],
   bk_geometry:  ['布萊恩·波特諾伊 The Geometry of Wealth (2018)', 'Brian Portnoy, The Geometry of Wealth (2018)'],
+  // Emotional-stability books (#801–1000) — also paraphrased digests.
+  bk_shift:     ['伊森·克洛斯 Shift (2025)', 'Ethan Kross, Shift (2025)'],
+  bk_dealing:   ['馬克·布雷克特 Dealing with Feeling (2025)', 'Marc Brackett, Dealing with Feeling (2025)'],
+  bk_letthem:   ['梅爾·羅賓斯 The Let Them Theory (2024)', 'Mel Robbins, The Let Them Theory (2024)'],
+  bk_nextconv:  ['傑佛森·費雪 The Next Conversation (2025)', 'Jefferson Fisher, The Next Conversation (2025)'],
+  bk_mortals:   ['奧利佛·柏克曼 Meditations for Mortals (2024)', 'Oliver Burkeman, Meditations for Mortals (2024)'],
+  bk_chatter:   ['伊森·克洛斯 Chatter (2021)', 'Ethan Kross, Chatter (2021)'],
+  bk_permission:['馬克·布雷克特 Permission to Feel (2019)', 'Marc Brackett, Permission to Feel (2019)'],
+  bk_unwinding: ['賈德森·布魯爾 Unwinding Anxiety (2021)', 'Judson Brewer, Unwinding Anxiety (2021)'],
+  bk_nobodytold:['茱莉·史密斯 Why Has Nobody Told Me This Before? (2022)', 'Julie Smith, Why Has Nobody Told Me This Before? (2022)'],
+  bk_stillness: ['萊恩·霍利得 Stillness Is the Key (2019)', 'Ryan Holiday, Stillness Is the Key (2019)'],
+  bk_discipline:['萊恩·霍利得 Discipline Is Destiny (2022)', 'Ryan Holiday, Discipline Is Destiny (2022)'],
+  bk_atlas:     ['布芮尼·布朗 Atlas of the Heart (2021)', 'Brené Brown, Atlas of the Heart (2021)'],
+  bk_burnout:   ['艾蜜莉與艾蜜莉亞·納高斯基 Burnout (2019)', 'Emily & Amelia Nagoski, Burnout (2019)'],
+  bk_selfcomp:  ['克莉絲汀·聶夫 Fierce Self-Compassion (2021)', 'Kristin Neff, Fierce Self-Compassion (2021)'],
+  bk_radical:   ['塔拉·布萊克 Radical Compassion (2019)', 'Tara Brach, Radical Compassion (2019)'],
+  bk_hardthings:['史提夫·麥格尼斯 Do Hard Things (2022)', 'Steve Magness, Do Hard Things (2022)'],
+  bk_buildlife: ['亞瑟·布魯克斯、歐普拉 Build the Life You Want (2023)', 'Arthur C. Brooks & Oprah Winfrey, Build the Life You Want (2023)'],
+  bk_boundaries:['妮德拉·塔瓦布 Set Boundaries, Find Peace (2021)', 'Nedra Glover Tawwab, Set Boundaries, Find Peace (2021)'],
+  bk_mythnormal:['嘉柏·麥特 The Myth of Normal (2022)', 'Gabor Maté, The Myth of Normal (2022)'],
+  bk_7half:     ['麗莎·費德曼·巴瑞特《關於大腦的七又二分之一堂課》(2020)', 'Lisa Feldman Barrett, Seven and a Half Lessons About the Brain (2020)'],
 };
 
 // [authorKey, 中文, English, flag?]
@@ -1154,6 +1175,227 @@ const QUOTES = [
   ['bk_geometry', '金錢能買到最好的東西，是選擇權與自主權。', 'The best thing money buys is choice and autonomy.', 2],
   ['bk_geometry', '投資的目標不是打敗市場，而是達成你的人生目標。', 'The goal of investing isn’t beating the market; it’s reaching your life goals.', 2],
   ['bk_geometry', '控制你能控制的：儲蓄、成本與行為。', 'Control what you can: savings, costs and behavior.', 2],
+
+  // ── #801–1000：情緒穩定 Emotional stability — book digests (flag 2) ──
+  ['bk_shift', '情緒不是敵人，而是資訊；它像免疫系統一樣，提醒你注意周遭發生的事。', 'Emotions aren’t the enemy but information — like an immune system, they alert you to what’s happening around you.', 2],
+  ['bk_shift', '情緒本身沒有好壞，只有在過大、過久、失控或干擾生活時才成為問題。', 'Emotions aren’t good or bad; they become a problem only when they are outsized, lingering, uncontrolled or disruptive.', 2],
+  ['bk_shift', '焦慮有它的用處：它幫你動員起來，決定要靠近還是避開威脅。', 'Anxiety has a purpose: it mobilizes you to approach or avoid a threat.', 2],
+  ['bk_shift', '想像幾個月或幾年後回頭看這件事，當下的情緒就會縮小。', 'Picture how you’ll feel about this months or years from now, and today’s emotion shrinks.', 2],
+  ['bk_shift', '換個地方，常能打斷一直在原地打轉的情緒。', 'Changing your location can interrupt an emotion that keeps feeding on itself.', 2],
+  ['bk_shift', '感官也能調節情緒：一口甜食、一段音樂、一次深呼吸都有用。', 'Your senses can shift emotions too: something sweet, a piece of music, a slow breath.', 2],
+  ['bk_shift', '適度的迴避不一定有害；有時暫時轉移注意力，正是最好的調節。', 'Avoidance isn’t always toxic; sometimes a temporary distraction is the best regulation.', 2],
+  ['bk_shift', '「活在當下」不是唯一答案；有時跳到未來或過去看，反而更能穩住自己。', '“Living in the moment” isn’t the only answer; sometimes stepping into the future or past steadies you more.', 2],
+  ['bk_shift', '管理情緒的工具，其實你早就擁有，只是需要學會什麼時候用哪一個。', 'You already have the tools to manage emotions; the skill is knowing which to use when.', 2],
+  ['bk_shift', '目標不是消滅情緒，而是讓情緒不再主導你。', 'The goal isn’t to eliminate emotions but to keep them from running you.', 2],
+
+  ['bk_dealing', '情緒調節不是天生的個性，而是一組能學習、練習、終身精進的技能。', 'Emotion regulation isn’t a fixed trait; it’s a set of skills you can learn, practice and refine for life.', 2],
+  ['bk_dealing', '沒有壞情緒，只有我們還不理解、還不懂得如何引導的情緒。', 'There are no bad emotions — only emotions we don’t yet understand or know how to direct.', 2],
+  ['bk_dealing', '感受到情緒與做出反應之間有一段空間，調節就發生在那裡。', 'Between feeling an emotion and responding to it there is a space — that’s where regulation happens.', 2],
+  ['bk_dealing', '調節策略從呼吸、思考到與人連結，各有適用的時機。', 'Regulation strategies range from breathing to thinking to connecting with others, each with its moment.', 2],
+  ['bk_dealing', '你對情緒的信念，會影響你調節它的能力。', 'What you believe about emotions shapes your ability to regulate them.', 2],
+  ['bk_dealing', '能精確說出情緒的名字，就更能處理它。', 'The more precisely you can name an emotion, the better you can handle it.', 2],
+  ['bk_dealing', '調節不是壓抑：把情緒藏起來，不等於處理好它。', 'Regulation isn’t suppression: hiding an emotion is not the same as handling it.', 2],
+  ['bk_dealing', '情緒調節是人際的：我們也會被身邊的人穩定，或被他們擾亂。', 'Regulation is social: the people around us can steady us — or unsettle us.', 2],
+  ['bk_dealing', '善用情緒，能幫你經營關係、達成目標，也更有幸福感。', 'Using your feelings wisely helps you nurture relationships, reach goals and feel better.', 2],
+  ['bk_dealing', '在平靜時練習調節技巧，情緒來時才用得出來。', 'Practice regulation skills when you’re calm so they’re there when emotions run high.', 2],
+
+  ['bk_letthem', '「讓他們去」：別人要怎麼想、怎麼做，就讓他們去。', '“Let them”: whatever others choose to think or do, let them.', 2],
+  ['bk_letthem', '「讓我來」：把力氣放回自己能控制的回應、選擇與行動。', '“Let me”: put your energy back into what you control — your response, choices and actions.', 2],
+  ['bk_letthem', '試圖控制別人，只會讓你的壓力反應被觸發，判斷力下降。', 'Trying to control others triggers your stress response and clouds your judgment.', 2],
+  ['bk_letthem', '別人的情緒不是你的責任，你不需要替所有人管理心情。', 'Other people’s emotions aren’t your responsibility; you don’t have to manage everyone’s mood.', 2],
+  ['bk_letthem', '放手不是放棄，而是把注意力收回到自己身上。', 'Letting go isn’t giving up; it’s bringing your attention back to yourself.', 2],
+  ['bk_letthem', '你越在意別人怎麼看你，就越把人生的方向盤交給別人。', 'The more you care what others think, the more you hand them the wheel of your life.', 2],
+  ['bk_letthem', '把別人的成功當成可能性的證明，而不是自己失敗的證據。', 'Treat others’ success as proof of what’s possible, not evidence of your failure.', 2],
+  ['bk_letthem', '成年人會照自己的意願行事；接受這一點，就少了很多無謂的消耗。', 'Adults will do what they want; accepting that saves you a great deal of wasted energy.', 2],
+  ['bk_letthem', '先讓身體平靜下來，再決定要怎麼回應。', 'Calm your body first, then decide how to respond.', 2],
+  ['bk_letthem', '讓他們去，讓我來——前者給你平靜，後者給你力量。', 'Let them, then let me — the first brings peace, the second brings power.', 2],
+
+  ['bk_nextconv', '對話的目標不是贏，而是讓下一次對話還能繼續。', 'The goal of a conversation isn’t to win; it’s to keep the next one possible.', 2],
+  ['bk_nextconv', '每一場爭吵背後，都藏著一個沒被說出來的掙扎。', 'Behind every argument is an unspoken struggle.', 2],
+  ['bk_nextconv', '人們渴望平靜的能量：「你說什麼都威脅不到我」的那種穩定。', 'People are hungry for calm energy — the steadiness that says, “Nothing you say threatens me.”', 2],
+  ['bk_nextconv', '情緒上來時，先停下來呼吸，再開口。', 'When emotions rise, pause and breathe before you speak.', 2],
+  ['bk_nextconv', '說少一點，往往比說多一點更有力量。', 'Saying less is often more powerful than saying more.', 2],
+  ['bk_nextconv', '放慢語速、降低音調，能讓緊張的對話降溫。', 'Slowing down and lowering your voice can cool a tense conversation.', 2],
+  ['bk_nextconv', '先求理解，再求被理解；問一個好問題，勝過十句辯解。', 'Seek to understand before being understood; one good question beats ten justifications.', 2],
+  ['bk_nextconv', '你無法控制對方說什麼，但可以控制自己怎麼回應。', 'You can’t control what the other person says, but you can control how you respond.', 2],
+  ['bk_nextconv', '把話說清楚是一種善意；模糊只會製造更多誤會。', 'Clarity is a kindness; vagueness only breeds more misunderstanding.', 2],
+  ['bk_nextconv', '對事不對人：處理問題，而不是攻擊說話的人。', 'Address the issue, not the person.', 2],
+
+  ['bk_mortals', '接受不完美：你永遠無法把一切都做好，這反而讓你自由。', 'Embrace imperfectionism: you’ll never get everything right, and that sets you free.', 2],
+  ['bk_mortals', '放下「掌控一切」的幻想，焦慮會減少一大半。', 'Let go of the fantasy of being on top of everything, and much of the anxiety goes with it.', 2],
+  ['bk_mortals', '不必等到覺得準備好才開始；準備好的感覺很少會來。', 'Don’t wait to feel ready; that feeling rarely arrives.', 2],
+  ['bk_mortals', '每天做一點點，比偶爾的爆發更能走得長遠。', 'A little every day goes further than occasional bursts.', 2],
+  ['bk_mortals', '世界的問題不是你一個人能解決的；做好你能做的那一份就夠了。', 'The world’s problems aren’t yours alone to fix; doing your part is enough.', 2],
+  ['bk_mortals', '承認自己的有限，是內心平靜的開始。', 'Admitting your limits is where inner peace begins.', 2],
+  ['bk_mortals', '分心常常是逃避不舒服的方式；留下來感受那份不適，就能找回專注。', 'Distraction is often a way of fleeing discomfort; staying with it brings back your focus.', 2],
+  ['bk_mortals', '人生不是在為「以後」做準備，此刻就是人生本身。', 'Life isn’t preparation for later; this moment is life itself.', 2],
+  ['bk_mortals', '做下一件該做的事，而不是試圖一次想清楚全部。', 'Do the next thing, rather than trying to figure out everything at once.', 2],
+  ['bk_mortals', '有限的時間不是詛咒，而是讓選擇有意義的原因。', 'Limited time isn’t a curse; it’s what makes choices meaningful.', 2],
+
+  ['bk_chatter', '腦中負面的自我對話（內在雜音）會讓人陷入反芻，放大痛苦。', 'Negative inner chatter traps you in rumination and amplifies distress.', 2],
+  ['bk_chatter', '用第二或第三人稱跟自己說話（例如叫自己的名字），能拉開心理距離。', 'Talking to yourself in the second or third person — using your own name — creates psychological distance.', 2],
+  ['bk_chatter', '想像你在給朋友建議，往往比給自己建議更清醒。', 'Imagine advising a friend; you’re often wiser for others than for yourself.', 2],
+  ['bk_chatter', '把困擾寫下來，能幫大腦整理混亂、停止反覆打轉。', 'Writing about what troubles you helps your mind organize chaos and stop looping.', 2],
+  ['bk_chatter', '走進大自然，能讓躁動的心安靜下來。', 'Spending time in nature quiets a restless mind.', 2],
+  ['bk_chatter', '從更大的時間尺度看問題，眼前的困擾就沒那麼大。', 'Viewed on a longer time scale, today’s problem looks smaller.', 2],
+  ['bk_chatter', '向人傾訴時，對方幫你轉換觀點，比單純陪你重溫情緒更有幫助。', 'When you vent, people who help you reframe help more than those who just relive it with you.', 2],
+  ['bk_chatter', '整理環境、建立秩序，也能讓內心感覺更可控。', 'Creating order in your surroundings can make your inner world feel more manageable.', 2],
+  ['bk_chatter', '敬畏感——面對比自己更大的事物——能讓自我縮小，煩惱也跟著縮小。', 'Awe — facing something bigger than yourself — shrinks the ego and your worries with it.', 2],
+  ['bk_chatter', '內在的聲音也可以是你的教練，而不只是批評者。', 'Your inner voice can be a coach, not just a critic.', 2],
+
+  ['bk_permission', '給自己感受的許可：所有情緒都值得被承認。', 'Give yourself permission to feel: every emotion deserves acknowledgment.', 2],
+  ['bk_permission', '當一個情緒科學家，而不是情緒法官：好奇它，而不是評斷它。', 'Be an emotion scientist, not an emotion judge: get curious instead of critical.', 2],
+  ['bk_permission', '辨識、理解、標記、表達、調節——五個步驟練習情緒能力。', 'Recognize, understand, label, express, regulate — five skills of emotional intelligence.', 2],
+  ['bk_permission', '用「情緒溫度計」問自己：我現在的能量高還是低？感覺愉快還是不愉快？', 'Use a mood meter: is my energy high or low, and does this feel pleasant or unpleasant?', 2],
+  ['bk_permission', '「我很好」通常不是真的；說出真實感受，才有機會被理解。', '“I’m fine” is usually untrue; naming your real feelings is how you get understood.', 2],
+  ['bk_permission', '情緒會影響注意力、記憶、判斷與人際關係。', 'Emotions shape attention, memory, decisions and relationships.', 2],
+  ['bk_permission', '大人要先學會調節自己，才能教孩子調節。', 'Adults have to learn to regulate themselves before they can teach children to.', 2],
+  ['bk_permission', '詢問「你感覺如何？」時，要真的願意聽答案。', 'When you ask “How are you feeling?” be ready to really hear the answer.', 2],
+  ['bk_permission', '豐富的情緒詞彙，能讓你更精準地理解自己。', 'A richer emotional vocabulary helps you understand yourself more precisely.', 2],
+  ['bk_permission', '壓抑情緒會耗損身心，也會在別的地方爆發出來。', 'Suppressed emotions drain you and tend to erupt somewhere else.', 2],
+
+  ['bk_unwinding', '焦慮常常是一種習慣迴圈：觸發 → 擔憂 → 短暫的安心。', 'Anxiety is often a habit loop: trigger, worry, brief relief.', 2],
+  ['bk_unwinding', '擔憂讓人覺得在「做點什麼」，其實只是在原地打轉。', 'Worry feels like doing something, but it’s really just spinning in place.', 2],
+  ['bk_unwinding', '先看見自己的焦慮迴圈，才可能改變它。', 'You have to map your anxiety loop before you can change it.', 2],
+  ['bk_unwinding', '大腦會自己發現：擔憂其實沒有帶來什麼好處，習慣就會鬆動。', 'When your brain notices that worrying doesn’t actually pay off, the habit begins to loosen.', 2],
+  ['bk_unwinding', '好奇心是對抗焦慮的強大工具：「嗯，這是什麼感覺？」', 'Curiosity is a powerful tool against anxiety: “Hmm, what does this feel like?”', 2],
+  ['bk_unwinding', '用好奇取代評斷，比靠意志力硬撐更有效。', 'Replacing judgment with curiosity works better than white-knuckling with willpower.', 2],
+  ['bk_unwinding', '找到一個「更大更好的獎賞」，舊習慣才會被取代。', 'A habit changes when you find a bigger, better offer.', 2],
+  ['bk_unwinding', '溫柔地注意當下的身體感受，讓焦慮像浪一樣來了又走。', 'Gently notice the sensations in your body and let anxiety rise and pass like a wave.', 2],
+  ['bk_unwinding', '改變不是一次完成，而是一次又一次地注意與選擇。', 'Change isn’t a single event; it’s noticing and choosing again and again.', 2],
+  ['bk_unwinding', '對自己仁慈，比自我批評更能讓人走出焦慮。', 'Kindness toward yourself gets you out of anxiety faster than self-criticism.', 2],
+
+  ['bk_nobodytold', '情緒不是事實；感覺很糟，不代表事情真的很糟。', 'Feelings aren’t facts; feeling terrible doesn’t mean things are terrible.', 2],
+  ['bk_nobodytold', '睡眠、飲食、運動與作息，都會直接影響情緒。', 'Sleep, food, movement and routine all directly affect your mood.', 2],
+  ['bk_nobodytold', '情緒低落時做的小行動，往往會帶來動力，而不是等動力來了才行動。', 'Small actions taken when you feel low create motivation, rather than waiting for motivation first.', 2],
+  ['bk_nobodytold', '注意自己的思考陷阱：以偏概全、讀心術、災難化。', 'Watch for thinking traps: overgeneralizing, mind reading, catastrophizing.', 2],
+  ['bk_nobodytold', '把想法當成想法看待，你就不必被它牽著走。', 'Treat thoughts as thoughts, and you don’t have to be dragged along by them.', 2],
+  ['bk_nobodytold', '對自己說話的語氣，要像對一個你在乎的朋友。', 'Speak to yourself the way you would to a friend you care about.', 2],
+  ['bk_nobodytold', '慢慢吐氣、讓呼氣比吸氣長，能幫身體平靜下來。', 'Breathing out slowly — longer exhales than inhales — helps your body calm down.', 2],
+  ['bk_nobodytold', '不必消滅焦慮，而是學會帶著它往前走。', 'You don’t have to eliminate anxiety; learn to move forward with it.', 2],
+  ['bk_nobodytold', '自信不是先有的，而是做了之後才慢慢長出來。', 'Confidence doesn’t come first; it grows after you act.', 2],
+  ['bk_nobodytold', '弄清楚自己的價值觀，就有了在情緒風暴中的方向。', 'Knowing your values gives you direction in an emotional storm.', 2],
+
+  ['bk_stillness', '平靜是一切偉大事物的關鍵。', 'Stillness is the key to almost everything worth doing.', 2],
+  ['bk_stillness', '心靜：減少輸入，限制資訊，才能想得更清楚。', 'Stillness of mind: limit your inputs to think more clearly.', 2],
+  ['bk_stillness', '靈靜：處理內心的嫉妒、慾望與憤怒，平靜才會持久。', 'Stillness of spirit: deal with envy, desire and anger within, so calm can last.', 2],
+  ['bk_stillness', '身靜：散步、睡眠與規律作息，是內心平靜的基礎。', 'Stillness of body: walking, sleep and routine are the foundation of inner calm.', 2],
+  ['bk_stillness', '學會說「不」，是保護平靜最有效的方法。', 'Learning to say no is the most effective way to protect your calm.', 2],
+  ['bk_stillness', '「夠了」的感覺，是內心安定的來源。', 'Knowing what is enough is a source of inner stability.', 2],
+  ['bk_stillness', '獨處與安靜的時間，是做出好決定的前提。', 'Solitude and quiet time are prerequisites for good decisions.', 2],
+  ['bk_stillness', '慢下來，才看得清楚真正重要的事。', 'Slow down, and you can see what really matters.', 2],
+  ['bk_stillness', '寫日記，是把腦中的噪音放到紙上的方法。', 'Journaling moves the noise out of your head and onto the page.', 2],
+  ['bk_stillness', '把注意力放在眼前這一刻，焦慮就少了立足之地。', 'Put your attention on this moment, and anxiety has less room to stand.', 2],
+
+  ['bk_discipline', '自律不是懲罰，而是給自己的禮物。', 'Discipline isn’t punishment; it’s a gift to yourself.', 2],
+  ['bk_discipline', '能管住自己的情緒，才能管好自己的人生。', 'Master your emotions and you can master your life.', 2],
+  ['bk_discipline', '節制是一種力量：不被一時的衝動牽著走。', 'Temperance is strength: not being dragged around by every impulse.', 2],
+  ['bk_discipline', '先管好身體——睡眠、飲食、運動——心才管得住。', 'Govern the body — sleep, diet, exercise — and the mind becomes easier to govern.', 2],
+  ['bk_discipline', '慢慢來，穩穩來；急躁通常只會讓事情變糟。', 'Slow and steady; haste usually makes things worse.', 2],
+  ['bk_discipline', '對自己嚴格，對別人寬容。', 'Be strict with yourself and tolerant of others.', 2],
+  ['bk_discipline', '在眾人慌亂時保持鎮定，是一種領導力。', 'Staying composed while others panic is a form of leadership.', 2],
+  ['bk_discipline', '小事上的自律，會累積成大事上的定力。', 'Discipline in small things adds up to steadiness in big ones.', 2],
+  ['bk_discipline', '不做某些事，往往比做更多事更需要自制力。', 'Not doing certain things often takes more self-control than doing more.', 2],
+  ['bk_discipline', '自制不是壓抑情緒，而是選擇不讓情緒替你做決定。', 'Self-control isn’t suppressing emotion; it’s refusing to let emotion decide for you.', 2],
+
+  ['bk_atlas', '語言是理解情緒的地圖：能說出它，才能走過它。', 'Language is the map for our emotions: if you can name it, you can navigate it.', 2],
+  ['bk_atlas', '多數人只能說出幾種情緒，但人類的情緒有幾十種細微差別。', 'Most people can name only a few emotions, though there are dozens of subtle ones.', 2],
+  ['bk_atlas', '羞愧說「我很糟」，內疚說「我做了一件糟糕的事」；後者能帶來改變。', 'Shame says “I am bad”; guilt says “I did something bad” — only the second leads to change.', 2],
+  ['bk_atlas', '比較會讓我們同時想要融入又想要出眾，結果兩頭落空。', 'Comparison makes us want to fit in and stand out at once, and we end up with neither.', 2],
+  ['bk_atlas', '焦慮與興奮的身體感受很像，差別在於你怎麼解讀。', 'Anxiety and excitement feel similar in the body; the difference is how you read them.', 2],
+  ['bk_atlas', '同理是與人一起感受，同情是站在外面為人難過。', 'Empathy is feeling with people; pity is feeling sorry for them from the outside.', 2],
+  ['bk_atlas', '承認脆弱不是軟弱，而是勇氣的表現。', 'Vulnerability isn’t weakness; it’s a form of courage.', 2],
+  ['bk_atlas', '喜悅需要勇氣：害怕失去而不敢享受，反而錯過了它。', 'Joy takes courage: holding back for fear of losing it means missing it.', 2],
+  ['bk_atlas', '感恩是對抗「預先悲傷」最好的方法。', 'Gratitude is the best antidote to bracing for disaster.', 2],
+  ['bk_atlas', '有意義的連結，需要我們願意被看見。', 'Meaningful connection requires being willing to be seen.', 2],
+
+  ['bk_burnout', '壓力源解決了，壓力反應不一定跟著結束；你需要「完成壓力循環」。', 'Dealing with a stressor doesn’t end the stress response; you have to complete the stress cycle.', 2],
+  ['bk_burnout', '身體活動是完成壓力循環最有效的方法。', 'Physical activity is the most efficient way to complete the stress cycle.', 2],
+  ['bk_burnout', '深呼吸、大笑、擁抱、哭泣與創作，也能幫身體釋放壓力。', 'Deep breathing, laughter, hugs, crying and creative expression also help the body release stress.', 2],
+  ['bk_burnout', '休息不是獎勵，而是必需品。', 'Rest isn’t a reward; it’s a necessity.', 2],
+  ['bk_burnout', '人不是設計來獨自承受一切的；連結本身就是療癒。', 'People aren’t built to cope alone; connection itself heals.', 2],
+  ['bk_burnout', '區分「能控制」與「不能控制」的壓力源，分別用不同方式處理。', 'Separate stressors you can control from those you can’t, and handle each differently.', 2],
+  ['bk_burnout', '對自己仁慈，能讓你在挫折後更快恢復。', 'Self-kindness helps you recover faster after setbacks.', 2],
+  ['bk_burnout', '有意義的目標能支撐你度過困難，但不該成為壓垮你的理由。', 'A meaningful goal can carry you through hard times, but it shouldn’t become what crushes you.', 2],
+  ['bk_burnout', '睡眠不足時，所有的情緒都會被放大。', 'When you’re short on sleep, every emotion gets amplified.', 2],
+  ['bk_burnout', '你不需要先證明自己有價值，才配得到照顧。', 'You don’t have to prove your worth before you deserve care.', 2],
+
+  ['bk_selfcomp', '自我慈悲有兩面：溫柔的接納，與堅定的保護。', 'Self-compassion has two sides: tender acceptance and fierce protection.', 2],
+  ['bk_selfcomp', '自我慈悲的三要素：善待自己、共同人性、正念覺察。', 'Three elements of self-compassion: self-kindness, common humanity and mindfulness.', 2],
+  ['bk_selfcomp', '犯錯是人類共同的經驗，你並不孤單。', 'Making mistakes is part of the shared human experience; you are not alone.', 2],
+  ['bk_selfcomp', '自我慈悲不是放縱，反而能讓人更有動力改進。', 'Self-compassion isn’t self-indulgence; it actually motivates improvement.', 2],
+  ['bk_selfcomp', '自我批評會觸發威脅反應，自我慈悲則讓人感到安全。', 'Self-criticism triggers a threat response; self-compassion makes you feel safe.', 2],
+  ['bk_selfcomp', '溫柔對待自己，也包括堅定地設下界線。', 'Being kind to yourself includes setting firm boundaries.', 2],
+  ['bk_selfcomp', '痛苦的時候，把手放在胸口，給自己一點安慰。', 'When you’re hurting, put a hand on your heart and offer yourself comfort.', 2],
+  ['bk_selfcomp', '自尊建立在比較上，自我慈悲不需要比較。', 'Self-esteem relies on comparison; self-compassion doesn’t.', 2],
+  ['bk_selfcomp', '用支持代替批判，挫折後才能更快站起來。', 'Support instead of judgment helps you get back up faster after a setback.', 2],
+  ['bk_selfcomp', '照顧好自己，你才有餘力照顧別人。', 'Take care of yourself so you have something left to care for others.', 2],
+
+  ['bk_radical', 'RAIN 四步驟：辨識、允許、探究、滋養。', 'RAIN: Recognize, Allow, Investigate, Nurture.', 2],
+  ['bk_radical', '先辨識：此刻我正在經歷什麼情緒？', 'Recognize: what am I feeling right now?', 2],
+  ['bk_radical', '再允許：讓它存在，不急著推開或修正。', 'Allow: let it be there without rushing to push it away or fix it.', 2],
+  ['bk_radical', '帶著善意探究：這個感受在身體哪裡？它需要什麼？', 'Investigate with kindness: where is this in my body, and what does it need?', 2],
+  ['bk_radical', '最後滋養：給自己需要的溫柔與安慰。', 'Nurture: offer yourself the tenderness and comfort you need.', 2],
+  ['bk_radical', '抗拒痛苦，往往讓痛苦更深。', 'Resisting pain often deepens it.', 2],
+  ['bk_radical', '暫停一下，就能從自動反應中走出來。', 'A pause lets you step out of automatic reactions.', 2],
+  ['bk_radical', '對自己的慈悲，會自然延伸到對別人的慈悲。', 'Compassion for yourself naturally extends to compassion for others.', 2],
+  ['bk_radical', '你不是你的想法與情緒，你是覺察它們的那個人。', 'You are not your thoughts and emotions; you are the one aware of them.', 2],
+  ['bk_radical', '在困難的關係中，先照顧好自己的心，才能真正看見對方。', 'In a hard relationship, tend your own heart first so you can truly see the other person.', 2],
+
+  ['bk_hardthings', '真正的堅韌不是硬撐，而是在不適中仍能清楚思考、做出好選擇。', 'Real toughness isn’t gritting your teeth; it’s thinking clearly and choosing well amid discomfort.', 2],
+  ['bk_hardthings', '老派的「硬漢」心態反而讓人更脆弱。', 'Old-school “tough guy” thinking actually makes people more fragile.', 2],
+  ['bk_hardthings', '情緒是訊號，不是命令；你可以聽見它，但不必服從它。', 'Emotions are signals, not commands; you can hear them without obeying them.', 2],
+  ['bk_hardthings', '在反應之前多創造一點空間，就能選擇更好的回應。', 'Create a little space before reacting, and you can choose a better response.', 2],
+  ['bk_hardthings', '對自己誠實地評估現實，比盲目樂觀更能撐下去。', 'An honest read of reality helps you endure better than blind optimism.', 2],
+  ['bk_hardthings', '內在的聲音要像教練，而不是嚴厲的批評者。', 'Your inner voice should sound like a coach, not a harsh critic.', 2],
+  ['bk_hardthings', '有安全感的人，才敢面對困難。', 'People who feel secure are the ones who dare to face difficulty.', 2],
+  ['bk_hardthings', '把注意力放在下一步，而不是整座山。', 'Focus on the next step, not the whole mountain.', 2],
+  ['bk_hardthings', '意義感能幫人撐過不舒服的過程。', 'A sense of meaning helps people endure discomfort.', 2],
+  ['bk_hardthings', '接受恐懼與疑慮是正常的，它們不代表你不夠強。', 'Fear and doubt are normal; they don’t mean you’re not strong enough.', 2],
+
+  ['bk_buildlife', '情緒自我管理的關鍵是後設認知：觀察自己的情緒，而不是被它淹沒。', 'The key to emotional self-management is metacognition: observing your emotions instead of drowning in them.', 2],
+  ['bk_buildlife', '你無法選擇情緒何時出現，但可以選擇如何回應。', 'You can’t choose when emotions arise, but you can choose how to respond.', 2],
+  ['bk_buildlife', '幸福不是目的地，而是一個方向。', 'Happiness isn’t a destination; it’s a direction.', 2],
+  ['bk_buildlife', '幸福的三個核心：享受、滿足與意義。', 'Happiness has three macronutrients: enjoyment, satisfaction and meaning.', 2],
+  ['bk_buildlife', '負面情緒不是要被消滅的缺陷，它們也有保護作用。', 'Negative emotions aren’t defects to eliminate; they serve to protect you too.', 2],
+  ['bk_buildlife', '經營家庭、友誼、工作與信仰這四根支柱，才能建立你想要的生活。', 'Invest in four pillars — family, friendship, work and faith — to build the life you want.', 2],
+  ['bk_buildlife', '感恩、希望、同理與幽默，是可以練習的情緒。', 'Gratitude, hope, compassion and humor are emotions you can practice.', 2],
+  ['bk_buildlife', '把注意力從「我」轉向別人，往往能減輕自己的痛苦。', 'Shifting attention from yourself to others often eases your own pain.', 2],
+  ['bk_buildlife', '你要先改善自己，才能真正改善周遭的世界。', 'Improve yourself first, and you can truly improve the world around you.', 2],
+  ['bk_buildlife', '寫下讓你感恩的事，能把注意力從缺乏轉向擁有。', 'Writing down what you’re grateful for shifts attention from what’s missing to what you have.', 2],
+
+  ['bk_boundaries', '界線是你為了讓自己在關係中感到安全與自在而設下的期待。', 'Boundaries are expectations that help you feel safe and comfortable in relationships.', 2],
+  ['bk_boundaries', '沒有界線，就容易累積怨氣、倦怠與焦慮。', 'Without boundaries, resentment, burnout and anxiety pile up.', 2],
+  ['bk_boundaries', '說「不」是完整的句子，不需要長篇解釋。', '“No” is a complete sentence; it doesn’t need a long explanation.', 2],
+  ['bk_boundaries', '設界線時對方不舒服是正常的，那不代表你做錯了。', 'It’s normal for others to feel uncomfortable when you set a boundary; that doesn’t mean you’re wrong.', 2],
+  ['bk_boundaries', '清楚而簡短地說出需求，比暗示更有效。', 'Stating your needs clearly and briefly works better than hinting.', 2],
+  ['bk_boundaries', '界線要靠行動維持，而不只是說出口。', 'Boundaries are kept by action, not just by words.', 2],
+  ['bk_boundaries', '你無法控制別人的反應，只能控制自己是否守住界線。', 'You can’t control how others react, only whether you hold your boundary.', 2],
+  ['bk_boundaries', '對自己也要有界線：手機、工作與承諾的上限。', 'Set boundaries with yourself too: limits on your phone, work and commitments.', 2],
+  ['bk_boundaries', '健康的關係能容納彼此的界線。', 'Healthy relationships have room for each other’s boundaries.', 2],
+  ['bk_boundaries', '討好別人換來的平靜，往往要用自己的平靜去付。', 'Peace bought by people-pleasing is usually paid for with your own peace.', 2],
+
+  ['bk_mythnormal', '很多我們以為「正常」的壓力，其實對身心並不健康。', 'Much of the stress we consider “normal” isn’t healthy for body or mind.', 2],
+  ['bk_mythnormal', '身體會記住長期壓抑的情緒，並以疾病的形式表現出來。', 'The body keeps score of chronically suppressed emotions and can express them as illness.', 2],
+  ['bk_mythnormal', '問題不是「你哪裡有問題」，而是「你經歷了什麼」。', 'The question isn’t “What’s wrong with you?” but “What happened to you?”', 2],
+  ['bk_mythnormal', '真實（做自己）與依附（被接納）之間的拉扯，是很多痛苦的根源。', 'The tension between authenticity and attachment is at the root of much suffering.', 2],
+  ['bk_mythnormal', '學會說「不」，有時是在保護你的健康。', 'Learning to say no can be a way of protecting your health.', 2],
+  ['bk_mythnormal', '對自己的過去帶著好奇與慈悲，而不是批判。', 'Approach your past with curiosity and compassion rather than judgment.', 2],
+  ['bk_mythnormal', '情緒是身體的一部分，身心無法分開對待。', 'Emotions are part of the body; mind and body can’t be treated separately.', 2],
+  ['bk_mythnormal', '療癒不是回到過去的你，而是成為更完整的你。', 'Healing isn’t returning to who you were; it’s becoming more whole.', 2],
+  ['bk_mythnormal', '社會的壓力與孤立，會影響每個人的情緒健康。', 'Social pressure and isolation affect everyone’s emotional health.', 2],
+  ['bk_mythnormal', '憤怒在健康的表達下，是保護自己界線的力量。', 'Expressed in healthy ways, anger is a force that protects your boundaries.', 2],
+
+  ['bk_7half', '大腦最重要的工作不是思考，而是管理身體的「預算」。', 'Your brain’s most important job isn’t thinking; it’s running your body budget.', 2],
+  ['bk_7half', '睡眠、飲食與運動不足會讓身體預算透支，情緒也跟著變差。', 'Poor sleep, diet and exercise overdraw your body budget, and your mood follows.', 2],
+  ['bk_7half', '很多時候你不是生氣或難過，而是累了、餓了或缺乏休息。', 'Often you aren’t angry or sad so much as tired, hungry or depleted.', 2],
+  ['bk_7half', '大腦不斷在預測；你感受到的，很多是大腦的猜測。', 'Your brain is constantly predicting; much of what you feel is its best guess.', 2],
+  ['bk_7half', '我們會調節彼此的神經系統：身邊的人能讓你平靜，也能讓你緊張。', 'We regulate each other’s nervous systems: the people around you can calm or stress you.', 2],
+  ['bk_7half', '善意的話語能補充別人的身體預算，惡意的話語則會消耗它。', 'Kind words can replenish someone’s body budget; cruel words drain it.', 2],
+  ['bk_7half', '情緒不是自動觸發的反應，而是大腦根據經驗建構出來的。', 'Emotions aren’t automatic reactions; your brain constructs them from experience.', 2],
+  ['bk_7half', '學習更多情緒概念，能讓你對感受有更細緻的掌握。', 'Learning more emotion concepts gives you finer control over your feelings.', 2],
+  ['bk_7half', '你比自己以為的，更能影響自己的感受。', 'You have more influence over your feelings than you think.', 2],
+  ['bk_7half', '改變經驗，就能慢慢改變大腦未來的預測。', 'Change your experiences and you gradually change your brain’s future predictions.', 2],
 ].map((q, i) => ({ id: i, a: q[0], zh: q[1], en: q[2], att: q[3] === 1, digest: q[3] === 2 }));
 
 function authorZh(q){ return AUTHORS[q.a][0] + (q.att ? '（傳）' : q.digest ? '（書摘）' : ''); }
