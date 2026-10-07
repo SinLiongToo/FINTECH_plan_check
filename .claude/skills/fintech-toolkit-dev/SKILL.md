@@ -211,6 +211,10 @@ Self-contained (no external data). Everything lives in one inline script:
   Sections are marked with comments (`// ── #201–500 ──`).
 - Strings are single-quoted JS: write apostrophes as `’` and inner quotes
   as `“ ”`, never ASCII `'`.
+- 4th element `2` = **book digest** (#601+): a paraphrased key idea from a
+  recent book, not a verbatim quote — rendered with 「（書摘）」 and no
+  quotation marks. Use this for recent books rather than inventing
+  "quotes" that can't be verified.
 - Set the 4th element to `1` when a quote is commonly attributed but not
   reliably sourced (famous misattributions, "Einstein said compound
   interest…"). It renders with a 「（傳）」 marker. Check for near-duplicates

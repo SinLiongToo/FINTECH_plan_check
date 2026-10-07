@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>投資名言 600 句 Investment Quotes — FinTech Toolkit</title>
+<title>投資名言 800 句 Investment Quotes — FinTech Toolkit</title>
 <meta name="theme-color" content="#0b0e14">
 <link rel="stylesheet" href="../../assets/shared.css">
 <style>
@@ -55,14 +55,14 @@
 <body class="ftk-page">
 
 <div class="ftk-hero">
-  <h1>🎙️ 投資名言 600 句</h1>
-  <p>600 Investment Quotes · 中英雙語 · 語音朗讀 · 自動播放。點任何一句即可朗讀，或按「自動播放」依序聆聽。</p>
+  <h1>🎙️ 投資名言 800 句</h1>
+  <p>800 Investment Quotes · 中英雙語 · 語音朗讀 · 自動播放。點任何一句即可朗讀，或按「自動播放」依序聆聽。</p>
 </div>
 
 <div class="q-wrap">
   <div class="q-player" id="player">
     <div class="q-meta">
-      <span class="q-count" id="qCount">#1 / 600</span>
+      <span class="q-count" id="qCount">#1 / 800</span>
       <span class="q-status" id="qStatus">已停止 Stopped</span>
     </div>
     <div class="q-zh" id="qZh"></div>
@@ -81,7 +81,7 @@
 
     <div class="q-settings">
       <label title="輸入句號後按 Enter 或「跳至」，自動播放會從這一句開始">從第
-        <input type="number" id="numStart" min="1" max="600" value="1" inputmode="numeric"> 句
+        <input type="number" id="numStart" min="1" max="800" value="1" inputmode="numeric"> 句
         <button type="button" class="q-btn" id="btnJump" style="padding:5px 12px">跳至 Go</button>
       </label>
       <label>朗讀語言
@@ -204,10 +204,35 @@ const AUTHORS = {
   zhugeliang:['諸葛亮《誡子書》', 'Zhuge Liang'],
   zhuzi:    ['《朱子家訓》', 'Zhu Bolu, Family Maxims'],
   zengguang:['《增廣賢文》', 'Zengguang Xianwen'],
+  // Recent books (#601–800) — entries are paraphrased key ideas (書摘), not verbatim quotes.
+  bk_same:      ['摩根·豪瑟《不變的定律》(2023)', 'Morgan Housel, Same as Ever (2023)'],
+  bk_artspend:  ['摩根·豪瑟《花錢的藝術》(2025)', 'Morgan Housel, The Art of Spending Money (2025)'],
+  bk_diezero:   ['比爾·柏金斯《別把你的錢留到死》(2020)', 'Bill Perkins, Die with Zero (2020)'],
+  bk_jkb:       ['尼克·馬朱利《持續買進》(2022)', 'Nick Maggiulli, Just Keep Buying (2022)'],
+  bk_ladder:    ['尼克·馬朱利 The Wealth Ladder (2025)', 'Nick Maggiulli, The Wealth Ladder (2025)'],
+  bk_couples:   ['拉米特·塞提 Money for Couples (2024)', 'Ramit Sethi, Money for Couples (2024)'],
+  bk_simplepath:['JL·柯林斯 The Simple Path to Wealth（2025 修訂版）', 'JL Collins, The Simple Path to Wealth (rev. 2025)'],
+  bk_worldorder:['瑞·達利歐《變化中的世界秩序》(2021)', 'Ray Dalio, Principles for Dealing with the Changing World Order (2021)'],
+  bk_cycle:     ['霍華·馬克斯《掌握市場週期》(2018)', 'Howard Marks, Mastering the Market Cycle (2018)'],
+  bk_atomic:    ['詹姆斯·克利爾《原子習慣》(2018)', 'James Clear, Atomic Habits (2018)'],
+  bk_strength:  ['亞瑟·布魯克斯 From Strength to Strength (2022)', 'Arthur C. Brooks, From Strength to Strength (2022)'],
+  bk_4000:      ['奧利佛·柏克曼《人生4千個禮拜》(2021)', 'Oliver Burkeman, Four Thousand Weeks (2021)'],
+  bk_quit:      ['安妮·杜克 Quit (2022)', 'Annie Duke, Quit (2022)'],
+  bk_bets:      ['安妮·杜克《高勝算決策》(2018)', 'Annie Duke, Thinking in Bets (2018)'],
+  bk_timesmart: ['艾胥莉·威蘭斯 Time Smart (2020)', 'Ashley Whillans, Time Smart (2020)'],
+  bk_delusions: ['威廉·伯恩斯坦 The Delusions of Crowds (2021)', 'William J. Bernstein, The Delusions of Crowds (2021)'],
+  bk_goodlife:  ['羅伯·威丁格、馬克·舒茲 The Good Life (2023)', 'Robert Waldinger & Marc Schulz, The Good Life (2023)'],
+  bk_retire:    ['克莉絲汀·本茲 How to Retire (2024)', 'Christine Benz, How to Retire (2024)'],
+  bk_noise:     ['康納曼、席波尼、桑思坦《雜訊》(2021)', 'Kahneman, Sibony & Sunstein, Noise (2021)'],
+  bk_geometry:  ['布萊恩·波特諾伊 The Geometry of Wealth (2018)', 'Brian Portnoy, The Geometry of Wealth (2018)'],
 };
 
-// [authorKey, 中文, English, attributed?]  — attributed = widely credited to
-// this person but not reliably sourced; shown with "（傳）/ (attributed)".
+// [authorKey, 中文, English, flag?]
+//   flag 1 = attributed: widely credited to this person but not reliably
+//            sourced; shown with "（傳）/ (attributed)".
+//   flag 2 = book digest: a paraphrased key idea from the book, not a
+//            verbatim quote; shown with "（書摘）/ (book summary)" and
+//            without quotation marks.
 const QUOTES = [
   ['buffett', '投資的第一原則是不要賠錢；第二原則是永遠不要忘記第一原則。', 'Rule No. 1: Never lose money. Rule No. 2: Never forget rule No. 1.'],
   ['buffett', '在別人貪婪時恐懼，在別人恐懼時貪婪。', 'Be fearful when others are greedy and greedy when others are fearful.'],
@@ -908,10 +933,231 @@ const QUOTES = [
   ['cnproverb', '比上不足，比下有餘。', 'Short of those above, but better off than those below.'],
   ['cnproverb', '錢財乃身外之物，生不帶來，死不帶去。', 'Money is outside the self: we bring none at birth and take none at death.'],
   ['cnproverb', '花錢買教訓。', 'Some lessons are bought with money.'],
-].map((q, i) => ({ id: i, a: q[0], zh: q[1], en: q[2], att: !!q[3] }));
 
-function authorZh(q){ return AUTHORS[q.a][0] + (q.att ? '（傳）' : ''); }
-function authorEn(q){ return AUTHORS[q.a][1] + (q.att ? ' (attributed)' : ''); }
+  // ── #601–800：近年新書書摘 Recent books — paraphrased key ideas (flag 2) ──
+  ['bk_same', '最大的風險，往往是沒有人在談論的那一個；因為沒人看見，所以也沒人準備。', 'The biggest risk is usually the one nobody is talking about — because no one sees it, no one prepares for it.', 2],
+  ['bk_same', '未來很難預測，但人性幾乎不變；押注在不變的事情上更可靠。', 'The future is hard to predict, but human behavior barely changes — bet on what stays the same.', 2],
+  ['bk_same', '期望會隨著處境一起上升，所以生活變好了，人卻不一定更快樂。', 'Expectations rise with circumstances, so life can get better without people feeling happier.', 2],
+  ['bk_same', '平靜會埋下瘋狂的種子：太久的穩定，讓人加大槓桿、降低戒心。', 'Calm plants the seeds of crazy: long stability tempts people into more leverage and less caution.', 2],
+  ['bk_same', '好消息來得慢，壞消息來得快；進步需要時間累積，災難只需要一瞬間。', 'Good news takes time and bad news happens fast: progress compounds slowly, setbacks strike in an instant.', 2],
+  ['bk_same', '最會說故事的人勝出，而不一定是最正確的人。', 'The best story wins — not necessarily the best idea or the right answer.', 2],
+  ['bk_same', '微小的事件透過複利，可能演變成巨大的結果。', 'Tiny events can compound into enormous outcomes.', 2],
+  ['bk_same', '經歷過不同世界的人，面對同樣的事實，會得出不同的結論。', 'People who have experienced different worlds reach different conclusions from the same facts.', 2],
+  ['bk_same', '激勵的力量極大；只要誘因夠強，人幾乎能說服自己相信任何事。', 'Incentives are powerful — with a strong enough incentive, people can justify almost anything.', 2],
+  ['bk_same', '每件值得追求的東西都有代價；關鍵是看清代價是什麼，並願意支付。', 'Everything worth pursuing has a price; the trick is to identify it and be willing to pay it.', 2],
+
+  ['bk_artspend', '花錢最好的方式，是讓自己更獨立、更能掌控自己的時間。', 'The best use of money is buying independence and control over your own time.', 2],
+  ['bk_artspend', '錢該花在你真正想要的東西上，而不是別人期待你想要的。', 'Spend on what you genuinely want, not on what others expect you to want.', 2],
+  ['bk_artspend', '為了讓別人佩服而花錢，很少換得到你期待的尊重與喜愛。', 'Spending to impress others rarely earns the respect or affection you are hoping for.', 2],
+  ['bk_artspend', '你怎麼花錢，反映了你是誰、在乎什麼。', 'How you spend money reflects who you are and what you care about.', 2],
+  ['bk_artspend', '參照點一改變，原本覺得足夠的東西就突然顯得不夠。', 'Change the reference point and what felt like enough suddenly feels insufficient.', 2],
+  ['bk_artspend', '安靜的財富——不炫耀、不比較——通常帶來最多的平靜。', 'Quiet wealth — not flaunted, not compared — usually brings the most peace.', 2],
+  ['bk_artspend', '對某人是浪費的支出，對另一個人可能是最值得的花費；花錢沒有標準答案。', 'One person’s waste is another’s best purchase; there is no universal right way to spend.', 2],
+  ['bk_artspend', '「夠了」不是一個數字，而是一種心態。', 'Enough is not a number; it is a state of mind.', 2],
+  ['bk_artspend', '花在與人共享的經歷上的錢，回報往往比花在物品上更持久。', 'Money spent on experiences shared with people tends to pay off longer than money spent on things.', 2],
+  ['bk_artspend', '能夠輕鬆說出「我不需要那個」，是一種被低估的財富。', 'Being able to say “I don’t need that” with ease is an underrated form of wealth.', 2],
+
+  ['bk_diezero', '人生的目標是最大化人生經歷，而不是最大化財富。', 'The goal of life is to maximize experiences, not wealth.', 2],
+  ['bk_diezero', '經歷會產生「記憶紅利」：越早擁有，能回味的時間就越長。', 'Experiences pay a “memory dividend”: the earlier you have them, the longer you get to enjoy remembering them.', 2],
+  ['bk_diezero', '每種經歷都有它的時間窗口；一旦錯過，再多錢也買不回來。', 'Every experience has a time window; once it closes, no amount of money can buy it back.', 2],
+  ['bk_diezero', '健康比財富更能決定你能享受什麼；錢越晚花，能換到的享受越少。', 'Health shapes what you can enjoy more than wealth does; money spent later buys less enjoyment.', 2],
+  ['bk_diezero', '把人生分成幾個「時間桶」，規劃每個階段最想完成的經歷。', 'Divide your life into “time buckets” and plan the experiences you want in each stage.', 2],
+  ['bk_diezero', '死時留下大筆財產，代表你用生命換來的錢從未被享用。', 'Dying with a large fortune means you traded life energy for money you never got to use.', 2],
+  ['bk_diezero', '要給孩子錢，就在他們最需要的時候給（約 26–35 歲），而不是等你過世後。', 'Give money to your children when it matters most to them — roughly ages 26 to 35 — not after you die.', 2],
+  ['bk_diezero', '淨資產應該在某個時間點達到高峰，之後就有計畫地開始花用。', 'Your net worth should peak at some point, after which you deliberately start spending it down.', 2],
+  ['bk_diezero', '用年金等工具對沖長壽風險，就能更安心地花錢。', 'Use annuities and similar tools to hedge longevity risk so you can spend with confidence.', 2],
+  ['bk_diezero', '「歸零」是一個瞄準的方向，不是要你在最後一天花光最後一塊錢。', '“Die with zero” is a direction to aim for, not a demand to spend your last dollar on your last day.', 2],
+
+  ['bk_jkb', '窮的時候專心存錢，有錢之後專心投資；看哪一個對你的財富影響更大。', 'Save if you’re poor, invest if you’re rich — focus on whichever moves your net worth more.', 2],
+  ['bk_jkb', '「兩倍法則」：想揮霍一筆錢，就同時投資同樣的金額，花得沒有罪惡感。', 'The 2x rule: for every splurge, invest the same amount, and you can spend without guilt.', 2],
+  ['bk_jkb', '等待「低點」再進場，通常不如持續穩定地買進。', 'Waiting for a dip usually loses to buying steadily.', 2],
+  ['bk_jkb', '收入是累積財富最大的槓桿：能省的錢有上限，能賺的錢沒有。', 'Income is the biggest lever for wealth: there’s a limit to how much you can save, but not to how much you can earn.', 2],
+  ['bk_jkb', '手上有錢可以投資時，盡早投入通常勝過分批慢慢投入。', 'When you have money to invest, investing it sooner usually beats spreading it out.', 2],
+  ['bk_jkb', '不要買個股：靠選股長期打敗大盤的機率很低。', 'Don’t buy individual stocks: the odds of beating the market by picking them are low.', 2],
+  ['bk_jkb', '每次加薪，至少把一半存起來。', 'Whenever you get a raise, save at least half of it.', 2],
+  ['bk_jkb', '時間是你最重要的資產；年輕時的時間比任何金額都值錢。', 'Time is your most important asset; when you’re young it’s worth more than any sum of money.', 2],
+  ['bk_jkb', '你永遠不會「覺得」自己有錢，因為總有人比你更有錢。', 'You’ll never feel rich, because there will always be someone richer.', 2],
+  ['bk_jkb', '財務自由不是終點線，而是能夠選擇如何度過你的時間。', 'Financial freedom is not a finish line; it’s the ability to choose how you spend your time.', 2],
+
+  ['bk_ladder', '財富可以分成六個等級，每一級大約是上一級的十倍。', 'Wealth can be divided into six levels, each roughly ten times the one below it.', 2],
+  ['bk_ladder', '讓你爬到這一級的策略，不一定能讓你爬到下一級。', 'The strategy that got you to one level may not get you to the next.', 2],
+  ['bk_ladder', '在較低的等級，提高收入與技能最重要；到了較高等級，投資與資產配置才是主角。', 'At the lower levels, raising income and skills matters most; at higher levels, investing and allocation take over.', 2],
+  ['bk_ladder', '「0.01% 法則」：低於淨資產 0.01% 的小額花費，不必為它煩惱。', 'The 0.01% rule: don’t sweat purchases that cost less than 0.01% of your net worth.', 2],
+  ['bk_ladder', '每往上爬一級，額外財富帶來的快樂就比上一級更少。', 'Each step up the ladder adds less happiness than the one before.', 2],
+  ['bk_ladder', '多數人的財富靠的是數十年的穩定累積，而不是一夜致富。', 'For most people, wealth is built over decades of steady accumulation, not overnight.', 2],
+  ['bk_ladder', '照你現在所在的等級花錢；提前過下一級的生活，反而可能讓你掉下去。', 'Spend in line with your current level; living like the next level up can knock you back down.', 2],
+  ['bk_ladder', '爬得越高，保住財富就比賺得更多更重要。', 'The higher you climb, the more preserving wealth matters relative to growing it.', 2],
+  ['bk_ladder', '定義出你自己的「夠了」，才能決定要不要繼續往上爬。', 'Defining your own “enough” lets you decide whether to keep climbing at all.', 2],
+  ['bk_ladder', '財富階梯沒有捷徑，但每往上一階，都能換來更多自由。', 'There are no shortcuts on the wealth ladder, but each rung can bring more freedom than the last.', 2],
+
+  ['bk_couples', '伴侶先一起描繪「富足人生」的樣子，再來談預算。', 'Couples should first picture their shared Rich Life, then talk budgets.', 2],
+  ['bk_couples', '伴侶為錢吵架，吵的通常不是數字，而是各自從小聽到的金錢故事。', 'Couples rarely fight about the numbers; they fight about the money stories they each grew up with.', 2],
+  ['bk_couples', '用「有意識的支出計畫」：固定開銷、投資、儲蓄與無罪惡感花費，各有比例。', 'Use a Conscious Spending Plan: fixed costs, investments, savings and guilt-free spending, each with its share.', 2],
+  ['bk_couples', '收入不同時，共同開銷可以依收入比例分擔，而不是一律對半。', 'If incomes differ, split shared costs in proportion to income rather than 50/50.', 2],
+  ['bk_couples', '定期安排「金錢約會」，讓談錢成為習慣，而不是吵架的導火線。', 'Hold regular money dates so talking about money becomes routine, not a trigger for fights.', 2],
+  ['bk_couples', '每個人都需要一筆不用向伴侶解釋的自由花費。', 'Each partner needs some guilt-free money they never have to justify.', 2],
+  ['bk_couples', '先自動化：讓薪水自動流向儲蓄與投資，省下每個月的意志力。', 'Automate first: route paychecks to savings and investments automatically and save your willpower.', 2],
+  ['bk_couples', '富足人生是你們一起想過的生活，而不只是帳戶裡的數字。', 'A Rich Life is the life you want together, not just a number in an account.', 2],
+  ['bk_couples', '談錢的目的不是分出誰對誰錯，而是一起朝同一個方向前進。', 'The point of money talks isn’t deciding who’s right; it’s moving in the same direction together.', 2],
+  ['bk_couples', '不要等到重大決定時才第一次談錢；越早談，衝突越少。', 'Don’t wait for a big decision to talk about money for the first time; the earlier you talk, the fewer the fights.', 2],
+
+  ['bk_simplepath', '「去你的錢」：存到足夠的錢，讓你能對不想做的事說不。', '“F-you money”: enough money that you can say no to what you don’t want to do.', 2],
+  ['bk_simplepath', '長期來看市場總是上漲，但過程會非常顛簸。', 'Over the long run the market always goes up — but it’s a wild and rocky ride.', 2],
+  ['bk_simplepath', '買進整體股市指數基金，然後放輕鬆（VTSAX and relax）。', 'Buy a total stock market index fund, then relax (VTSAX and relax).', 2],
+  ['bk_simplepath', '人生有累積財富與保存財富兩個階段，資產配置也該隨之調整。', 'Life has a wealth-building phase and a wealth-preservation phase; your allocation should change with it.', 2],
+  ['bk_simplepath', '把負債當成不能接受的負擔，盡早擺脫。', 'Treat debt as an unacceptable burden and get rid of it.', 2],
+  ['bk_simplepath', '每年提領約 4% 的資產，歷史上大致能支撐很長的退休期。', 'Withdrawing about 4% a year has historically sustained a long retirement.', 2],
+  ['bk_simplepath', '真正的危險不是市場崩跌，而是你在崩跌時恐慌賣出。', 'The real danger is not the crash but panicking and selling during it.', 2],
+  ['bk_simplepath', '簡單的投資組合勝過複雜的；越複雜，費用與錯誤就越多。', 'Simple portfolios beat complex ones; complexity breeds costs and mistakes.', 2],
+  ['bk_simplepath', '你無法預測市場時機，所以乾脆不要嘗試。', 'You can’t time the market, so don’t try.', 2],
+  ['bk_simplepath', '金錢是為你買到自由的工具，不該成為綁住你的枷鎖。', 'Money is a tool for buying freedom, not a chain to bind you.', 2],
+
+  ['bk_worldorder', '歷史上的大週期大約 50 到 100 年一輪，多數人一生只經歷一次，所以容易忽略。', 'The big cycles of history run roughly 50 to 100 years; most people live through only one, so they overlook them.', 2],
+  ['bk_worldorder', '大債務週期走到尾聲時，通常伴隨大量印鈔與貨幣貶值。', 'The end of a big debt cycle typically brings heavy money printing and currency devaluation.', 2],
+  ['bk_worldorder', '帝國衰落時，準備貨幣地位通常是最後才失去的東西。', 'Reserve-currency status is usually the last thing an empire loses as it declines.', 2],
+  ['bk_worldorder', '國家的興衰，取決於教育、競爭力、生產力、債務與內部秩序等多股力量。', 'Nations rise and fall on forces such as education, competitiveness, productivity, debt and internal order.', 2],
+  ['bk_worldorder', '貧富差距擴大與內部衝突升高，常是大週期轉折的訊號。', 'Widening wealth gaps and rising internal conflict often signal a big-cycle turning point.', 2],
+  ['bk_worldorder', '跨國家、跨貨幣分散配置，是因應世界秩序變化的關鍵。', 'Diversifying across countries and currencies is key to coping with a changing world order.', 2],
+  ['bk_worldorder', '在大量印鈔的時代，看似安全的現金會被通膨默默侵蝕。', 'In an era of heavy money printing, seemingly safe cash is quietly eroded by inflation.', 2],
+  ['bk_worldorder', '研究過去五百年的歷史，才能看清今天正在發生什麼。', 'Studying the past 500 years of history helps you see what is happening today.', 2],
+  ['bk_worldorder', '生產力是長期財富最根本的來源。', 'Productivity is the most fundamental source of lasting wealth.', 2],
+  ['bk_worldorder', '國家和家庭一樣，健康與否取決於是否量入為出。', 'A nation’s health, like a household’s, depends on whether it lives within its means.', 2],
+
+  ['bk_cycle', '週期一定會發生，問題只在於何時發生、規模多大。', 'Cycles are inevitable; the only questions are when and how big.', 2],
+  ['bk_cycle', '替市場量體溫：當大家都樂觀、借錢又容易時，就該小心。', 'Take the market’s temperature: when optimism is universal and credit is easy, be careful.', 2],
+  ['bk_cycle', '信用週期是所有週期中最劇烈的；信用的窗口一關上，資產就失去買家。', 'The credit cycle is the most volatile of all: when the window slams shut, assets lose their buyers.', 2],
+  ['bk_cycle', '週期的極端很少持續，但總有人以為這一次會一直延續下去。', 'Cycle extremes rarely last, yet someone always assumes this one will.', 2],
+  ['bk_cycle', '投資人的心理在貪婪與恐懼、輕信與懷疑之間擺盪。', 'Investor psychology swings between greed and fear, credulity and skepticism.', 2],
+  ['bk_cycle', '好時光裡風險被低估，壞時光裡風險被高估。', 'In good times risk is underestimated; in bad times it is overestimated.', 2],
+  ['bk_cycle', '根據週期所在位置調整攻守姿態，比預測下一步更實際。', 'Adjusting your posture — offense or defense — to where we are in the cycle is more practical than forecasting.', 2],
+  ['bk_cycle', '經濟本身的波動不大，市場與企業獲利的波動卻被人性放大。', 'The economy fluctuates modestly; markets and profits swing far more, amplified by psychology.', 2],
+  ['bk_cycle', '最好的買點，常出現在賣方被迫拋售的時候。', 'The best buying opportunities often come when sellers are forced to sell.', 2],
+  ['bk_cycle', '成功本身就埋下失敗的種子：好績效吸引資金，最終推高價格、壓低報酬。', 'Success carries the seeds of failure: good performance attracts capital, which pushes prices up and returns down.', 2],
+
+  ['bk_atomic', '每天進步 1%，一年後會好上將近 37 倍。', 'Get 1% better every day and you’ll be nearly 37 times better after a year.', 2],
+  ['bk_atomic', '你不會上升到目標的高度，而是下降到系統的水準。', 'You do not rise to the level of your goals; you fall to the level of your systems.', 2],
+  ['bk_atomic', '真正的行為改變是身分的改變：從「我想存錢」變成「我是會存錢的人」。', 'True behavior change is identity change: from “I want to save” to “I am a saver.”', 2],
+  ['bk_atomic', '讓好習慣顯而易見、有吸引力、簡單容易、令人滿足。', 'Make good habits obvious, attractive, easy and satisfying.', 2],
+  ['bk_atomic', '習慣疊加：把新習慣接在一個既有的習慣後面。', 'Habit stacking: attach a new habit to one you already do.', 2],
+  ['bk_atomic', '不要連續錯過兩次：錯過一次是意外，錯過兩次就是新習慣的開始。', 'Never miss twice: missing once is an accident; missing twice is the start of a new habit.', 2],
+  ['bk_atomic', '環境比意志力可靠：讓好行為成為最省力的選擇。', 'Environment beats willpower: make the good behavior the path of least resistance.', 2],
+  ['bk_atomic', '兩分鐘法則：開始一個新習慣時，讓它在兩分鐘內就能完成。', 'The two-minute rule: when starting a new habit, make it take less than two minutes.', 2],
+  ['bk_atomic', '成果常在「潛能潛伏期」之後才突然出現；看不到進展，不代表沒有進步。', 'Results often appear only after a “plateau of latent potential”; no visible progress doesn’t mean none.', 2],
+  ['bk_atomic', '習慣是自我提升的複利。', 'Habits are the compound interest of self-improvement.', 2],
+
+  ['bk_strength', '流動智力隨年齡下降，晶體智力卻會上升；人生下半場要換一條成長曲線。', 'Fluid intelligence declines with age while crystallized intelligence rises — the second half of life calls for a second curve.', 2],
+  ['bk_strength', '滿足感＝擁有的 ÷ 想要的；管理慾望比追求更多更有效。', 'Satisfaction = what you have ÷ what you want; managing your wants beats chasing more.', 2],
+  ['bk_strength', '成功會讓人上癮，而且和其他癮一樣，永遠需要更多。', 'Success is addictive, and like any addiction it always demands more.', 2],
+  ['bk_strength', '像雕刻一樣用減法過生活：去掉多餘的東西，剩下的才是你。', 'Live like a sculptor, by subtraction: chip away the excess and what remains is you.', 2],
+  ['bk_strength', '人際關係像白楊樹林：看似各自獨立的樹，地下的根系其實相連。', 'Relationships are like an aspen grove: trees that look separate share one root system.', 2],
+  ['bk_strength', '把自己當成一個人，而不是一份工作或一個頭銜。', 'See yourself as a person, not as a job or a title.', 2],
+  ['bk_strength', '衰退無法避免，但它可以是轉向智慧與傳承的開始。', 'Decline is inevitable, but it can be the start of a turn toward wisdom and teaching.', 2],
+  ['bk_strength', '名聲、金錢、權力與享樂，都無法帶來持久的快樂。', 'Fame, money, power and pleasure don’t bring lasting happiness.', 2],
+  ['bk_strength', '越早面對自己的有限與終點，就越早獲得自由。', 'The earlier you face your limits and mortality, the sooner you are set free.', 2],
+  ['bk_strength', '深厚的友誼需要刻意經營；工作上的朋友不等於真正的朋友。', 'Deep friendships need deliberate effort; work friends are not the same as real friends.', 2],
+
+  ['bk_4000', '如果活到 80 歲，人生大約只有四千個星期。', 'If you live to 80, you get roughly four thousand weeks.', 2],
+  ['bk_4000', '你永遠做不完所有事；接受這一點，反而是一種解脫。', 'You will never get everything done — and accepting that is a liberation.', 2],
+  ['bk_4000', '效率陷阱：你越有效率，要做的事就越多。', 'The efficiency trap: the more efficient you become, the more there is to do.', 2],
+  ['bk_4000', '每個選擇都是放棄：做了一件事，就代表放棄其他所有可能。', 'Every choice is a renunciation: doing one thing means giving up all the others.', 2],
+  ['bk_4000', '先把時間花在最重要的事上，就像先「付錢給自己」。', 'Pay yourself first in time: spend it on what matters most before anything else.', 2],
+  ['bk_4000', '限制同時進行的事情數量，完成一件再開始下一件。', 'Limit your work in progress: finish one thing before starting the next.', 2],
+  ['bk_4000', '耐心是一種超能力：很多事就是需要它該花的時間。', 'Patience is a superpower: many things take the time they take.', 2],
+  ['bk_4000', '在宇宙尺度下我們很渺小，這反而讓我們不必執著於非凡的成就。', 'Cosmic insignificance can be therapy: it frees you from needing to do something spectacular.', 2],
+  ['bk_4000', '未來永遠無法被完全保障，生活只發生在當下。', 'The future can never be fully secured; life happens only in the present.', 2],
+  ['bk_4000', '刻意選擇要忽略什麼，比試圖什麼都做更重要。', 'Deliberately choosing what to neglect matters more than trying to do it all.', 2],
+
+  ['bk_quit', '放棄被嚴重低估：懂得在對的時候放棄，是一種致勝的技巧。', 'Quitting is underrated: knowing when to quit is a winning skill.', 2],
+  ['bk_quit', '等到放棄變得「顯而易見」時，通常已經太晚了。', 'By the time quitting feels obvious, it’s usually too late.', 2],
+  ['bk_quit', '事先設定退出條件：若在某個日期前沒達到某個狀態，就退出。', 'Set kill criteria in advance: if you haven’t reached a certain state by a certain date, you quit.', 2],
+  ['bk_quit', '沉沒成本會讓人繼續把資源投入錯誤的事情。', 'Sunk costs keep people pouring resources into the wrong things.', 2],
+  ['bk_quit', '先處理最難的部分：先訓練猴子，再蓋基座。', 'Tackle the hardest part first — train the monkey before building the pedestal.', 2],
+  ['bk_quit', '我們害怕放棄，是因為把它看成失敗，而不是資源的重新配置。', 'We fear quitting because we see it as failure rather than as reallocating our resources.', 2],
+  ['bk_quit', '把恆毅力用在錯的事情上，只是浪費。', 'Grit applied to the wrong pursuit is just waste.', 2],
+  ['bk_quit', '找一位「放棄教練」：一個敢告訴你該停下來的人。', 'Find a quitting coach — someone willing to tell you when to stop.', 2],
+  ['bk_quit', '擁有一樣東西會讓我們高估它的價值（稟賦效應），也更難放手。', 'Owning something makes us overvalue it (the endowment effect) and harder to let go.', 2],
+  ['bk_quit', '現狀偏誤讓人寧可維持現狀，即使改變的期望值更高。', 'Status quo bias keeps people where they are even when change has a higher expected value.', 2],
+
+  ['bk_bets', '不要用結果評斷決策：好決策也可能遇上壞結果（「結果論」陷阱）。', 'Don’t judge decisions by their outcomes: good decisions can have bad results (“resulting”).', 2],
+  ['bk_bets', '每個決策都是一次下注，賭的是各種可能的未來。', 'Every decision is a bet on possible futures.', 2],
+  ['bk_bets', '「要不要打賭？」這句話能逼你檢查自己到底有多確定。', '“Wanna bet?” forces you to check how sure you really are.', 2],
+  ['bk_bets', '用機率思考：把「我確定」換成「我有七成把握」。', 'Think in probabilities: replace “I’m sure” with “I’m 70% confident.”', 2],
+  ['bk_bets', '人生的結果是技巧與運氣的混合，必須把兩者分開看。', 'Life outcomes mix skill and luck, and you have to separate the two.', 2],
+  ['bk_bets', '找一群願意挑戰你、一起追求真相的夥伴。', 'Find a truth-seeking group willing to challenge you.', 2],
+  ['bk_bets', '10-10-10：想想這個決定在 10 分鐘、10 個月、10 年後會帶給你什麼感受。', '10-10-10: consider how you’ll feel about a decision in 10 minutes, 10 months and 10 years.', 2],
+  ['bk_bets', '我們常把好結果歸功於自己的技巧，把壞結果歸咎於運氣。', 'We tend to credit good outcomes to our skill and blame bad ones on luck.', 2],
+  ['bk_bets', '承認「我不確定」，是做出好決策的起點。', 'Admitting “I’m not sure” is where good decision-making starts.', 2],
+  ['bk_bets', '事先想像可能失敗的原因（事前驗屍），能幫你避免它發生。', 'Imagining in advance why you might fail (a premortem) helps you avoid it.', 2],
+
+  ['bk_timesmart', '用錢買時間的人，比用錢買東西的人更快樂。', 'People who spend money to buy time are happier than those who spend it on things.', 2],
+  ['bk_timesmart', '「時間貧窮」——總覺得時間不夠——是現代人普遍的壓力來源。', 'Time poverty — always feeling short of time — is a widespread source of modern stress.', 2],
+  ['bk_timesmart', '零碎的「時間碎紙花」，會讓空閒時間感覺不像空閒。', '“Time confetti” — fragmented minutes — makes free time feel less free.', 2],
+  ['bk_timesmart', '重視時間勝過金錢的人，通常幸福感更高。', 'People who value time over money tend to be happier.', 2],
+  ['bk_timesmart', '把家務外包、縮短通勤，可以買回寶貴的時間。', 'Outsourcing chores or shortening your commute can buy back precious time.', 2],
+  ['bk_timesmart', '像安排工作一樣，把休閒時間排進行事曆。', 'Schedule leisure into your calendar the way you schedule work.', 2],
+  ['bk_timesmart', '做選擇前先問：這會讓我多出時間，還是少掉時間？', 'Before a choice, ask: will this give me more time or take it away?', 2],
+  ['bk_timesmart', '很多人高估金錢帶來的快樂，卻低估空閒時間帶來的快樂。', 'Many people overestimate the happiness money brings and underestimate the happiness of free time.', 2],
+  ['bk_timesmart', '把手機放遠一點，能把零碎時間重新拼回完整的空閒。', 'Putting your phone away can stitch time confetti back into real free time.', 2],
+  ['bk_timesmart', '富有不只看銀行帳戶，也要看你的時間帳戶。', 'Being rich isn’t only about your bank account; it’s about your time account too.', 2],
+
+  ['bk_delusions', '人類是會說故事的猿猴；一個好故事比數據傳播得更快。', 'Humans are storytelling apes; a good story spreads faster than data.', 2],
+  ['bk_delusions', '金融狂熱的徵兆：聚會上人人談投資，有人辭掉工作專心炒作。', 'Signs of a financial mania: investing dominates party talk and people quit their jobs to speculate.', 2],
+  ['bk_delusions', '狂熱之中，懷疑者會被嘲笑成「搞不懂狀況的人」。', 'In a mania, skeptics are mocked as people who “just don’t get it.”', 2],
+  ['bk_delusions', '狂熱時期總會出現極端預測，例如「這會改變一切」。', 'Manias bring extreme predictions — “this changes everything.”', 2],
+  ['bk_delusions', '投機泡沫與末日預言，是同一種群眾心理的兩種面貌。', 'Speculative bubbles and end-of-days prophecies are two faces of the same crowd psychology.', 2],
+  ['bk_delusions', '容易取得的信用，是每一次泡沫的燃料。', 'Easy credit is the fuel of every bubble.', 2],
+  ['bk_delusions', '新科技常常是真的，但投資新科技未必能賺錢。', 'New technologies are often real, but investing in them doesn’t necessarily make money.', 2],
+  ['bk_delusions', '模仿是人類天性；看到別人賺錢，我們很難忍住不跟進。', 'Imitation is human nature; seeing others get rich makes it hard not to join in.', 2],
+  ['bk_delusions', '了解過去的群眾瘋狂，是對抗下一次瘋狂最好的疫苗。', 'Knowing past crowd delusions is the best vaccine against the next one.', 2],
+  ['bk_delusions', '情緒的傳染力，遠勝過理性的分析。', 'Emotion is far more contagious than reasoned analysis.', 2],
+
+  ['bk_goodlife', '持續八十多年的哈佛研究發現：良好的人際關係讓人更快樂、更健康。', 'The Harvard study, running for more than 80 years, found that good relationships keep people happier and healthier.', 2],
+  ['bk_goodlife', '50 歲時對人際關係的滿意度，比膽固醇更能預測 80 歲時的健康。', 'Satisfaction with relationships at 50 predicted health at 80 better than cholesterol levels did.', 2],
+  ['bk_goodlife', '孤獨對健康的傷害，可能不亞於吸菸或酗酒。', 'Loneliness can harm health as much as smoking or heavy drinking.', 2],
+  ['bk_goodlife', '「社交健身」：關係就像肌肉，需要持續鍛鍊。', 'Social fitness: relationships are like muscles and need regular exercise.', 2],
+  ['bk_goodlife', '人際關係的品質，比數量更重要。', 'The quality of relationships matters more than the quantity.', 2],
+  ['bk_goodlife', '什麼時候開始經營關係都不嫌晚。', 'It’s never too late to invest in relationships.', 2],
+  ['bk_goodlife', '好奇心是加深關係最簡單的方法：多問一點，多聽一點。', 'Curiosity is the simplest way to deepen relationships: ask more, listen more.', 2],
+  ['bk_goodlife', '財富與成就帶來的快樂有限，人與人的連結帶來的快樂更持久。', 'Wealth and achievement bring limited happiness; human connection brings more lasting joy.', 2],
+  ['bk_goodlife', '親密關係中難免有衝突，重要的是能不能修復。', 'Conflict is inevitable in close relationships; what matters is whether you repair it.', 2],
+  ['bk_goodlife', '把注意力給身邊的人，是你能給的最珍貴禮物。', 'Your attention is the most valuable gift you can give the people around you.', 2],
+
+  ['bk_retire', '退休不只是財務規劃，也是重新設計生活與目標。', 'Retirement is not just a financial plan; it’s a redesign of your life and purpose.', 2],
+  ['bk_retire', '提領策略保持彈性：市場不好時少領一點，能大幅提高資金撐到最後的機率。', 'Stay flexible with withdrawals: taking a little less in bad markets greatly improves the odds your money lasts.', 2],
+  ['bk_retire', '延後請領社會安全年金，是對抗長壽風險的實用保險。', 'Delaying Social Security is practical insurance against living a long time.', 2],
+  ['bk_retire', '近期要用的錢放在現金與債券，長期的錢才放在股票。', 'Keep near-term spending money in cash and bonds; leave long-term money in stocks.', 2],
+  ['bk_retire', '退休頭幾年遇上熊市（報酬順序風險），傷害最大。', 'A bear market in the first years of retirement (sequence-of-returns risk) does the most damage.', 2],
+  ['bk_retire', '醫療與長期照護支出，是退休規劃中最常被低估的部分。', 'Health-care and long-term-care costs are the most underestimated part of retirement planning.', 2],
+  ['bk_retire', '退休後維持社交、身體與心智的活躍，和存夠錢一樣重要。', 'Staying socially, physically and mentally active in retirement matters as much as having enough money.', 2],
+  ['bk_retire', '先想清楚退休後每週要做什麼，再決定什麼時候退休。', 'Work out what you’ll do each week before deciding when to retire.', 2],
+  ['bk_retire', '簡化帳戶與投資組合，讓退休後的管理更輕鬆。', 'Simplify your accounts and portfolio so they’re easier to manage in retirement.', 2],
+  ['bk_retire', '及早規劃財產傳承、交代好事務，是送給家人的禮物。', 'Planning your estate and putting your affairs in order early is a gift to your family.', 2],
+
+  ['bk_noise', '只要有判斷，就有雜訊。', 'Wherever there is judgment, there is noise.', 2],
+  ['bk_noise', '偏誤是系統性地偏向一邊；雜訊則是不該存在的隨機分散。', 'Bias is a systematic deviation; noise is unwanted random scatter.', 2],
+  ['bk_noise', '同一位專家在不同時候，對同一件事可能給出不同的判斷。', 'The same expert can judge the same case differently at different times.', 2],
+  ['bk_noise', '匯集多個獨立的判斷再取平均，能有效降低雜訊。', 'Averaging several independent judgments reduces noise.', 2],
+  ['bk_noise', '「決策衛生」：用結構化的流程，在雜訊出現之前就預防它。', 'Decision hygiene: use structured processes to prevent noise before it appears.', 2],
+  ['bk_noise', '簡單的規則與公式，常常比人的直覺判斷更一致、更準確。', 'Simple rules and formulas are often more consistent and accurate than human judgment.', 2],
+  ['bk_noise', '把大決定拆成幾個獨立評估的面向，最後再整合起來。', 'Break a big decision into independently assessed dimensions, then combine them.', 2],
+  ['bk_noise', '心情、天氣，甚至一天中的時段，都會影響專業人士的判斷。', 'Mood, weather and even the time of day can sway professional judgment.', 2],
+  ['bk_noise', '雜訊之所以被忽略，是因為它很少被看見、也很少被衡量。', 'Noise is overlooked because it is rarely seen or measured.', 2],
+  ['bk_noise', '延後直覺：先蒐集完資訊，再下結論。', 'Delay your intuition: gather the facts before reaching a conclusion.', 2],
+
+  ['bk_geometry', '財富的定義是「有資金支撐的滿足」。', 'Wealth is funded contentment.', 2],
+  ['bk_geometry', '快樂有兩種：當下的愉悅，以及回顧時感受到的意義與滿足。', 'There are two kinds of happiness: in-the-moment pleasure and reflective satisfaction, or meaning.', 2],
+  ['bk_geometry', '我們會適應新的收入與擁有物，所以「更多」帶來的快樂很快就消退。', 'We adapt to new income and possessions, so the joy of “more” fades quickly.', 2],
+  ['bk_geometry', '先找出目的，再排優先順序，最後才是實際做法。', 'Start with purpose, then priorities, then practices.', 2],
+  ['bk_geometry', '財富的關鍵，是知道自己的「夠了」那條線在哪裡。', 'The key to wealth is knowing where your “enough” line is.', 2],
+  ['bk_geometry', '理財最重要的是簡單：做好能控制的事，其餘交給時間。', 'Simplicity matters most: handle what you can control and leave the rest to time.', 2],
+  ['bk_geometry', '比較讓人永遠不滿足；找到屬於自己的衡量標準。', 'Comparison keeps you perpetually dissatisfied; find your own yardstick.', 2],
+  ['bk_geometry', '金錢能買到最好的東西，是選擇權與自主權。', 'The best thing money buys is choice and autonomy.', 2],
+  ['bk_geometry', '投資的目標不是打敗市場，而是達成你的人生目標。', 'The goal of investing isn’t beating the market; it’s reaching your life goals.', 2],
+  ['bk_geometry', '控制你能控制的：儲蓄、成本與行為。', 'Control what you can: savings, costs and behavior.', 2],
+].map((q, i) => ({ id: i, a: q[0], zh: q[1], en: q[2], att: q[3] === 1, digest: q[3] === 2 }));
+
+function authorZh(q){ return AUTHORS[q.a][0] + (q.att ? '（傳）' : q.digest ? '（書摘）' : ''); }
+function authorEn(q){ return AUTHORS[q.a][1] + (q.att ? ' (attributed)' : q.digest ? ' (book summary)' : ''); }
 
 // ─── state ───────────────────────────────────────────────────────────────
 const LS = 'ftk-quotes-';
@@ -1006,8 +1252,9 @@ function currentQuote(){ return playlist.length ? QUOTES[playlist[pos]] : null; 
 function renderCurrent(){
   const q = currentQuote();
   $('qCount').textContent = q ? `#${q.id + 1}  ·  ${pos + 1} / ${playlist.length}` : '0 / 0';
-  $('qZh').textContent = q ? '「' + q.zh + '」' : '沒有符合條件的名言。';
-  $('qEn').textContent = q ? '“' + q.en + '”' : '';
+  // Book digests are paraphrases, so they get no quotation marks.
+  $('qZh').textContent = q ? (q.digest ? q.zh : '「' + q.zh + '」') : '沒有符合條件的名言。';
+  $('qEn').textContent = q ? (q.digest ? q.en : '“' + q.en + '”') : '';
   $('qAuthor').textContent = q ? '— ' + authorZh(q) + ' ' + authorEn(q) : '';
   document.querySelectorAll('.q-card').forEach(c => c.classList.toggle('current', q && +c.dataset.id === q.id));
   if (q) {
