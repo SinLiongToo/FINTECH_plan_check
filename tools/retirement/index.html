@@ -155,6 +155,10 @@
                                 <input type="number" id="investAsset" value="800000" class="w-full bg-[#172030] border border-slate-700/60 text-white rounded p-2 focus:ring-2 focus:ring-amber-500 outline-none text-sm">
                             </div>
                         </div>
+                        <div>
+                            <button type="button" id="btnFromRebalance" onclick="importFromRebalance()" class="text-[11px] text-amber-400 hover:underline">⇢ 從「再平衡計算」帶入投資資產</button>
+                            <div id="fromRebalanceNote" class="text-[11px] text-slate-400 mt-1"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -441,6 +445,8 @@
 
         function updateUIStrings() {
             const dict = i18n[currentLang];
+            document.getElementById('btnFromRebalance').innerText = currentLang === 'zh'
+                ? '⇢ 從「再平衡計算」帶入投資資產' : '⇢ Import invested assets from Rebalance';
             document.getElementById('ui-title').innerText = dict.title;
             document.getElementById('ui-subtitle').innerText = dict.subtitle;
             document.getElementById('loadMockBtn').innerText = dict.mockBtn;
@@ -495,6 +501,34 @@
             document.getElementById('floatingExpense').value = 250000;
             document.getElementById('inflationRate').value = 2.2;
             document.getElementById('interestRate').value = 6.0;
+            runSimulation();
+        }
+
+        // Pull the total market value of the holdings saved by the Rebalance
+        // tool (localStorage 'ftk-rebalance-v1') into 投資資產, in TWD.
+        function importFromRebalance() {
+            const note = document.getElementById('fromRebalanceNote');
+            const zh = currentLang !== 'en';
+            let data = null;
+            try { data = JSON.parse(localStorage.getItem('ftk-rebalance-v1') || 'null'); } catch (e) {}
+            if (!data || !Array.isArray(data.portfolio) || !data.portfolio.length) {
+                note.textContent = zh ? '還沒有儲存的持股：請先到「再平衡計算」輸入你的持股（會自動儲存）。'
+                                      : 'No saved holdings yet — enter them in the Rebalance tool first (they save automatically).';
+                return;
+            }
+            const fx = data.fx > 0 ? data.fx : 32;
+            let total = 0;
+            data.portfolio.forEach(a => {
+                const local = (+a.price || 0) * (+a.shares || 0) * (a.market === 'TW' ? 1000 : 1);
+                total += a.market === 'US' ? local * fx : local;
+            });
+            total = Math.round(total);
+            document.getElementById('investAsset').value = total;
+            const saved = data.savedAt ? new Date(data.savedAt) : null;
+            const when = saved && !isNaN(saved) ? `${saved.getMonth() + 1}/${saved.getDate()}` : '';
+            note.textContent = zh
+                ? `已帶入 NT$${total.toLocaleString()}（${data.portfolio.length} 檔持股，匯率 ${(+fx).toFixed(2)}${when ? '，' + when + ' 儲存' : ''}）`
+                : `Imported NT$${total.toLocaleString()} (${data.portfolio.length} holdings, FX ${(+fx).toFixed(2)}${when ? ', saved ' + when : ''})`;
             runSimulation();
         }
 

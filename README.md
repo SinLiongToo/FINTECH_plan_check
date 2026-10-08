@@ -1,5 +1,7 @@
 # FinTech Toolkit（理財工具箱）
 
+> 功能更新紀錄見 [CHANGELOG.md](CHANGELOG.md)。
+
 把四個原本獨立的理財小工具 + 一份理財觀念參考頁，合併成一個共用外殼（導覽列 / 深淺色主題 / 手機版）的靜態網站，部署在 GitHub Pages。
 
 **上線網址：https://sinliongtoo.github.io/FINTECH_plan_check/**
@@ -17,12 +19,12 @@ Repo：[SinLiongToo/FINTECH_plan_check](https://github.com/SinLiongToo/FINTECH_p
 
 | 頁面 | 來源 | 資料來源 | 備註 |
 |---|---|---|---|
-| 📉 [股價下跌追蹤](tools/stock-drop/) | `taiwan_stock_v4.html` | `data/stock_data.json`（見下方管線） | 14 檔內建（台股個股 + TAIEX）+ VT/BND/SOXX + 美股搜尋（55 檔資料庫） |
-| ⚖️ [再平衡計算](tools/rebalance/) | `rebalance.html` | `data/stock_data.json` → `data/quotes.json`（全部台股上市櫃 + S&P 500 + 熱門美股 ETF/ADR 最新收盤）→ AllOrigins（目前已不可用）；查不到時畫面會提示手動輸入 | 雙幣別（TWD/USD）獨立投入 or 全球統一再平衡 |
-| 🏖️ [退休試算](tools/retirement/) | `retirement simulation.html` | 純本地試算 | 內建中英文切換、巴菲特金句跑馬燈 |
+| 📉 [股價下跌追蹤](tools/stock-drop/) | `taiwan_stock_v4.html` | `data/stock_data.json`（見下方管線） | 14 檔內建（台股個股 + TAIEX）+ VT/BND/SOXX + 美股搜尋（55 檔資料庫）；「➕ 加入再平衡」一鍵把目前個股送到再平衡；資料超過 4 天未更新會顯示警示 |
+| ⚖️ [再平衡計算](tools/rebalance/) | `rebalance.html` | `data/stock_data.json` → `data/quotes.json`（全部台股上市櫃 + S&P 500 + 熱門美股 ETF/ADR 最新收盤）→ AllOrigins（目前已不可用）；查不到時畫面會提示手動輸入 | 雙幣別（TWD/USD）獨立投入 or 全球統一再平衡；持股自動儲存在瀏覽器、可匯出／匯入 JSON；開頁自動更新股價；每個價格標示收盤日期，過期顯示警示 |
+| 🏖️ [退休試算](tools/retirement/) | `retirement simulation.html` | 純本地試算 | 內建中英文切換、巴菲特金句跑馬燈；可「從再平衡計算帶入投資資產」 |
 | 💰 [貸款投資試算](tools/loan/) | `fintech_loan_investment_tool.html` | 純本地試算 | 內建 20 句中英雙語理財金句跑馬燈、Help 按鈕直達說明頁 |
 | 📜 [人生財務守則](tools/rules/)（新增） | 全新內容 | 純靜態 | 9 條理財法則（72法則、100減年齡、50-30-20、解套公式、複利成長…），內建中英文切換 |
-| 🎙️ [投資名言 1000 句](tools/quotes/)（新增） | 全新內容 | 純靜態 + 瀏覽器內建語音（Web Speech API） | 1000 句中英雙語金句：#1–600 為約 94 位作者／出處的名言（含論語、道德經、史記等中國經典；#501–600 為「夠了、心態、喜悅、花錢的藝術」主題），#601–800 為 20 本 2018–2025 年理財／心態新書的書摘重點，#801–1000 為 20 本 2019–2025 年「情緒穩定」主題新書的書摘重點（皆為改寫而非原文引用，標示「（書摘）」）；語音朗讀（中文／英文／中+英）、自動播放、上一句/下一句、隨機、循環、語速/間隔、作者篩選與搜尋；未能可靠查證出處的句子標示「（傳）」 |
+| 🎙️ [投資名言 1000 句](tools/quotes/)（新增） | 全新內容 | 純靜態 + 瀏覽器內建語音（Web Speech API） | 1000 句中英雙語金句：#1–600 為約 94 位作者／出處的名言（含論語、道德經、史記等中國經典；#501–600 為「夠了、心態、喜悅、花錢的藝術」主題），#601–800 為 20 本 2018–2025 年理財／心態新書的書摘重點，#801–1000 為 20 本 2019–2025 年「情緒穩定」主題新書的書摘重點（皆為改寫而非原文引用，標示「（書摘）」）；語音朗讀（中文／英文／中+英）、自動播放、上一句/下一句、隨機、循環、語速/間隔、作者篩選與搜尋；分類標籤（名言／理財書摘／情緒穩定書摘／⭐ 收藏）與分頁載入；收藏；今日金句（首頁同步顯示）；分享圖卡（PNG）；定時停止與睡前模式；未能可靠查證出處的句子標示「（傳）」。資料在 `tools/quotes/quotes-data.js` |
 
 四個原始工具都是**單一 HTML、無 build step**，內嵌全部 CSS/JS，天生適合 GitHub Pages；新增的兩個頁面完全用共用設計系統（`assets/shared.css`）新寫。語音使用瀏覽器內建的 `speechSynthesis`，不需要任何外部服務；實際音色取決於使用者裝置上安裝的中/英文語音。詳細個別驗證結果見下方「工具驗證」章節。
 
@@ -33,6 +35,17 @@ Repo：[SinLiongToo/FINTECH_plan_check](https://github.com/SinLiongToo/FINTECH_p
 - **導覽列**：所有頁面共用，可在 5 個頁面間自由切換，工具頁另外有常駐的「← 返回總覽」按鈕。
 - **深/淺色模式**：全站共用一顆切換鈕（存在 `localStorage`），四個原始工具 + 新增頁面全部都支援（Rebalance/Loan 原本就用 CSS 變數管理色彩，直接加一組淺色變數；Retirement 是 Tailwind 工具類寫死深色，改成針對實際用到的類別逐一覆寫；Stock Drawdown Explorer 本來就有 light/dark class，直接接上共用按鈕）。
 - **手機版**：所有頁面在 375px 寬度下都可正常操作（表格橫向捲動、輸入區可折疊、股票 chip 列有 ‹ › 按鈕可左右捲動）。
+- **可安裝成 App（PWA）**：`manifest.webmanifest` + `sw.js`（由 `assets/shared.js` 自動註冊）。手機「加入主畫面」後像 App 一樣開啟；離線時仍可開啟所有頁面（網路優先、離線才用快取，不會卡在舊版）。修改預先快取清單時記得把 `sw.js` 的 `CACHE` 版本號加一。
+- **首頁今日金句**：首頁上方顯示與名言頁相同的「📅 今日金句」，點擊直接跳到該句。
+- **工具間串接（皆存在使用者自己的瀏覽器 `localStorage`）**：
+
+  | key | 寫入者 | 讀取者 | 內容 |
+  |---|---|---|---|
+  | `ftk-rebalance-v1` | 再平衡 | 再平衡、退休試算 | 持股、加碼金額、匯率 |
+  | `ftk-rebalance-pending` | 股價下跌追蹤 | 再平衡（下次開啟時合併後清除） | 待加入的股票 |
+  | `ftk-quotes-*` | 投資名言 | 投資名言 | 語音設定、上次位置、分類、收藏（`favs`） |
+  | `ftk-theme` | 全站 | 全站 | 深／淺色 |
+
 - **首頁最後更新時間**：用 `document.lastModified` 讀取 GitHub Pages 回報的實際檔案更新時間，不需要手動維護日期字串。
 
 ---

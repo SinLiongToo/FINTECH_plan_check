@@ -88,9 +88,28 @@
     document.body.appendChild(footer);
   }
 
+  // PWA: add the manifest / home-screen icon links to every page and register
+  // the service worker (root sw.js, network-first, see comments there).
+  function setupPWA(){
+    var head = document.head;
+    function addLink(rel, href){
+      if (head.querySelector('link[rel="' + rel + '"]')) return;
+      var l = document.createElement('link'); l.rel = rel; l.href = href; head.appendChild(l);
+    }
+    addLink('manifest', ROOT + 'manifest.webmanifest');
+    addLink('apple-touch-icon', ROOT + 'assets/icons/apple-touch-icon.png');
+    addLink('icon', ROOT + 'assets/icons/icon-192.png');
+    var secure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    if ('serviceWorker' in navigator && secure) {
+      var reg = function(){ navigator.serviceWorker.register(ROOT + 'sw.js').catch(function(){}); };
+      if (document.readyState === 'complete') reg(); else window.addEventListener('load', reg);
+    }
+  }
+
   function init(){
     buildNav();
     if (window.FTK_NO_FOOTER !== true) buildFooter();
+    setupPWA();
   }
 
   if (document.body) init();

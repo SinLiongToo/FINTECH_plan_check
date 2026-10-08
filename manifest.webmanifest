@@ -1,0 +1,22 @@
+{
+  "name": "FinTech Toolkit 個人理財工具箱",
+  "short_name": "理財工具箱",
+  "description": "股價下跌追蹤、再平衡、退休試算、貸款投資試算、人生財務守則與投資名言語音播放。",
+  "lang": "zh-Hant",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b0e14",
+  "theme_color": "#0b0e14",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "assets/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "再平衡計算", "url": "./tools/rebalance/index.html" },
+    { "name": "投資名言", "url": "./tools/quotes/index.html" },
+    { "name": "股價下跌追蹤", "url": "./tools/stock-drop/index.html" }
+  ]
+}

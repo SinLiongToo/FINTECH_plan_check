@@ -14,6 +14,12 @@
   <p>四個理財試算工具 + 理財觀念守則 + 投資名言語音播放，整合成一個共用介面。手機/桌面皆可使用，支援深色與淺色模式。</p>
 </div>
 
+<a class="ftk-daily" id="homeDaily" href="tools/quotes/index.html" hidden>
+  <span class="ftk-daily-lbl">📅 今日金句 <span id="homeDailyDate"></span></span>
+  <span class="ftk-daily-txt" id="homeDailyText"></span>
+  <span class="ftk-daily-by" id="homeDailyBy"></span>
+</a>
+
 <div class="ftk-card-grid">
   <a class="ftk-card" href="tools/stock-drop/index.html">
     <span class="ftk-card-icon">📉</span>
@@ -76,6 +82,24 @@
       el.textContent = d.toLocaleString('zh-TW', {year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'});
     }
   })();
+
+  // 今日金句: load the quotes data lazily (it's ~180 KB) after the page has
+  // rendered, then show the same quote-of-the-day as the quotes page.
+  window.addEventListener('load', function(){
+    var s = document.createElement('script');
+    s.src = 'tools/quotes/quotes-data.js';
+    s.onload = function(){
+      if (typeof QUOTES === 'undefined' || typeof dailyQuoteId !== 'function') return;
+      var d = new Date(), id = dailyQuoteId(d), q = QUOTES[id];
+      document.getElementById('homeDailyDate').textContent = (d.getMonth() + 1) + '/' + d.getDate();
+      document.getElementById('homeDailyText').textContent = q.digest ? q.zh : '「' + q.zh + '」';
+      document.getElementById('homeDailyBy').textContent = '— ' + authorZh(q);
+      var box = document.getElementById('homeDaily');
+      box.href = 'tools/quotes/index.html#q=' + (id + 1);
+      box.hidden = false;
+    };
+    document.body.appendChild(s);
+  });
 </script>
 </body>
 </html>

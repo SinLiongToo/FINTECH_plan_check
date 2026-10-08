@@ -128,3 +128,25 @@
   display:inline-block; margin-top:12px; font-size:11px; letter-spacing:.05em;
   text-transform:uppercase; color:var(--ftk-accent-2);
 }
+
+/* ── 今日金句 card on the dashboard ─────────────────────────────────── */
+.ftk-daily{
+  display:flex; flex-wrap:wrap; gap:6px 12px; align-items:baseline;
+  max-width:1148px; margin:20px auto 0; padding:14px 18px; box-sizing:border-box;
+  width:calc(100% - 32px);
+  background:var(--ftk-bg-elev); border:1px solid var(--ftk-border); border-left:4px solid var(--ftk-accent);
+  border-radius:12px; text-decoration:none; color:var(--ftk-text); font-family:var(--ftk-font);
+  transition:border-color .15s;
+}
+.ftk-daily[hidden]{ display:none; }
+.ftk-daily:hover{ border-color:var(--ftk-accent); }
+.ftk-daily-lbl{ font-weight:700; color:var(--ftk-accent); font-size:13px; white-space:nowrap; }
+.ftk-daily-txt{ flex:1; min-width:220px; font-size:14.5px; line-height:1.55; }
+.ftk-daily-by{ color:var(--ftk-text-dim); font-size:12.5px; }
+
+/* ── Data freshness badge (stock-drop, rebalance) ───────────────────── */
+.ftk-stale{
+  display:inline-block; margin-left:6px; padding:1px 7px; border-radius:999px;
+  font-size:11px; font-weight:700; color:#b45309; background:rgba(245,158,11,.15);
+  border:1px solid rgba(245,158,11,.5); white-space:nowrap;
+}

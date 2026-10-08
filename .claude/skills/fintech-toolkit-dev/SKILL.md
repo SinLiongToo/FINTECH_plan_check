@@ -199,7 +199,10 @@ report back once it resolves — don't sit in a foreground sleep loop.
 
 ## The quotes page (`tools/quotes/index.html`)
 
-Self-contained (no external data). Everything lives in one inline script:
+The data lives in **`tools/quotes/quotes-data.js`** (plain globals:
+`AUTHORS`, `QUOTES`, `authorZh/authorEn`, `dailyQuoteId()`), shared by the
+quotes page and the home page's 「今日金句」 card (which loads it lazily
+after `load`). The page logic is the inline script in `index.html`.
 
 - `AUTHORS` — `key: [中文名, English name]`. The author dropdown is built
   from it automatically and only lists keys that actually have quotes, so
@@ -224,9 +227,17 @@ Self-contained (no external data). Everything lives in one inline script:
   placeholder), the home card in `index.html`, and the quotes row in
   `README.md`. Grep for the old number.
 - localStorage keys use the `ftk-quotes-` prefix: `lang`, `rate`, `gap`,
-  `shuffle`, `loop`, `last` (resume position = quote id).
+  `timer`, `shuffle`, `loop`, `last` (resume position = quote id), `cat`
+  (category tab), `favs` (JSON array of quote ids).
+- Category tabs (`CATS`): 名言 = `!digest`, 理財書摘 = digest `id < 800`,
+  情緒穩定書摘 = digest `id >= 800`. **If you append a new digest batch,
+  add a tab for it** or it only shows under 全部.
+- The grid renders `PAGE` (60) cards at a time; anything that needs a card
+  in the DOM (jump, autoplay scroll) must call `ensureRendered(pos)` first.
+- `#q=N` in the URL opens quote N (home card links use it).
 - Features that must keep working: auto-play, prev/next, shuffle, loop,
-  author filter + search, "從第 N 句 / 跳至 Go" jump (clears filters that
+  category tabs, favorites, load-more, daily quote, share card (PNG
+  download), sleep timer / 睡前模式, author filter + search, "從第 N 句 / 跳至 Go" jump (clears filters that
   hide the target; restarts auto-play from there if playing), resume on
   reload, clicking a card during auto-play continues from that card.
 
@@ -250,6 +261,20 @@ await page.addInitScript(() => {
   window.SpeechSynthesisUtterance = function (t) { this.text = t; };
 });
 ```
+
+## Cross-tool state, PWA
+
+- Tools share state only through the user's own `localStorage`:
+  `ftk-rebalance-v1` (Rebalance holdings + extra cash + FX; Retirement's
+  「從再平衡帶入」 reads it) and `ftk-rebalance-pending` (Stock Drawdown's
+  「➕ 加入再平衡」 queues tickers; Rebalance merges and clears it on load).
+  Keep these formats backward compatible — users have real data in them.
+- PWA: `manifest.webmanifest` + `sw.js` at the repo root, registered and
+  linked by `assets/shared.js` (so every page gets it). `sw.js` is
+  network-first with cache fallback, so deploys show up immediately.
+  **Bump `CACHE` in `sw.js` whenever you change its `SHELL` list.** In
+  Playwright, pass `serviceWorkers: 'block'` to a context when a cached
+  response could mask what you're testing.
 
 ## Design system quick reference
 

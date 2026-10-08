@@ -238,6 +238,7 @@ button.gst:hover{border-color:var(--accent);color:var(--accent);}
     <button class="rbtn" data-r="100">All</button>
     <div class="rsep"></div>
     <span class="slbl" id="slbl">Loading&#x2026;</span>
+    <button class="rbtn" id="btnToRebalance" type="button" title="把目前這檔股票加入「再平衡計算」的持股清單" style="margin-left:auto">➕ 加入再平衡</button>
   </div>
   <div class="cbox chart-rel">
     <div id="tooltip">
@@ -1192,8 +1193,50 @@ function setStaticLabels(sym) {
   if (cp && last) cp.textContent = last.close.toLocaleString(undefined, {maximumFractionDigits: 0});
   const lastCloseDate = last ? fmtLocalDate(last.date) : "?";
   document.getElementById("slbl").textContent = `Static live data · ${s.name} · as of ${lastCloseDate}`;
+  // Freshness: flag a last close more than 4 calendar days old (a normal
+  // weekend + a holiday is fine) so stale data isn't mistaken for current.
+  if (last) {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const age = Math.round((today - new Date(last.date.getFullYear(), last.date.getMonth(), last.date.getDate())) / 86400000);
+    if (age > 4) {
+      const b = document.createElement("span");
+      b.className = "ftk-stale";
+      b.textContent = `⚠ 資料已 ${age} 天未更新`;
+      document.getElementById("slbl").appendChild(b);
+    }
+  }
   document.getElementById("tbnote").textContent = `${s.name} · latest close ${lastCloseDate} from Yahoo Finance, auto-updated by GitHub Actions (not real-time)`;
 }
+
+// "➕ 加入再平衡": queue the current symbol for the Rebalance tool, which
+// merges localStorage 'ftk-rebalance-pending' into its saved holdings on
+// its next load. Indices (^TWII etc.) can't be held, so they're refused.
+async function addCurrentToRebalance() {
+  const sym = curSym;
+  if (!sym || sym.startsWith("^")) { alert("指數無法直接持有，請選擇個股或 ETF。\nIndices can't be held directly — pick a stock or ETF."); return; }
+  const tw = /\.TWO?$/i.test(sym);
+  const ticker = tw ? sym.replace(/\.TWO?$/i, "") : sym.toUpperCase();
+  const s = STOCKS.find(x => x.sym === sym) || {};
+  await loadStockDB();
+  const rec = STOCK_DB && STOCK_DB[sym.toLowerCase()];
+  const series = liveRAW[sym];
+  const last = series && series[series.length - 1];
+  const item = {
+    market: tw ? "TW" : "US", ticker,
+    name: (tw ? s.cn : s.name) || s.name || ticker,
+    price: rec && typeof rec.current_price === "number" ? rec.current_price : (last ? last.close : 0),
+    priceDate: rec && rec.quote_date ? rec.quote_date : (last ? fmtLocalDate(last.date) : "")
+  };
+  let pending = [];
+  try { pending = JSON.parse(localStorage.getItem("ftk-rebalance-pending") || "[]"); } catch (e) {}
+  if (!Array.isArray(pending)) pending = [];
+  if (!pending.some(p => p.ticker === ticker)) pending.push(item);
+  try { localStorage.setItem("ftk-rebalance-pending", JSON.stringify(pending)); } catch (e) {}
+  if (confirm(`已把 ${ticker}（${item.name}）加入再平衡清單。\n要現在前往「再平衡計算」嗎？`)) {
+    location.href = "../rebalance/index.html";
+  }
+}
+document.getElementById("btnToRebalance").addEventListener("click", addCurrentToRebalance);
 
 // Add a chip for a symbol not in the built-in STOCKS list (e.g. a US
 // stock picked from search). Reuses the same chip markup/behavior as

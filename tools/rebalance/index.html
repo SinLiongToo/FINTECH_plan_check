@@ -573,6 +573,18 @@
             border-color: #f59e0b;
         }
         .weight-warn.show { display: block; }
+        .store-bar {
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+            gap: 0.5rem; margin: -0.25rem 0 0.75rem; font-size: 0.72rem; color: var(--text-muted);
+        }
+        .store-btns { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+        .store-btn { padding: 0.3rem 0.7rem; font-size: 0.72rem; }
+        .store-msg { display: none; margin: 0 0 0.75rem; padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.75rem;
+            color: var(--success); background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.4); }
+        .store-msg.show { display: block; }
+        .store-msg.err { color: var(--danger); background: rgba(239, 68, 68, 0.1); border-color: var(--danger); }
+        .price-date { font-size: 0.62rem; color: var(--text-muted); margin-top: 3px; white-space: nowrap; }
+        .price-date .ftk-stale { margin-left: 0; }
         .table-input.weight-over {
             border-color: var(--danger) !important;
             box-shadow: 0 0 0 1px var(--danger);
@@ -908,6 +920,21 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Saved-portfolio toolbar: holdings auto-save in this browser;
+                     export/import moves them to another device. -->
+                <div class="store-bar">
+                    <span class="store-note" id="storeNote">
+                        <span class="lang-zh">💾 持股會自動儲存在這個瀏覽器</span><span class="lang-en">💾 Holdings auto-save in this browser</span>
+                    </span>
+                    <span class="store-btns">
+                        <button type="button" class="btn store-btn" onclick="exportPortfolio()" title="下載 JSON 檔，可在其他裝置匯入">⬇ <span class="lang-zh">匯出</span><span class="lang-en">Export</span></button>
+                        <button type="button" class="btn store-btn" onclick="document.getElementById('importFile').click()" title="從匯出的 JSON 檔還原">⬆ <span class="lang-zh">匯入</span><span class="lang-en">Import</span></button>
+                        <button type="button" class="btn store-btn" onclick="resetPortfolio()" title="清除儲存，回到示範組合">↺ <span class="lang-zh">示範資料</span><span class="lang-en">Demo</span></button>
+                        <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importPortfolio(this)">
+                    </span>
+                </div>
+                <div id="storeMsg" class="store-msg" role="status"></div>
 
                 <div class="table-container">
                     <table>
@@ -1593,6 +1620,7 @@
                     </td>
                     <td style="text-align: center;">
                         <input type="number" step="0.01" value="${asset.price}" oninput="updateAssetField(${idx}, 'price', this.value)" class="table-input">
+                        <div class="price-date" id="priceDate-${idx}">${priceDateHtml(asset)}</div>
                     </td>
                     <td style="text-align: center;">
                         <input type="number" value="${asset.shares}" oninput="updateAssetField(${idx}, 'shares', this.value)" class="table-input">
@@ -1611,6 +1639,11 @@
         function updateAssetField(idx, field, val) {
             if (field === 'price' || field === 'shares' || field === 'targetWeight') {
                 portfolio[idx][field] = parseFloat(val) || 0;
+                if (field === 'price') {
+                    portfolio[idx].priceDate = 'manual';
+                    const d = document.getElementById('priceDate-' + idx);
+                    if (d) d.innerHTML = priceDateHtml(portfolio[idx]);
+                }
             } else {
                 portfolio[idx][field] = val;
             }
@@ -1685,6 +1718,7 @@
             const rec = db[key] || db[key.replace(/\.tw$/, '')] || db[key + '.tw'];
             if (!rec || typeof rec.current_price !== 'number') return false;
             portfolio[idx].price = rec.current_price;
+            portfolio[idx].priceDate = rec.quote_date || String(rec.as_of || '').slice(0, 10);
             if (rec.name && nameIsPlaceholder(portfolio[idx])) {
                 portfolio[idx].name = rec.name;
             }
@@ -1721,16 +1755,31 @@
                 : (db.us || {})[t] || (db.us || {})[t.replace(/-/g, '.')];
             if (!rec || typeof rec[1] !== 'number') return false;
             portfolio[idx].price = rec[1];
+            portfolio[idx].priceDate = rec[2] || '';
             if (rec[0] && nameIsPlaceholder(portfolio[idx])) portfolio[idx].name = rec[0];
             return true;
+        }
+
+        // The optional local proxy (server.py, /api/stock) only exists in
+        // local development. Probe it once per page load instead of once per
+        // holding, so the deployed site doesn't fire a 404 for every ticker.
+        let localApiProbe = null;
+        function localApiAvailable() {
+            if (!localApiProbe) {
+                localApiProbe = fetch('/api/stock?symbol=SPY')
+                    .then(r => r.ok)
+                    .catch(() => false);
+            }
+            return localApiProbe;
         }
 
         async function fetchSingleStock(idx) {
             const asset = portfolio[idx];
             const originalBtn = document.getElementById('fetchPricesBtn');
             originalBtn.disabled = true;
-            
+
             try {
+                if (!(await localApiAvailable())) throw new Error('no local API');
                 // Try local proxy API
                 let res = await fetch(`/api/stock?symbol=${asset.ticker}`);
                 if (!res.ok && asset.market === 'TW') {
@@ -1742,6 +1791,7 @@
                     const data = await res.json();
                     if (data && !data.error) {
                         portfolio[idx].price = parseFloat(data.price) || portfolio[idx].price;
+                        portfolio[idx].priceDate = localISODate(new Date());
                         portfolio[idx].name = data.name || portfolio[idx].name;
                         renderTable();
                         calculateRebalance();
@@ -1795,6 +1845,7 @@
                         const price = meta.regularMarketPrice !== undefined ? meta.regularMarketPrice : meta.chartPreviousClose;
                         const name = meta.longName || meta.shortName || asset.ticker;
                         portfolio[idx].price = parseFloat(price) || portfolio[idx].price;
+                        portfolio[idx].priceDate = meta.regularMarketTime ? localISODate(new Date(meta.regularMarketTime * 1000)) : localISODate(new Date());
                         if (nameIsPlaceholder(portfolio[idx])) {
                             portfolio[idx].name = name;
                         }
@@ -1871,6 +1922,136 @@
             document.querySelectorAll('.weight-input').forEach(inp => inp.classList.toggle('weight-over', sum > 100));
         }
 
+        // ─── Saved portfolio (localStorage) ───────────────────────────────
+        // Holdings, new-money amounts and the FX rate are saved on every
+        // recalculation and restored on load. Other tools read this key too:
+        // tools/retirement pulls the total value, and tools/stock-drop queues
+        // tickers under PENDING_KEY for this page to add on its next load.
+        const STORE_KEY = 'ftk-rebalance-v1';
+        const PENDING_KEY = 'ftk-rebalance-pending';
+        const DEMO_PORTFOLIO = JSON.parse(JSON.stringify(portfolio));
+        let storeReady = false;   // don't overwrite the saved copy before it has been loaded
+
+        function savePortfolio() {
+            if (!storeReady) return;
+            try {
+                localStorage.setItem(STORE_KEY, JSON.stringify({
+                    v: 1, savedAt: new Date().toISOString(), fx: globalFxRate,
+                    extraTwd: parseFloat(document.getElementById('extraTwd').value) || 0,
+                    extraUsd: parseFloat(document.getElementById('extraUsd').value) || 0,
+                    portfolio: portfolio.map(a => ({ market: a.market, ticker: a.ticker, name: a.name, price: a.price,
+                        priceDate: a.priceDate || '', shares: a.shares, targetWeight: a.targetWeight }))
+                }));
+            } catch (e) {}
+        }
+
+        function validPortfolio(list) {
+            return Array.isArray(list) && list.every(a => a && (a.market === 'US' || a.market === 'TW') &&
+                typeof a.ticker === 'string' && a.ticker.trim() && isFinite(a.price) && isFinite(a.shares) && isFinite(a.targetWeight));
+        }
+
+        function applyStored(data) {
+            portfolio = data.portfolio.map(a => ({ market: a.market, ticker: String(a.ticker).trim().toUpperCase(),
+                name: String(a.name || a.ticker), price: +a.price, priceDate: a.priceDate || '',
+                shares: +a.shares, targetWeight: +a.targetWeight }));
+            if (isFinite(data.extraTwd)) document.getElementById('extraTwd').value = data.extraTwd;
+            if (isFinite(data.extraUsd)) document.getElementById('extraUsd').value = data.extraUsd;
+            if (data.fx > 0) { globalFxRate = +data.fx; document.getElementById('manualFxRate').value = globalFxRate.toFixed(2); }
+        }
+
+        function loadStoredPortfolio() {
+            try {
+                const data = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+                if (data && validPortfolio(data.portfolio)) { applyStored(data); return true; }
+            } catch (e) {}
+            return false;
+        }
+
+        // Tickers queued by the Stock Drawdown page ("加入再平衡").
+        function mergePendingAdds() {
+            let pending = [];
+            try { pending = JSON.parse(localStorage.getItem(PENDING_KEY) || '[]'); localStorage.removeItem(PENDING_KEY); } catch (e) {}
+            const added = [];
+            (Array.isArray(pending) ? pending : []).forEach(p => {
+                if (!p || !p.ticker || (p.market !== 'US' && p.market !== 'TW')) return;
+                const t = String(p.ticker).trim().toUpperCase();
+                if (portfolio.some(a => a.ticker === t)) return;
+                portfolio.push({ market: p.market, ticker: t, name: p.name || t, price: +p.price || 0,
+                    priceDate: p.priceDate || '', shares: 0, targetWeight: 0 });
+                added.push(t);
+            });
+            return added;
+        }
+
+        function showStoreMsg(text, isErr) {
+            const el = document.getElementById('storeMsg');
+            el.textContent = text;
+            el.className = 'store-msg show' + (isErr ? ' err' : '');
+            clearTimeout(showStoreMsg.t);
+            showStoreMsg.t = setTimeout(() => { el.className = 'store-msg'; }, 6000);
+        }
+
+        function exportPortfolio() {
+            savePortfolio();
+            const blob = new Blob([localStorage.getItem(STORE_KEY) || '{}'], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'rebalance-portfolio-' + localISODate(new Date()) + '.json';
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+        }
+
+        function importPortfolio(input) {
+            const isZh = document.body.getAttribute('data-lang') === 'zh';
+            const file = input.files && input.files[0];
+            input.value = '';
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const data = JSON.parse(reader.result);
+                    if (!validPortfolio(data.portfolio)) throw new Error('bad');
+                    applyStored(data);
+                    renderTable(); calculateRebalance();
+                    showStoreMsg(isZh ? '✅ 已匯入 ' + portfolio.length + ' 檔持股' : '✅ Imported ' + portfolio.length + ' holdings');
+                } catch (e) {
+                    showStoreMsg(isZh ? '⚠ 匯入失敗：檔案不是這個工具匯出的持股 JSON' : '⚠ Import failed: not a portfolio file exported by this tool', true);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function resetPortfolio() {
+            const isZh = document.body.getAttribute('data-lang') === 'zh';
+            if (!confirm(isZh ? '確定要清除已儲存的持股，回到示範組合嗎？（建議先「匯出」備份）' : 'Clear your saved holdings and go back to the demo portfolio? (Export first to keep a backup.)')) return;
+            portfolio = JSON.parse(JSON.stringify(DEMO_PORTFOLIO));
+            renderTable(); calculateRebalance();
+            showStoreMsg(isZh ? '已回到示範組合' : 'Reset to the demo portfolio');
+        }
+
+        // ─── Price freshness ──────────────────────────────────────────────
+        function localISODate(d) {
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
+        // A close is "stale" if it's more than 4 calendar days old — covers a
+        // normal weekend plus a holiday without false alarms.
+        function priceAgeDays(iso) {
+            const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '');
+            if (!m) return null;
+            const d = new Date(+m[1], +m[2] - 1, +m[3]);
+            const t = new Date(); t.setHours(0, 0, 0, 0);
+            return Math.round((t - d) / 86400000);
+        }
+        function priceDateHtml(asset) {
+            const isZh = document.body.getAttribute('data-lang') === 'zh';
+            if (asset.priceDate === 'manual') return isZh ? '手動輸入' : 'manual';
+            const age = priceAgeDays(asset.priceDate);
+            if (age === null) return isZh ? '未更新' : 'not fetched';
+            const m = /^\d{4}-(\d{2})-(\d{2})/.exec(asset.priceDate);
+            const label = (+m[1]) + '/' + (+m[2]) + ' ' + (isZh ? '收盤' : 'close');
+            return age > 4 ? label + '<br><span class="ftk-stale">⚠ ' + (isZh ? age + ' 天前' : age + 'd old') + '</span>' : label;
+        }
+
         function calculateRebalance() {
             const extraTwd = parseFloat(document.getElementById('extraTwd').value) || 0;
             const extraUsd = parseFloat(document.getElementById('extraUsd').value) || 0;
@@ -1913,6 +2094,7 @@
                 sumDisplay.className = "weight-indicator incorrect";
             }
             showWeightWarning(weightSum, isZh);
+            savePortfolio();
 
             // Total New Capital calculation
             let totalNewCapitalVal = 0;
@@ -2288,9 +2470,21 @@
         }
 
         window.onload = () => {
+            const isZh = document.body.getAttribute('data-lang') === 'zh';
+            const restored = loadStoredPortfolio();
+            const added = mergePendingAdds();
+            storeReady = true;
             renderTable();
-            fetchExchangeRate();
             calculateRebalance();
+            if (added.length) {
+                showStoreMsg(isZh ? '✅ 已從「股價下跌追蹤」加入：' + added.join('、') + '（請填入持有數量與目標 %）'
+                                  : '✅ Added from Stock Drawdown: ' + added.join(', ') + ' (fill in holdings and target %)');
+            } else if (restored) {
+                showStoreMsg(isZh ? '💾 已載入你上次儲存的持股，正在更新最新股價…' : '💾 Loaded your saved holdings; refreshing prices…');
+            }
+            // Refresh prices (and FX) on every load so saved holdings never sit
+            // on stale prices; the button stays as a manual refresh.
+            fetchAllLatestPrices();
             let startCollapsed = false;
             try { startCollapsed = localStorage.getItem(HELP_COLLAPSE_KEY) === '1'; } catch (e) {}
             setHelpPanelCollapsed(startCollapsed);
