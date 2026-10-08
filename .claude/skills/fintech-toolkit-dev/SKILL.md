@@ -229,8 +229,8 @@ after `load`). The page logic is the inline script in `index.html`.
 - localStorage keys use the `ftk-quotes-` prefix: `lang`, `rate`, `gap`,
   `timer`, `shuffle`, `loop`, `last` (resume position = quote id), `cat`
   (category tab), `favs` (JSON array of quote ids).
-- Category tabs (`CATS`): 名言 = `!digest`, 理財書摘 = digest `id < 800`,
-  情緒穩定書摘 = digest `id >= 800`. **If you append a new digest batch,
+- Category tabs (`CATS`): 投資名言 = `!digest && id < 1000`, 理財書摘 =
+  digest `id < 800`, 情緒穩定書摘 = digest `800–999`, 🏅 運動員·韌性 = `1000–1099`. **If you append a new digest batch,
   add a tab for it** or it only shows under 全部.
 - The grid renders `PAGE` (60) cards at a time; anything that needs a card
   in the DOM (jump, autoplay scroll) must call `ensureRendered(pos)` first.

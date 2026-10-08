@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>投資名言 1000 句 Investment Quotes — FinTech Toolkit</title>
+<title>投資名言 1100 句 Investment Quotes — FinTech Toolkit</title>
 <meta name="theme-color" content="#0b0e14">
 <link rel="stylesheet" href="../../assets/shared.css">
 <style>
@@ -82,8 +82,8 @@
 <body class="ftk-page">
 
 <div class="ftk-hero">
-  <h1>🎙️ 投資名言 1000 句</h1>
-  <p>1000 Investment Quotes · 中英雙語 · 語音朗讀 · 自動播放。點任何一句即可朗讀，或按「自動播放」依序聆聽。</p>
+  <h1>🎙️ 投資名言 1100 句</h1>
+  <p>1100 Investment Quotes · 中英雙語 · 語音朗讀 · 自動播放。點任何一句即可朗讀，或按「自動播放」依序聆聽。</p>
 </div>
 
 <div class="q-wrap">
@@ -95,7 +95,7 @@
 
   <div class="q-player" id="player">
     <div class="q-meta">
-      <span class="q-count" id="qCount">#1 / 1000</span>
+      <span class="q-count" id="qCount">#1 / 1100</span>
       <span class="q-status" id="qStatus">已停止 Stopped</span>
     </div>
     <div class="q-zh" id="qZh"></div>
@@ -116,7 +116,7 @@
 
     <div class="q-settings">
       <label title="輸入句號後按 Enter 或「跳至」，自動播放會從這一句開始">從第
-        <input type="number" id="numStart" min="1" max="1000" value="1" inputmode="numeric"> 句
+        <input type="number" id="numStart" min="1" max="1100" value="1" inputmode="numeric"> 句
         <button type="button" class="q-btn" id="btnJump" style="padding:5px 12px">跳至 Go</button>
       </label>
       <label>朗讀語言
@@ -174,13 +174,15 @@ let favs = new Set();
 try { favs = new Set(JSON.parse(lsGet('favs', '[]')).filter(n => Number.isInteger(n) && n >= 0 && n < QUOTES.length)); } catch (e) {}
 function saveFavs(){ lsSet('favs', JSON.stringify([...favs].sort((a, b) => a - b))); }
 
-// Category tabs. Book digests are flagged in the data; the two digest
-// batches are told apart by number range (#601–800 money, #801–1000 emotion).
+// Category tabs. Book digests are flagged in the data; batches are told
+// apart by number range (#601–800 money, #801–1000 emotion digests,
+// #1001–1100 athletes & resilience).
 const CATS = [
   { key: 'all',     zh: '全部',         test: () => true },
-  { key: 'quotes',  zh: '名言',         test: q => !q.digest },
+  { key: 'quotes',  zh: '投資名言',     test: q => !q.digest && q.id < 1000 },
   { key: 'money',   zh: '理財書摘',     test: q => q.digest && q.id < 800 },
-  { key: 'emotion', zh: '情緒穩定書摘', test: q => q.digest && q.id >= 800 },
+  { key: 'emotion', zh: '情緒穩定書摘', test: q => q.digest && q.id >= 800 && q.id < 1000 },
+  { key: 'sport',   zh: '🏅 運動員·韌性', test: q => q.id >= 1000 && q.id < 1100 },
   { key: 'fav',     zh: '⭐ 我的收藏',  test: q => favs.has(q.id) },
 ];
 let cat = lsGet('cat', 'all');
