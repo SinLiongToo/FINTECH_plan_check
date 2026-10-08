@@ -583,6 +583,11 @@
             color: var(--success); background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.4); }
         .store-msg.show { display: block; }
         .store-msg.err { color: var(--danger); background: rgba(239, 68, 68, 0.1); border-color: var(--danger); }
+        .cur-w-val { font-family: 'Outfit', monospace; font-weight: 700; font-size: 0.85rem; color: var(--text-primary); }
+        .cur-w-diff { font-size: 0.62rem; margin-top: 3px; white-space: nowrap; color: var(--text-muted); }
+        .cur-w-diff.ok { color: var(--success); }
+        .cur-w-diff.over { color: #f59e0b; }
+        .cur-w-diff.under { color: var(--blue); }
         .price-date { font-size: 0.62rem; color: var(--text-muted); margin-top: 3px; white-space: nowrap; }
         .price-date .ftk-stale { margin-left: 0; }
         .table-input.weight-over {
@@ -951,7 +956,15 @@
                                         <span class="lang-en">(US:Shs/TW:Lots)</span>
                                     </div>
                                 </th>
-                                <th style="width: 15%; text-align: center;"><span class="lang-zh">目標 %</span><span class="lang-en">Target %</span></th>
+                                <th style="width: 13%; text-align: center;">
+                                    <span class="lang-zh">目前 %</span>
+                                    <span class="lang-en">Current %</span>
+                                    <div style="font-size: 0.65rem; color: var(--text-muted); font-weight: normal; margin-top: 2px;">
+                                        <span class="lang-zh">(與目標差距)</span>
+                                        <span class="lang-en">(vs target)</span>
+                                    </div>
+                                </th>
+                                <th style="width: 12%; text-align: center;"><span class="lang-zh">目標 %</span><span class="lang-en">Target %</span></th>
                                 <th style="width: 10%; text-align: center;"><span class="lang-zh">操作</span><span class="lang-en">Action</span></th>
                             </tr>
                         </thead>
@@ -1620,12 +1633,13 @@
                         <input type="text" value="${asset.name || ''}" onchange="updateAssetField(${idx}, 'name', this.value)" class="table-input table-input-name" placeholder="標的名稱">
                     </td>
                     <td style="text-align: center;">
-                        <input type="number" step="0.01" value="${asset.price}" oninput="updateAssetField(${idx}, 'price', this.value)" class="table-input">
+                        <input type="number" step="0.01" value="${asset.price}" oninput="updateAssetField(${idx}, 'price', this.value)" class="table-input" style="width: 84px;">
                         <div class="price-date" id="priceDate-${idx}">${priceDateHtml(asset)}</div>
                     </td>
                     <td style="text-align: center;">
                         <input type="number" value="${asset.shares}" oninput="updateAssetField(${idx}, 'shares', this.value)" class="table-input">
                     </td>
+                    <td style="text-align: center;" class="cur-w" id="curW-${idx}">—</td>
                     <td style="text-align: center;">
                         <input type="number" value="${asset.targetWeight}" oninput="updateAssetField(${idx}, 'targetWeight', this.value)" class="table-input weight-input" style="width: 55px;">
                     </td>
@@ -2053,6 +2067,29 @@
             return age > 4 ? label + '<br><span class="ftk-stale">⚠ ' + (isZh ? age + ' 天前' : age + 'd old') + '</span>' : label;
         }
 
+        // 「目前 %」column: each holding's share of the current portfolio value
+        // (before new money), and how far it is from its target. Within ±1
+        // percentage point counts as on target.
+        function renderCurrentWeights(total, isZh) {
+            portfolio.forEach((asset, idx) => {
+                const cell = document.getElementById('curW-' + idx);
+                if (!cell) return;
+                if (!(total > 0)) { cell.innerHTML = '—'; return; }
+                const pct = asset.valueInBase / total * 100;
+                const diff = pct - (asset.targetWeight || 0);
+                let cls, txt;
+                if (Math.abs(diff) <= 1) {
+                    cls = 'ok'; txt = isZh ? '✓ 接近目標' : '✓ on target';
+                } else if (diff > 0) {
+                    cls = 'over'; txt = (isZh ? '超配 +' : 'over +') + diff.toFixed(1);
+                } else {
+                    cls = 'under'; txt = (isZh ? '低配 ' : 'under ') + diff.toFixed(1);
+                }
+                cell.innerHTML = '<div class="cur-w-val">' + pct.toFixed(1) + '%</div>' +
+                    '<div class="cur-w-diff ' + cls + '">' + txt + '</div>';
+            });
+        }
+
         function calculateRebalance() {
             const extraTwd = parseFloat(document.getElementById('extraTwd').value) || 0;
             const extraUsd = parseFloat(document.getElementById('extraUsd').value) || 0;
@@ -2085,6 +2122,8 @@
                     usStocks.push(asset);
                 }
             });
+
+            renderCurrentWeights(totalCurrentConvertedVal, isZh);
 
             // Target weight sum validation
             const sumDisplay = document.getElementById('weightSumDisplay');
