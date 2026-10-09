@@ -30,7 +30,8 @@
     { href: ROOT + 'tools/retirement/index.html', label: '🏖️ 退休試算', key: 'retirement' },
     { href: ROOT + 'tools/loan/index.html', label: '💰 貸款投資試算', key: 'loan' },
     { href: ROOT + 'tools/rules/index.html', label: '📜 人生財務守則', key: 'rules' },
-    { href: ROOT + 'tools/quotes/index.html', label: '🎙️ 投資金句', key: 'quotes' }
+    { href: ROOT + 'tools/quotes/index.html', label: '🎙️ 投資金句', key: 'quotes' },
+    { href: ROOT + 'tools/inventory/index.html', label: '🗂️ 財產盤點', key: 'inventory' }
   ];
 
   function buildNav(){

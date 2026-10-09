@@ -9,7 +9,7 @@
 
    Bump CACHE when the precache list changes; old caches are removed on
    activate. */
-const CACHE = 'ftk-v1';
+const CACHE = 'ftk-v2';
 const SHELL = [
   './',
   './index.html',
@@ -25,6 +25,7 @@ const SHELL = [
   './tools/rules/index.html',
   './tools/quotes/index.html',
   './tools/quotes/quotes-data.js',
+  './tools/inventory/index.html',
 ];
 
 self.addEventListener('install', event => {

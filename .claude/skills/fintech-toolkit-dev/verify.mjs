@@ -26,6 +26,7 @@ const PAGES = [
   ['loan', '/tools/loan/index.html'],
   ['rules', '/tools/rules/index.html'],
   ['quotes', '/tools/quotes/index.html'],
+  ['inventory', '/tools/inventory/index.html'],
 ];
 
 const browser = await chromium.launch();

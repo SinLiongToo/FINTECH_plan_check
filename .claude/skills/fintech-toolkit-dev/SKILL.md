@@ -1,12 +1,15 @@
 ---
 name: fintech-toolkit-dev
-description: Run, test, and deploy changes to the FinTech Toolkit — a 7-page static site (project_claude_FINTECH) on GitHub Pages (SinLiongToo/FINTECH_plan_check) with a GitHub Actions + yfinance stock-data pipeline. Use whenever asked to test this app locally, verify a change before/after committing, check or trigger the stock data workflow, or confirm something is live on GitHub Pages after a push.
+description: Run, test, and deploy changes to the FinTech Toolkit — an 8-page static site (project_claude_FINTECH) on GitHub Pages (SinLiongToo/FINTECH_plan_check) with a GitHub Actions + yfinance stock-data pipeline. Use whenever asked to test this app locally, verify a change before/after committing, check or trigger the stock data workflow, or confirm something is live on GitHub Pages after a push.
 ---
 
 # FinTech Toolkit — dev workflow
 
 Static multi-page site, no build step, no framework. Pages:
-`index.html`, `tools/{stock-drop,rebalance,retirement,loan,rules,quotes}/index.html`.
+`index.html`, `tools/{stock-drop,rebalance,retirement,loan,rules,quotes,inventory}/index.html`.
+A new page must also be added to the `TOOLS` array in `assets/shared.js`
+(nav), the home-page card grid, `SHELL` in `sw.js` (bump `CACHE`), and
+`PAGES` in `verify.mjs`.
 All pages load `assets/shared.css` + `assets/shared.js` for the shared nav,
 dark/light theme toggle, and "← 返回總覽" back button. Each page sets
 `window.FTK_ROOT` (relative path back to repo root) and `window.FTK_PAGE`

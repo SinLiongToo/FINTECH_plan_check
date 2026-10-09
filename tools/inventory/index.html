@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>個人財產盤點 Asset Inventory — FinTech Toolkit</title>
+<meta name="theme-color" content="#0b0e14">
+<link rel="stylesheet" href="../../assets/shared.css">
+<style>
+.inv-wrap{ max-width:1180px; margin:0 auto; padding:0 16px 64px; font-family:var(--ftk-font); color:var(--ftk-text); }
+.inv-warn{
+  margin:18px 0 0; padding:12px 16px; border-radius:12px; font-size:13px; line-height:1.6;
+  background:rgba(229,83,75,.08); border:1px solid rgba(229,83,75,.45); color:var(--ftk-text);
+}
+.inv-warn b{ color:var(--ftk-danger); }
+
+/* summary */
+.inv-sum{ display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin:18px 0; }
+.inv-stat{ background:var(--ftk-bg-elev); border:1px solid var(--ftk-border); border-radius:12px; padding:14px 16px; }
+.inv-stat .l{ font-size:12px; color:var(--ftk-text-dim); }
+.inv-stat .v{ font-size:20px; font-weight:700; margin-top:4px; font-family:Consolas,'Segoe UI',monospace; }
+.inv-stat .v.pos{ color:var(--ftk-success); }
+.inv-stat .v.neg{ color:var(--ftk-danger); }
+.inv-stat .v.acc{ color:var(--ftk-accent); }
+.inv-stat .s{ font-size:11.5px; color:var(--ftk-text-dim); margin-top:2px; }
+
+.inv-panel{ background:var(--ftk-bg-elev); border:1px solid var(--ftk-border); border-radius:14px; padding:16px 18px; margin:0 0 16px; box-shadow:var(--ftk-shadow); }
+.inv-panel h2{ font-size:15px; margin:0 0 12px; }
+.inv-bars .row{ display:grid; grid-template-columns:150px 1fr 190px; gap:10px; align-items:center; font-size:12.5px; margin:6px 0; }
+.inv-bars .track{ height:10px; border-radius:6px; background:var(--ftk-bg); border:1px solid var(--ftk-border); overflow:hidden; }
+.inv-bars .fill{ height:100%; background:var(--ftk-accent); border-radius:6px; }
+.inv-bars .fill.debt{ background:var(--ftk-danger); }
+.inv-bars .amt{ text-align:right; font-family:Consolas,monospace; color:var(--ftk-text-dim); }
+
+/* toolbar */
+.inv-tools{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:0 0 16px; }
+.inv-btn{
+  border:1px solid var(--ftk-border); background:var(--ftk-bg-elev); color:var(--ftk-text);
+  border-radius:999px; padding:7px 14px; font-size:13px; cursor:pointer; white-space:nowrap; font-family:inherit;
+}
+.inv-btn:hover{ border-color:var(--ftk-accent); }
+.inv-btn.primary{ background:var(--ftk-accent); border-color:var(--ftk-accent); color:#241a05; font-weight:700; }
+.inv-btn.small{ padding:4px 10px; font-size:12px; }
+.inv-msg{ display:none; margin:0 0 14px; padding:9px 14px; border-radius:10px; font-size:13px;
+  background:rgba(62,207,142,.1); border:1px solid rgba(62,207,142,.45); }
+.inv-msg.show{ display:block; }
+.inv-msg.err{ background:rgba(229,83,75,.08); border-color:rgba(229,83,75,.45); }
+.inv-saved{ font-size:12px; color:var(--ftk-text-dim); margin-left:auto; }
+
+/* category sections */
+.inv-cat{ background:var(--ftk-bg-elev); border:1px solid var(--ftk-border); border-radius:14px; margin:0 0 14px; overflow:hidden; }
+.inv-cat-head{ display:flex; align-items:center; gap:10px; padding:14px 18px; cursor:pointer; user-select:none; flex-wrap:wrap; }
+.inv-cat-head .ic{ font-size:20px; }
+.inv-cat-head .t{ font-weight:700; font-size:15px; }
+.inv-cat-head .n{ font-size:12px; color:var(--ftk-text-dim); }
+.inv-cat-head .tot{ margin-left:auto; font-family:Consolas,monospace; font-weight:700; color:var(--ftk-accent); }
+.inv-cat-head .tot.debt{ color:var(--ftk-danger); }
+.inv-cat-head .chev{ color:var(--ftk-text-dim); transition:transform .15s; }
+.inv-cat.closed .chev{ transform:rotate(-90deg); }
+.inv-cat.closed .inv-cat-body{ display:none; }
+.inv-cat-body{ padding:0 18px 16px; border-top:1px solid var(--ftk-border); }
+
+.inv-items{ display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+.inv-item{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px 10px;
+  padding:12px; border:1px solid var(--ftk-border); border-radius:10px; background:var(--ftk-bg); position:relative;
+}
+.inv-item label{ display:flex; flex-direction:column; gap:3px; font-size:11px; color:var(--ftk-text-dim); }
+.inv-item input{
+  background:var(--ftk-bg-elev); color:var(--ftk-text); border:1px solid var(--ftk-border); border-radius:7px;
+  padding:6px 8px; font-size:13px; font-family:inherit; min-width:0; width:100%; box-sizing:border-box;
+}
+.inv-item input:focus{ outline:none; border-color:var(--ftk-accent); }
+.inv-item input[type=number]{ font-family:Consolas,monospace; text-align:right; }
+.inv-item .wide{ grid-column:span 2; }
+.inv-item .del{
+  position:absolute; top:6px; right:8px; border:none; background:none; color:var(--ftk-text-dim);
+  cursor:pointer; font-size:15px; padding:2px 4px;
+}
+.inv-item .del:hover{ color:var(--ftk-danger); }
+.inv-item .stale{ color:#d97706; font-weight:700; }
+.inv-item .meta{ grid-column:1/-1; font-size:11px; color:var(--ftk-text-dim); display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+.inv-item .meta button{ font-size:11px; }
+
+.inv-empty{ font-size:12.5px; color:var(--ftk-text-dim); margin-top:14px; }
+.inv-sugg{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.inv-sugg button{ border:1px dashed var(--ftk-border); background:none; color:var(--ftk-text-dim); border-radius:999px; padding:4px 11px; font-size:12px; cursor:pointer; font-family:inherit; }
+.inv-sugg button:hover{ border-color:var(--ftk-accent); color:var(--ftk-accent); }
+
+.inv-notes{ display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; margin-top:14px; }
+.inv-note{ border-radius:10px; padding:12px 14px; font-size:12.5px; line-height:1.65; }
+.inv-note h4{ margin:0 0 6px; font-size:13px; }
+.inv-note ul{ margin:0; padding-left:18px; }
+.inv-note li{ margin:3px 0; }
+.inv-note.tax{ background:rgba(47,158,143,.08); border:1px solid rgba(47,158,143,.4); }
+.inv-note.care{ background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.45); }
+
+.inv-general ul{ margin:0; padding-left:20px; font-size:13px; line-height:1.75; }
+.inv-disclaimer{ font-size:12px; color:var(--ftk-text-dim); line-height:1.6; margin-top:10px; }
+.inv-disclaimer a{ color:var(--ftk-accent-2); }
+
+@media (max-width:600px){
+  .inv-bars .row{ grid-template-columns:90px 1fr; font-size:11.5px; }
+  .inv-bars .amt{ grid-column:1/-1; text-align:left; margin-top:-4px; }
+  .inv-item .wide{ grid-column:auto; }
+  .inv-saved{ margin-left:0; width:100%; }
+}
+
+/* print: a clean list for the family binder */
+@media print{
+  .ftk-nav, .ftk-footer, .inv-tools, .inv-msg, .inv-sugg, .inv-item .del, .inv-item .meta button, .inv-warn, .no-print{ display:none !important; }
+  body, .ftk-page{ background:#fff !important; color:#000 !important; }
+  .inv-cat.closed .inv-cat-body{ display:block !important; }
+  .inv-cat, .inv-panel, .inv-stat, .inv-item{ box-shadow:none !important; break-inside:avoid; border-color:#999 !important; background:#fff !important; }
+  .inv-item input{ border:none !important; background:none !important; color:#000 !important; padding:0 !important; }
+  .inv-note{ break-inside:avoid; }
+}
+</style>
+</head>
+<body class="ftk-page">
+
+<div class="ftk-hero">
+  <h1>🗂️ 個人財產盤點</h1>
+  <p>Personal Asset Inventory · 把現金、投資、不動產、保險、退休金、版稅與數位資產整理成一份清單，掌握淨資產，並附上稅務重點與要小心的事。資料只存在這個瀏覽器。</p>
+</div>
+
+<div class="inv-wrap">
+  <div class="inv-warn">
+    🔒 <b>請勿在這裡輸入任何密碼、PIN 碼、加密貨幣私鑰或助記詞。</b>
+    「存取方式」欄只寫<b>線索</b>（例如「助記詞紙本在家中保險箱」「密碼存在 1Password，緊急聯絡人：配偶」），真正的機密請放在實體保險箱或密碼管理器。
+    清單只存在這台裝置的瀏覽器，換裝置請用「匯出／匯入」。
+  </div>
+
+  <div class="inv-sum" id="invSum"></div>
+
+  <div class="inv-panel">
+    <h2>📊 資產分布</h2>
+    <div class="inv-bars" id="invBars"></div>
+  </div>
+
+  <div class="inv-tools">
+    <button type="button" class="inv-btn primary" id="btnFromRebalance" title="把「再平衡計算」儲存的持股總值帶入投資類">⇢ 從再平衡帶入投資</button>
+    <button type="button" class="inv-btn" id="btnExpandAll">展開全部</button>
+    <button type="button" class="inv-btn" id="btnCollapseAll">收合全部</button>
+    <button type="button" class="inv-btn" id="btnExport">⬇ 匯出</button>
+    <button type="button" class="inv-btn" id="btnImport">⬆ 匯入</button>
+    <button type="button" class="inv-btn" id="btnPrint">🖨 列印 / 存 PDF</button>
+    <button type="button" class="inv-btn" id="btnClear">🗑 清空</button>
+    <input type="file" id="importFile" accept="application/json,.json" hidden>
+    <span class="inv-saved" id="invSaved"></span>
+  </div>
+  <div class="inv-msg" id="invMsg" role="status"></div>
+
+  <div id="invCats"></div>
+
+  <div class="inv-panel inv-general">
+    <h2>🧭 整體提醒：傳承與稅務</h2>
+    <ul>
+      <li><b>讓家人知道這份清單在哪裡。</b>最完整的盤點，如果沒人找得到，就等於沒有。建議列印一份和遺囑、保單放在一起，並每年更新一次（例如報稅季）。</li>
+      <li><b>遺產稅</b>：免稅額 1,333 萬元，另有配偶、子女、喪葬費等扣除額；稅率 10%／15%／20% 三級累進。生前贈與<b>每人每年 244 萬元</b>免稅，可分年規劃。</li>
+      <li><b>最低稅負制（基本稅額）</b>：海外所得（每戶全年 100 萬元以上須計入）、受益人與要保人不同的人壽保險死亡給付（每戶 3,740 萬元以內免計）等加總後，基本所得額超過 <b>750 萬元</b>的部分按 20% 計算。</li>
+      <li><b>持有美股的人特別注意</b>：非美國人持有的美國資產（美國公司股票、美國註冊的 ETF，<b>不論透過美國券商或台灣複委託</b>）超過 <b>6 萬美元</b>，身故時依法可能被課<b>最高 40% 的美國遺產稅</b>，海外券商的繼承手續也很繁瑣。常見的因應方式包括改持有非美國註冊（如愛爾蘭註冊）的 ETF、生前分年贈與等，請諮詢熟悉跨境稅務的專業人士。</li>
+      <li><b>夫妻財產</b>：一方過世時，生存配偶可主張「剩餘財產差額分配請求權」，這部分不計入遺產稅；平時保留婚後財產的紀錄有助主張。</li>
+      <li><b>預立醫療決定、意定監護、遺囑</b>：資產清單之外，這三份文件決定了你失能或離世時誰能替你處理財產。</li>
+    </ul>
+    <p class="inv-disclaimer">
+      ⚠ 以上為台灣 2025 年度的一般性整理，金額每年可能依物價調整，實際適用請以財政部最新公告為準，重大決定請諮詢會計師或律師。這不是稅務或法律建議。
+      參考：<a href="https://www.etax.nat.gov.tw/" target="_blank" rel="noopener">財政部稅務入口網</a>
+    </p>
+  </div>
+</div>
+
+<script>
+// ─── Category definitions: label, sign (debts subtract), suggestions,
+// tax notes and cautions. Taiwan-focused, 2025 figures (see disclaimer).
+const CATS = [
+  { key: 'cash', icon: '🏦', zh: '現金與存款', sugg: ['銀行活期存款', '定期存款', '外幣存款', '數位帳戶', '緊急預備金'],
+    tax: ['利息所得與股利等合併有「儲蓄投資特別扣除額」每戶 27 萬元。', '外幣存款的匯兌利得在結匯時才實現，一般不課稅。'],
+    care: ['列出每個帳戶的銀行與分行，家人才知道要去哪裡辦理繼承。', '單一銀行存款保險上限為新台幣 300 萬元（本金加利息）。', '久未使用的帳戶可能被列為靜止戶，定期確認。'] },
+  { key: 'invest', icon: '📈', zh: '股票與投資', sugg: ['台股證券帳戶', '美股／複委託帳戶', '海外券商帳戶', '基金', '債券'],
+    tax: ['台股股利：可選擇合併計稅（8.5% 可抵減稅額，上限 8 萬）或 28% 分開計稅。', '台股證券交易所得目前停徵，但有千分之三證交稅（ETF 千分之一）。', '美股股利會被美國先扣 30% 稅；海外券商的已實現獲利屬海外所得，每戶全年 100 萬元以上須計入最低稅負。'],
+    care: ['持有美國股票／美國 ETF 合計超過 6 萬美元（不論在哪個券商），身故時可能課美國遺產稅（見下方整體提醒）。', '海外券商帳戶繼承常需公證、翻譯、合法化文件，耗時數月，務必讓家人知道帳戶存在。', '記下每個帳戶的券商、帳號末四碼與交割銀行。'] },
+  { key: 'realestate', icon: '🏠', zh: '不動產', sugg: ['自住房屋', '出租房屋', '土地', '預售屋', '停車位'],
+    tax: ['房屋稅每年 5 月、地價稅每年 11 月繳納；2024 年起「房屋稅 2.0」對非自住的多屋提高稅率。', '出租收入屬租賃所得，未舉證時可減除 43% 必要費用。', '房地合一稅 2.0（境內個人）：持有 2 年內 45%、2–5 年 35%、5–10 年 20%、超過 10 年 15%；自住滿 6 年且符合條件，獲利 400 萬元以內免稅，超過部分 10%。'],
+    care: ['估值建議用實價登錄或公告現值，並註明估值日期。', '房貸請另外列在「負債」，才能算出正確的淨資產。', '共有持分、借名登記等情況容易產生糾紛，記錄清楚。', '火險、地震險的保單一併列在「保險」。'] },
+  { key: 'insurance', icon: '🛡️', zh: '保險', sugg: ['定期壽險', '終身壽險', '醫療險', '意外險', '失能／長照險', '年金險', '儲蓄型保單', '房屋火險'],
+    tax: ['人身保險費每人每年最多 2.4 萬元可列舉扣除（健保費不受此限）。', '指定受益人的人壽保險死亡給付，原則上不計入遺產；但高齡、帶病、躉繳、短期投保等「實質課稅」案例仍可能被課遺產稅。', '受益人與要保人不同的壽險死亡給付，每戶超過 3,740 萬元的部分計入最低稅負。'],
+    care: ['估值欄填「保單價值準備金／解約金」，保額寫在備註（保額不是你現在的資產）。', '結婚、離婚、生子後，確認受益人是否需要更新。', '寫下保險公司、保單號碼、要保人／被保險人／受益人。', '可到壽險公會「保險存摺」查詢自己名下所有保單。'] },
+  { key: 'retire', icon: '🧓', zh: '退休金', sugg: ['勞退個人專戶', '勞保年金', '公教退休金', '企業退休金／自提', '海外退休帳戶（401k／IRA）'],
+    tax: ['勞退自提 6% 以內可從當年薪資所得中減除，領取時再適用退職所得的免稅額度。', '一次領與月領的退職所得計算方式不同，退休前可先試算。'],
+    care: ['勞退個人專戶餘額可在勞動部勞工保險局網站查詢。', '身故時勞退專戶餘額由遺屬或指定請領人領取，記得告知家人。', '海外退休帳戶需留意當地的繼承與稅務規定。'] },
+  { key: 'royalty', icon: '✍️', zh: '版稅與智慧財產', sugg: ['書籍版稅', '音樂／歌曲版權', '專利授權', '線上課程收入', '圖庫／素材授權', '商標'],
+    tax: ['稿費、版稅、樂譜、作曲、編劇、漫畫、講演鐘點費，每人全年合計 18 萬元以內免稅。', '超過 18 萬元的部分，可減除 30% 成本費用（自行出版為 75%），以餘額申報執行業務所得；或檢附憑證核實減除。', '海外平台（如 YouTube、Amazon KDP）的收入可能被來源國扣繳，保留扣繳憑單。'],
+    care: ['列出每份合約：出版社／平台、到期日、續約與分潤條件。', '著作財產權可繼承，存續期間通常為作者生存期間加 50 年，指定由誰繼承與管理。', '記下收款帳戶與平台登入方式的線索，讓繼承人能持續收取版稅。', '「年收入」欄填每年版稅，可算出你的被動收入。'] },
+  { key: 'digital', icon: '💾', zh: '數位資產', sugg: ['加密貨幣（交易所）', '加密貨幣（自管錢包）', '網域名稱', '網站／部落格', '社群帳號', '雲端相簿與文件', '電子支付餘額', '航空里程／點數'],
+    tax: ['出售加密貨幣的獲利，實務上一般屬財產交易所得，須自行申報；透過海外交易所可能屬海外所得。相關規定仍在發展，保留每筆交易紀錄。', '網站、網域出售的獲利同樣屬應申報所得。'],
+    care: ['<b>絕對不要把私鑰、助記詞、密碼寫在這裡。</b>只寫「放在哪裡」的線索。', '自管錢包的助記詞一旦遺失，資產永遠無法取回；考慮分開保存或使用多重簽章。', '設定 Google「閒置帳戶管理員」、Apple「遺產聯絡人」，讓家人能在你過世後存取帳號。', '很多平台條款禁止帳號轉移，里程與點數可能在身故時作廢，提早規劃使用。', '列出網域續約日期，避免過期被搶註。'] },
+  { key: 'other', icon: '💎', zh: '其他資產', sugg: ['汽車／機車', '黃金／貴金屬', '收藏品', '借給他人的錢', '公司股權／合夥'],
+    tax: ['出售自用汽車、個人收藏品，一般不課稅；但以買賣為業者屬營利行為。', '借給他人的錢屬「債權」，會計入遺產。'],
+    care: ['借款請保留借據或匯款紀錄，否則家人難以追討。', '未上市公司股權的估值與繼承較複雜，寫清楚公司名稱與持股比例。', '貴重物品存放位置記錄清楚（例如銀行保管箱）。'] },
+  { key: 'debt', icon: '💳', zh: '負債', sign: -1, sugg: ['房屋貸款', '信用貸款', '車貸', '信用卡分期', '學貸', '為他人作保'],
+    tax: ['自用住宅購屋借款利息每戶每年最多 30 萬元可列舉扣除（須先減除儲蓄投資特別扣除額）。', '被繼承人生前的未償債務，可從遺產總額中扣除。'],
+    care: ['「估值」欄填目前剩餘本金，會自動從淨資產中扣除。', '繼承人可在知悉繼承 3 個月內辦理「拋棄繼承」；現行法律原則上採限定繼承，以遺產為限償還債務。', '替別人作保的保證責任也要列出，家人才不會意外被追償。'] },
+];
+
+const LS_KEY = 'ftk-assets-v1';
+const $ = id => document.getElementById(id);
+let state = { v: 1, items: [], closed: {} };
+
+function load(){
+  try {
+    const d = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+    if (d && Array.isArray(d.items)) state = { v: 1, items: d.items.filter(validItem), closed: d.closed || {}, savedAt: d.savedAt };
+  } catch (e) {}
+}
+function save(){
+  state.savedAt = new Date().toISOString();
+  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {}
+  showSaved();
+}
+function validItem(it){ return it && typeof it.id === 'string' && CATS.some(c => c.key === it.cat); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function todayISO(){ const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function fmt(n){ return 'NT$ ' + Math.round(n || 0).toLocaleString('zh-TW'); }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function daysSince(iso){
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ''); if (!m) return null;
+  const t = new Date(); t.setHours(0, 0, 0, 0);
+  return Math.round((t - new Date(+m[1], +m[2] - 1, +m[3])) / 86400000);
+}
+
+function showSaved(){
+  if (!state.savedAt) { $('invSaved').textContent = ''; return; }
+  const d = new Date(state.savedAt);
+  $('invSaved').textContent = `💾 已自動儲存 ${d.toLocaleString('zh-TW', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}`;
+}
+function msg(text, err){
+  const el = $('invMsg'); el.innerHTML = text; el.className = 'inv-msg show' + (err ? ' err' : '');
+  clearTimeout(msg.t); msg.t = setTimeout(() => { el.className = 'inv-msg'; }, 7000);
+}
+
+// ─── summary ─────────────────────────────────────────────────────────────
+function totals(){
+  const byCat = {};
+  let assets = 0, debts = 0, income = 0, stale = 0;
+  CATS.forEach(c => byCat[c.key] = 0);
+  state.items.forEach(it => {
+    const v = +it.value || 0;
+    byCat[it.cat] += v;
+    if (it.cat === 'debt') debts += v; else assets += v;
+    if (it.cat !== 'debt') income += +it.income || 0;
+    const age = daysSince(it.checked);
+    if (age === null || age > 365) stale++;
+  });
+  return { byCat, assets, debts, net: assets - debts, income, stale };
+}
+
+function renderSummary(){
+  const t = totals();
+  $('invSum').innerHTML = `
+    <div class="inv-stat"><div class="l">總資產</div><div class="v pos">${fmt(t.assets)}</div><div class="s">${state.items.filter(i => i.cat !== 'debt').length} 個項目</div></div>
+    <div class="inv-stat"><div class="l">總負債</div><div class="v neg">${fmt(t.debts)}</div><div class="s">${state.items.filter(i => i.cat === 'debt').length} 個項目</div></div>
+    <div class="inv-stat"><div class="l">淨資產</div><div class="v acc">${fmt(t.net)}</div><div class="s">${t.assets > 0 ? '負債比 ' + (t.debts / t.assets * 100).toFixed(1) + '%' : '—'}</div></div>
+    <div class="inv-stat"><div class="l">每年被動收入</div><div class="v">${fmt(t.income)}</div><div class="s">${t.income > 0 ? '約每月 ' + fmt(t.income / 12) : '版稅、租金、利息、股利'}</div></div>
+    <div class="inv-stat"><div class="l">待重新確認</div><div class="v ${t.stale ? 'neg' : ''}">${t.stale} 項</div><div class="s">超過一年未確認的項目</div></div>`;
+  const max = Math.max(1, ...CATS.map(c => t.byCat[c.key]));
+  $('invBars').innerHTML = state.items.length ? CATS.filter(c => t.byCat[c.key] > 0).map(c => `
+    <div class="row"><span>${c.icon} ${c.zh}</span>
+      <span class="track"><span class="fill${c.sign < 0 ? ' debt' : ''}" style="width:${(t.byCat[c.key] / max * 100).toFixed(1)}%;display:block"></span></span>
+      <span class="amt">${c.sign < 0 ? '−' : ''}${fmt(t.byCat[c.key])}${c.sign < 0 || t.assets <= 0 ? '' : ' · ' + (t.byCat[c.key] / t.assets * 100).toFixed(0) + '%'}</span></div>`).join('')
+    : '<div class="inv-empty">還沒有任何項目。從下方各類別點選建議項目，或按「新增」開始盤點。</div>';
+  CATS.forEach(c => {
+    const el = $('tot-' + c.key);
+    if (el) el.textContent = (c.sign < 0 ? '−' : '') + fmt(t.byCat[c.key]);
+  });
+}
+
+// ─── category sections ───────────────────────────────────────────────────
+function itemHtml(it){
+  const age = daysSince(it.checked);
+  const staleTxt = age === null ? '<span class="stale">尚未確認</span>' : age > 365 ? `<span class="stale">⚠ ${it.checked} 確認（超過一年）</span>` : `確認於 ${it.checked}`;
+  const isDebt = it.cat === 'debt';
+  return `<div class="inv-item" data-id="${it.id}">
+    <button type="button" class="del" title="刪除這個項目" data-del="${it.id}">✕</button>
+    <label>名稱<input data-f="name" value="${esc(it.name)}" placeholder="例如：國泰世華活存"></label>
+    <label>機構 / 位置<input data-f="inst" value="${esc(it.inst)}" placeholder="銀行、券商、地址、平台"></label>
+    <label>${isDebt ? '剩餘本金 (NT$)' : '估值 (NT$)'}<input type="number" inputmode="decimal" data-f="value" value="${it.value || ''}" placeholder="0"></label>
+    ${isDebt ? '' : `<label>每年收入 (NT$)<input type="number" inputmode="decimal" data-f="income" value="${it.income || ''}" placeholder="版稅、租金、利息"></label>`}
+    <label>${isDebt ? '保證人 / 共同借款人' : '受益人 / 繼承人'}<input data-f="heir" value="${esc(it.heir)}" placeholder="${isDebt ? '若有' : '例如：配偶、子女'}"></label>
+    <label class="wide">存取方式 / 文件存放（勿寫密碼）<input data-f="note" value="${esc(it.note)}" placeholder="例如：存摺在書房抽屜；保單正本在銀行保管箱"></label>
+    <div class="meta"><span data-stale="${it.id}">${staleTxt}</span>
+      <button type="button" class="inv-btn small" data-check="${it.id}">✓ 今天已確認</button></div>
+  </div>`;
+}
+
+function renderCats(){
+  $('invCats').innerHTML = CATS.map(c => {
+    const items = state.items.filter(i => i.cat === c.key);
+    const closed = state.closed[c.key] === undefined ? false : state.closed[c.key];
+    return `<section class="inv-cat${closed ? ' closed' : ''}" data-cat="${c.key}">
+      <div class="inv-cat-head" data-toggle="${c.key}">
+        <span class="ic">${c.icon}</span><span class="t">${c.zh}</span><span class="n">${items.length} 項</span>
+        <span class="tot${c.sign < 0 ? ' debt' : ''}" id="tot-${c.key}"></span><span class="chev">▾</span>
+      </div>
+      <div class="inv-cat-body">
+        ${items.length ? `<div class="inv-items">${items.map(itemHtml).join('')}</div>` : '<div class="inv-empty">這個類別還沒有項目。</div>'}
+        <div class="inv-sugg">${c.sugg.map(s => `<button type="button" data-add="${c.key}" data-name="${esc(s)}">＋ ${esc(s)}</button>`).join('')}
+          <button type="button" data-add="${c.key}" data-name="">＋ 其他</button></div>
+        <div class="inv-notes">
+          <div class="inv-note tax"><h4>💰 稅務重點</h4><ul>${c.tax.map(x => `<li>${x}</li>`).join('')}</ul></div>
+          <div class="inv-note care"><h4>⚠ 要小心的事</h4><ul>${c.care.map(x => `<li>${x}</li>`).join('')}</ul></div>
+        </div>
+      </div>
+    </section>`;
+  }).join('');
+  renderSummary();
+}
+
+function addItem(cat, name, extra){
+  const it = Object.assign({ id: uid(), cat, name: name || '', inst: '', value: 0, income: 0, heir: '', note: '', checked: todayISO() }, extra || {});
+  state.items.push(it);
+  state.closed[cat] = false;
+  save(); renderCats();
+  const el = document.querySelector(`.inv-item[data-id="${it.id}"] input[data-f="${name ? 'inst' : 'name'}"]`);
+  if (el) { el.focus(); el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+  return it;
+}
+
+// ─── events ──────────────────────────────────────────────────────────────
+$('invCats').addEventListener('input', e => {
+  const inp = e.target.closest('input[data-f]'); if (!inp) return;
+  const it = state.items.find(i => i.id === inp.closest('.inv-item').dataset.id); if (!it) return;
+  const f = inp.dataset.f;
+  it[f] = (f === 'value' || f === 'income') ? (parseFloat(inp.value) || 0) : inp.value;
+  save(); renderSummary();
+});
+$('invCats').addEventListener('click', e => {
+  const t = e.target;
+  const add = t.closest('[data-add]');
+  if (add) { addItem(add.dataset.add, add.dataset.name); return; }
+  const del = t.closest('[data-del]');
+  if (del) {
+    const it = state.items.find(i => i.id === del.dataset.del);
+    if (it && confirm(`刪除「${it.name || '未命名項目'}」？`)) { state.items = state.items.filter(i => i !== it); save(); renderCats(); }
+    return;
+  }
+  const chk = t.closest('[data-check]');
+  if (chk) {
+    const it = state.items.find(i => i.id === chk.dataset.check);
+    if (it) { it.checked = todayISO(); save(); document.querySelector(`[data-stale="${it.id}"]`).textContent = '確認於 ' + it.checked; renderSummary(); }
+    return;
+  }
+  const tog = t.closest('[data-toggle]');
+  if (tog) {
+    const sec = tog.closest('.inv-cat');
+    sec.classList.toggle('closed');
+    state.closed[tog.dataset.toggle] = sec.classList.contains('closed');
+    save();
+  }
+});
+
+function setAllClosed(v){ CATS.forEach(c => state.closed[c.key] = v); save(); renderCats(); }
+$('btnExpandAll').addEventListener('click', () => setAllClosed(false));
+$('btnCollapseAll').addEventListener('click', () => setAllClosed(true));
+$('btnPrint').addEventListener('click', () => window.print());
+
+$('btnExport').addEventListener('click', () => {
+  save();
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = `asset-inventory-${todayISO()}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  msg('⬇ 已匯出。這個檔案包含你的財產資訊，請妥善保管，不要傳到公開的地方。');
+});
+$('btnImport').addEventListener('click', () => $('importFile').click());
+$('importFile').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      if (!d || !Array.isArray(d.items) || !d.items.every(validItem)) throw new Error('bad');
+      if (state.items.length && !confirm(`匯入會取代目前的 ${state.items.length} 個項目，確定嗎？`)) return;
+      state = { v: 1, items: d.items, closed: d.closed || {} };
+      save(); renderCats(); msg(`✅ 已匯入 ${d.items.length} 個項目`);
+    } catch (err) { msg('⚠ 匯入失敗：檔案不是這個工具匯出的盤點清單。', true); }
+  };
+  r.readAsText(f);
+});
+$('btnClear').addEventListener('click', () => {
+  if (!state.items.length) return;
+  if (!confirm('確定清空所有項目嗎？建議先「匯出」備份。此動作無法復原。')) return;
+  state.items = []; save(); renderCats(); msg('已清空。');
+});
+
+// Pull the total value of the holdings saved by the Rebalance tool into a
+// single "investments" row (updated in place on later imports).
+$('btnFromRebalance').addEventListener('click', () => {
+  let d = null;
+  try { d = JSON.parse(localStorage.getItem('ftk-rebalance-v1') || 'null'); } catch (e) {}
+  if (!d || !Array.isArray(d.portfolio) || !d.portfolio.length) {
+    msg('還沒有儲存的持股：請先到 <a href="../rebalance/index.html">再平衡計算</a> 輸入持股（會自動儲存）。', true); return;
+  }
+  const fx = d.fx > 0 ? +d.fx : 32;
+  let total = 0, tw = 0, us = 0;
+  d.portfolio.forEach(a => {
+    const local = (+a.price || 0) * (+a.shares || 0) * (a.market === 'TW' ? 1000 : 1);
+    if (a.market === 'US') { us += local; total += local * fx; } else { tw += local; total += local; }
+  });
+  const note = `${d.portfolio.length} 檔：台股 NT$${Math.round(tw).toLocaleString()}、美股 US$${Math.round(us).toLocaleString()}（匯率 ${fx.toFixed(2)}）`;
+  let it = state.items.find(i => i.fromRebalance);
+  if (it) { it.value = Math.round(total); it.note = note; it.checked = todayISO(); save(); renderCats(); }
+  else it = addItem('invest', '證券帳戶（再平衡持股）', { value: Math.round(total), note, fromRebalance: true });
+  msg(`✅ 已帶入投資總值 ${fmt(total)}（${note}）`
+      + (us > 60000 ? '<br>⚠ 美股部位超過 6 萬美元，請留意下方「整體提醒」的美國遺產稅。' : ''));
+});
+
+load();
+renderCats();
+showSaved();
+</script>
+
+<script>window.FTK_ROOT = '../../'; window.FTK_PAGE = 'inventory';</script>
+<script src="../../assets/shared.js"></script>
+</body>
+</html>
