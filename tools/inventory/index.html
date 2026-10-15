@@ -31,6 +31,7 @@
 .inv-bars .fill{ height:100%; background:var(--ftk-accent); border-radius:6px; }
 .inv-bars .fill.debt{ background:var(--ftk-danger); }
 .inv-bars .amt{ text-align:right; font-family:Consolas,monospace; color:var(--ftk-text-dim); }
+.inv-bars .noval{ font-family:var(--ftk-font); color:#d97706; font-size:12px; }
 
 /* toolbar */
 .inv-tools{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:0 0 16px; }
@@ -242,17 +243,32 @@ function msg(text, err){
 // ─── summary ─────────────────────────────────────────────────────────────
 function totals(){
   const byCat = {};
-  let assets = 0, debts = 0, income = 0, stale = 0;
-  CATS.forEach(c => byCat[c.key] = 0);
+  const countByCat = {};
+  let assets = 0, debts = 0, income = 0, stale = 0, noValue = 0;
+  CATS.forEach(c => { byCat[c.key] = 0; countByCat[c.key] = 0; });
   state.items.forEach(it => {
     const v = +it.value || 0;
     byCat[it.cat] += v;
+    countByCat[it.cat]++;
     if (it.cat === 'debt') debts += v; else assets += v;
     if (it.cat !== 'debt') income += +it.income || 0;
+    // Term/medical insurance and social accounts often have no cash value,
+    // so a 0 there isn't treated as missing.
+    if (!v && !ZERO_OK.has(it.cat)) noValue++;
     const age = daysSince(it.checked);
     if (age === null || age > 365) stale++;
   });
-  return { byCat, assets, debts, net: assets - debts, income, stale };
+  return { byCat, countByCat, assets, debts, net: assets - debts, income, stale, noValue };
+}
+
+const ZERO_OK = new Set(['insurance', 'digital']);
+
+// Share of total assets: one decimal below 10% / above 90% so it never
+// rounds to a misleading "0%" or "100%".
+function pctText(part, whole){
+  if (!(whole > 0) || !(part > 0)) return '';
+  const p = part / whole * 100;
+  return ' · ' + (p < 10 || p > 90 ? p.toFixed(1) : p.toFixed(0)) + '%';
 }
 
 function renderSummary(){
@@ -262,12 +278,19 @@ function renderSummary(){
     <div class="inv-stat"><div class="l">總負債</div><div class="v neg">${fmt(t.debts)}</div><div class="s">${state.items.filter(i => i.cat === 'debt').length} 個項目</div></div>
     <div class="inv-stat"><div class="l">淨資產</div><div class="v acc">${fmt(t.net)}</div><div class="s">${t.assets > 0 ? '負債比 ' + (t.debts / t.assets * 100).toFixed(1) + '%' : '—'}</div></div>
     <div class="inv-stat"><div class="l">每年被動收入</div><div class="v">${fmt(t.income)}</div><div class="s">${t.income > 0 ? '約每月 ' + fmt(t.income / 12) : '版稅、租金、利息、股利'}</div></div>
-    <div class="inv-stat"><div class="l">待重新確認</div><div class="v ${t.stale ? 'neg' : ''}">${t.stale} 項</div><div class="s">超過一年未確認的項目</div></div>`;
+    <div class="inv-stat" title="尚未填估值：估值為 0 的項目（保險、數位資產常沒有現金價值，不列入）。超過一年未確認：「最後確認日期」超過 365 天，建議每年檢查一次（保單價值、房價、受益人…）。">
+      <div class="l">待處理</div>
+      <div class="v ${t.noValue + t.stale ? 'neg' : ''}">${t.noValue + t.stale} 項</div>
+      <div class="s">尚未填估值 ${t.noValue} 項 · 超過一年未確認 ${t.stale} 項</div></div>`;
   const max = Math.max(1, ...CATS.map(c => t.byCat[c.key]));
-  $('invBars').innerHTML = state.items.length ? CATS.filter(c => t.byCat[c.key] > 0).map(c => `
+  // Show every category that has items — including ones whose values are
+  // still 0, so it's clear they exist but need a value.
+  $('invBars').innerHTML = state.items.length ? CATS.filter(c => t.countByCat[c.key] > 0).map(c => `
     <div class="row"><span>${c.icon} ${c.zh}</span>
       <span class="track"><span class="fill${c.sign < 0 ? ' debt' : ''}" style="width:${(t.byCat[c.key] / max * 100).toFixed(1)}%;display:block"></span></span>
-      <span class="amt">${c.sign < 0 ? '−' : ''}${fmt(t.byCat[c.key])}${c.sign < 0 || t.assets <= 0 ? '' : ' · ' + (t.byCat[c.key] / t.assets * 100).toFixed(0) + '%'}</span></div>`).join('')
+      <span class="amt">${t.byCat[c.key] > 0
+        ? (c.sign < 0 ? '−' : '') + fmt(t.byCat[c.key]) + (c.sign < 0 ? '' : pctText(t.byCat[c.key], t.assets))
+        : `<span class="noval">${ZERO_OK.has(c.key) ? '無現金價值或未填' : '尚未填估值'}（${t.countByCat[c.key]} 項）</span>`}</span></div>`).join('')
     : '<div class="inv-empty">還沒有任何項目。從下方各類別點選建議項目，或按「新增」開始盤點。</div>';
   CATS.forEach(c => {
     const el = $('tot-' + c.key);
