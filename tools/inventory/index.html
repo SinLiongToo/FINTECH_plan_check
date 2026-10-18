@@ -100,7 +100,67 @@
 .inv-disclaimer{ font-size:12px; color:var(--ftk-text-dim); line-height:1.6; margin-top:10px; }
 .inv-disclaimer a{ color:var(--ftk-accent-2); }
 
+
+/* currency */
+.inv-cur{ margin-top:12px; padding-top:10px; border-top:1px solid var(--ftk-border); font-size:12.5px; }
+.cur-chip{ display:inline-block; margin:2px 0 2px 6px; padding:1px 8px; border-radius:999px; border:1px solid var(--ftk-border); font-size:11.5px; }
+.cur-rate{ font-size:11.5px; color:var(--ftk-text-dim); margin-top:4px; }
+.inv-item select{
+  background:var(--ftk-bg-elev); color:var(--ftk-text); border:1px solid var(--ftk-border); border-radius:7px;
+  padding:6px 8px; font-size:13px; font-family:inherit; width:100%; box-sizing:border-box;
+}
+.inv-item .conv{ font-size:11px; color:var(--ftk-accent-2); text-align:right; }
+.inv-item .inl{ flex-direction:row; align-items:center; gap:6px; font-size:11px; }
+.inv-item .inl select{ width:auto; padding:3px 6px; font-size:11.5px; }
+.inv-item .chk input, .est-inputs .chk input{ width:auto; }
+
+/* panels */
+.panel-head{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+.panel-head h2{ margin:0; }
+.dim{ color:var(--ftk-text-dim); font-size:12px; }
+.up{ color:var(--ftk-success); } .down{ color:var(--ftk-danger); }
+.trend-svg{ width:100%; max-width:720px; height:auto; display:block; margin:4px auto 10px; }
+.trend-svg .g{ stroke:var(--ftk-border); stroke-dasharray:3 4; }
+.trend-svg .ln{ fill:none; stroke:var(--ftk-accent); stroke-width:2.5; }
+.trend-svg .pt{ fill:var(--ftk-accent); }
+.trend-svg .ax{ fill:var(--ftk-text-dim); font-size:11px; font-family:Consolas,monospace; }
+.tbl-wrap{ overflow-x:auto; }
+.inv-tbl{ width:100%; border-collapse:collapse; font-size:12.5px; }
+.inv-tbl th, .inv-tbl td{ padding:6px 8px; border-bottom:1px solid var(--ftk-border); text-align:left; white-space:nowrap; }
+.inv-tbl th{ color:var(--ftk-text-dim); font-weight:600; font-size:11.5px; }
+.num{ text-align:right !important; font-family:Consolas,monospace; }
+
+.liq-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; }
+.liq-box{ border:1px solid var(--ftk-border); border-radius:10px; padding:10px 12px; border-left-width:4px; }
+.liq-box.liquid{ border-left-color:var(--ftk-success); } .liq-box.slow{ border-left-color:#f59e0b; } .liq-box.locked{ border-left-color:var(--ftk-text-dim); }
+.liq-box .l{ font-size:12px; color:var(--ftk-text-dim); }
+.liq-box .v{ font-size:17px; font-weight:700; font-family:Consolas,monospace; margin-top:2px; }
+.liq-box .s{ font-size:11.5px; color:var(--ftk-text-dim); margin-top:2px; }
+.liq-row{ display:flex; gap:14px; align-items:flex-end; flex-wrap:wrap; margin-top:12px; }
+.liq-row label, .est-inputs label{ display:flex; flex-direction:column; gap:3px; font-size:11.5px; color:var(--ftk-text-dim); }
+.liq-row input, .est-inputs input[type=number]{
+  background:var(--ftk-bg); color:var(--ftk-text); border:1px solid var(--ftk-border); border-radius:7px;
+  padding:6px 8px; font-size:13px; width:150px; font-family:Consolas,monospace; text-align:right;
+}
+.liq-verdict{ font-size:13px; padding-bottom:6px; }
+.warn-t{ color:#d97706; font-weight:600; } .ok-t{ color:var(--ftk-success); font-weight:600; }
+
+.est-inputs{ display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; margin-bottom:12px; }
+.est-inputs .chk{ flex-direction:row; align-items:center; gap:6px; font-size:13px; color:var(--ftk-text); padding-bottom:7px; }
+.est-inputs input[type=number]{ width:110px; }
+.est-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; }
+.est-card{ border:1px solid var(--ftk-border); border-radius:10px; padding:12px 14px; }
+.est-card h3{ font-size:13.5px; margin:0 0 8px; }
+.inv-kv{ width:100%; border-collapse:collapse; font-size:12.5px; }
+.inv-kv td{ padding:5px 0; border-bottom:1px dashed var(--ftk-border); vertical-align:top; }
+.inv-kv td:last-child{ text-align:right; font-family:Consolas,monospace; white-space:nowrap; padding-left:10px; }
+.inv-kv tr.tot td{ font-weight:700; border-bottom:1px solid var(--ftk-border); }
+.inv-kv tr.big td{ font-size:14.5px; color:var(--ftk-accent); border-bottom:none; }
+
+.family-sheet{ display:none; }
+
 @media (max-width:600px){
+  .liq-row input, .est-inputs input[type=number]{ width:120px; }
   .inv-bars .row{ grid-template-columns:90px 1fr; font-size:11.5px; }
   .inv-bars .amt{ grid-column:1/-1; text-align:left; margin-top:-4px; }
   .inv-item .wide{ grid-column:auto; }
@@ -115,6 +175,17 @@
   .inv-cat, .inv-panel, .inv-stat, .inv-item{ box-shadow:none !important; break-inside:avoid; border-color:#999 !important; background:#fff !important; }
   .inv-item input{ border:none !important; background:none !important; color:#000 !important; padding:0 !important; }
   .inv-note{ break-inside:avoid; }
+  /* 👪 family summary: print only the family sheet */
+  body.print-family > *:not(#familySheet){ display:none !important; }
+  body.print-family .family-sheet{ display:block !important; color:#000; font-family:var(--ftk-font); padding:0 8px; }
+  .family-sheet h1{ font-size:20px; margin:0 0 4px; }
+  .family-sheet h2{ font-size:15px; margin:18px 0 6px; border-bottom:2px solid #333; padding-bottom:3px; }
+  .family-sheet h3{ font-size:13px; margin:12px 0 4px; }
+  .family-sheet .fam-meta{ font-size:11.5px; color:#444; margin:2px 0; }
+  .fam-tbl{ width:100%; border-collapse:collapse; font-size:11.5px; break-inside:avoid; }
+  .fam-tbl th, .fam-tbl td{ border:1px solid #999; padding:4px 6px; text-align:left; vertical-align:top; }
+  .fam-tbl th{ background:#eee; }
+  .family-sheet ul{ font-size:12px; }
 }
 </style>
 </head>
@@ -137,15 +208,59 @@
   <div class="inv-panel">
     <h2>📊 資產分布</h2>
     <div class="inv-bars" id="invBars"></div>
+    <div class="inv-cur" id="invCur"></div>
+  </div>
+
+  <div class="inv-panel">
+    <div class="panel-head"><h2>📈 淨資產趨勢</h2>
+      <button type="button" class="inv-btn primary small" id="btnSnapshot">📸 記錄今天的淨資產</button></div>
+    <div id="trendBody"></div>
+  </div>
+
+  <div class="inv-panel">
+    <h2>💧 流動性與緊急預備金</h2>
+    <div id="liqOut"></div>
+    <div class="liq-row">
+      <label>每月生活支出 (NT$)<input type="number" inputmode="decimal" data-prof="monthlyExpense" placeholder="例如 60000"></label>
+      <div class="liq-verdict" id="liqVerdict"></div>
+    </div>
+    <div class="inv-disclaimer">「可立即動用」= 存款、股票等幾天內可變現；「需時間變現」= 不動產、保單解約、收藏品；「暫不可動用」= 退休專戶等。每個項目可在下方個別調整。</div>
+  </div>
+
+  <div class="inv-panel">
+    <h2>🏛️ 遺產稅粗估</h2>
+    <div class="est-inputs">
+      <label class="chk"><input type="checkbox" data-prof="spouse"> 有配偶</label>
+      <label>子女人數<input type="number" min="0" data-prof="children"></label>
+      <label>受扶養父母人數<input type="number" min="0" data-prof="parents"></label>
+    </div>
+    <div id="estateOut"></div>
+    <div class="inv-disclaimer">⚠ 粗估僅供參考：依 2025 年度免稅額、扣除額與級距計算，未計入未成年子女加扣、身心障礙扣除、生存配偶剩餘財產差額分配（可大幅降低遺產）、生前贈與等。不動產多以公告現值而非市價課稅，實際稅額通常低於以市價估算的結果。請以會計師試算為準。</div>
+  </div>
+
+  <div class="inv-panel">
+    <h2>🛡️ 壽險保障缺口</h2>
+    <div class="est-inputs">
+      <label>需保障年數<input type="number" min="0" data-prof="needYears"></label>
+      <label>子女教育金 (NT$)<input type="number" min="0" data-prof="eduFund" placeholder="0"></label>
+      <span class="dim">每月生活支出沿用「流動性」的設定（<span id="gapExpense"></span>）</span>
+    </div>
+    <div id="gapOut"></div>
+  </div>
+
+  <div class="inv-panel">
+    <h2>📞 重要聯絡人</h2>
+    <div id="contactBody"></div>
   </div>
 
   <div class="inv-tools">
-    <button type="button" class="inv-btn primary" id="btnFromRebalance" title="把「再平衡計算」儲存的持股總值帶入投資類">⇢ 從再平衡帶入投資</button>
+    <button type="button" class="inv-btn primary" id="btnFromRebalance" title="把「再平衡計算」儲存的持股帶入：台股（TWD）與美股（USD）兩筆">⇢ 從再平衡帶入投資</button>
     <button type="button" class="inv-btn" id="btnExpandAll">展開全部</button>
     <button type="button" class="inv-btn" id="btnCollapseAll">收合全部</button>
     <button type="button" class="inv-btn" id="btnExport">⬇ 匯出</button>
     <button type="button" class="inv-btn" id="btnImport">⬆ 匯入</button>
-    <button type="button" class="inv-btn" id="btnPrint">🖨 列印 / 存 PDF</button>
+    <button type="button" class="inv-btn" id="btnPrint">🖨 列印完整清單</button>
+    <button type="button" class="inv-btn" id="btnPrintFamily" title="只印家人需要的：帳戶在哪、文件放哪、找誰">👪 列印家人摘要</button>
     <button type="button" class="inv-btn" id="btnClear">🗑 清空</button>
     <input type="file" id="importFile" accept="application/json,.json" hidden>
     <span class="inv-saved" id="invSaved"></span>
@@ -170,6 +285,8 @@
     </p>
   </div>
 </div>
+
+<div id="familySheet" class="family-sheet" aria-hidden="true"></div>
 
 <script>
 // ─── Category definitions: label, sign (debts subtract), suggestions,
@@ -206,12 +323,66 @@ const CATS = [
 
 const LS_KEY = 'ftk-assets-v1';
 const $ = id => document.getElementById(id);
-let state = { v: 1, items: [], closed: {} };
+
+// ─── currencies & FX ─────────────────────────────────────────────────────
+// Values are entered in the item's own currency and converted to TWD with
+// live rates (open.er-api.com, cached), falling back to rough defaults.
+const CURRENCIES = ['TWD', 'USD', 'JPY', 'EUR', 'CNY', 'HKD', 'GBP', 'AUD', 'SGD'];
+const FX_DEFAULT = { TWD: 1, USD: 32, JPY: 0.21, EUR: 35, CNY: 4.4, HKD: 4.1, GBP: 41, AUD: 21, SGD: 24 };
+const FX_KEY = 'ftk-fx-v1';
+let FX = Object.assign({}, FX_DEFAULT), fxDate = '', fxLive = false;
+
+function loadFxCache(){
+  try {
+    const c = JSON.parse(localStorage.getItem(FX_KEY) || 'null');
+    if (c && c.rates && c.rates.USD > 0) { FX = Object.assign({}, FX_DEFAULT, c.rates); fxDate = c.date || ''; fxLive = true; return; }
+  } catch (e) {}
+  try { // Rebalance's saved USD/TWD rate is better than a hardcoded guess.
+    const r = JSON.parse(localStorage.getItem('ftk-rebalance-v1') || 'null');
+    if (r && r.fx > 0) FX.USD = +r.fx;
+  } catch (e) {}
+}
+async function refreshFx(){
+  try {
+    const res = await fetch('https://open.er-api.com/v6/latest/USD');
+    const d = await res.json();
+    if (!d || !d.rates || !d.rates.TWD) return;
+    const rates = {};
+    CURRENCIES.forEach(c => { if (d.rates[c]) rates[c] = d.rates.TWD / d.rates[c]; });
+    rates.TWD = 1;
+    FX = Object.assign({}, FX_DEFAULT, rates); fxDate = todayISO(); fxLive = true;
+    try { localStorage.setItem(FX_KEY, JSON.stringify({ rates, date: fxDate })); } catch (e) {}
+    renderAll();
+  } catch (e) {}
+}
+function rate(cur){ return FX[cur || 'TWD'] || 1; }
+function twd(it){ return (+it.value || 0) * rate(it.cur); }
+function twdIncome(it){ return (+it.income || 0) * rate(it.cur); }
+
+// ─── liquidity tiers ─────────────────────────────────────────────────────
+const LIQ = { liquid: '可立即動用', slow: '需時間變現', locked: '暫不可動用' };
+const LIQ_DEFAULT = { cash: 'liquid', invest: 'liquid', realestate: 'slow', insurance: 'slow', retire: 'locked', royalty: 'slow', digital: 'slow', other: 'slow' };
+function liqOf(it){ return it.liq || LIQ_DEFAULT[it.cat] || 'slow'; }
+
+const INS_TYPES = { life: '壽險', medical: '醫療險', accident: '意外險', disability: '失能險', ltc: '長照險', annuity: '年金／儲蓄險', property: '產險（火險等）' };
+const US_SITUS_CATS = new Set(['invest', 'realestate', 'other']);
+const ZERO_OK = new Set(['insurance', 'digital']);
+
+// ─── state ───────────────────────────────────────────────────────────────
+const PROFILE_DEFAULT = { monthlyExpense: 0, spouse: true, children: 0, parents: 0, needYears: 10, eduFund: 0 };
+let state = { v: 2, items: [], closed: {}, snapshots: [], contacts: [], profile: Object.assign({}, PROFILE_DEFAULT) };
 
 function load(){
   try {
     const d = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
-    if (d && Array.isArray(d.items)) state = { v: 1, items: d.items.filter(validItem), closed: d.closed || {}, savedAt: d.savedAt };
+    if (d && Array.isArray(d.items)) {
+      state = {
+        v: 2, items: d.items.filter(validItem), closed: d.closed || {}, savedAt: d.savedAt,
+        snapshots: Array.isArray(d.snapshots) ? d.snapshots : [],
+        contacts: Array.isArray(d.contacts) ? d.contacts : [],
+        profile: Object.assign({}, PROFILE_DEFAULT, d.profile || {})
+      };
+    }
   } catch (e) {}
 }
 function save(){
@@ -223,13 +394,19 @@ function validItem(it){ return it && typeof it.id === 'string' && CATS.some(c =>
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 function todayISO(){ const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
 function fmt(n){ return 'NT$ ' + Math.round(n || 0).toLocaleString('zh-TW'); }
+function fmtW(n){ // compact: 萬 / 億
+  const a = Math.abs(n), s = n < 0 ? '−' : '';
+  if (a >= 1e8) return s + (a / 1e8).toFixed(2) + ' 億';
+  if (a >= 1e4) return s + Math.round(a / 1e4).toLocaleString('zh-TW') + ' 萬';
+  return s + Math.round(a).toLocaleString('zh-TW');
+}
+function fmtUSD(n){ return 'US$ ' + Math.round(n || 0).toLocaleString('en-US'); }
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 function daysSince(iso){
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ''); if (!m) return null;
   const t = new Date(); t.setHours(0, 0, 0, 0);
   return Math.round((t - new Date(+m[1], +m[2] - 1, +m[3])) / 86400000);
 }
-
 function showSaved(){
   if (!state.savedAt) { $('invSaved').textContent = ''; return; }
   const d = new Date(state.savedAt);
@@ -237,89 +414,278 @@ function showSaved(){
 }
 function msg(text, err){
   const el = $('invMsg'); el.innerHTML = text; el.className = 'inv-msg show' + (err ? ' err' : '');
-  clearTimeout(msg.t); msg.t = setTimeout(() => { el.className = 'inv-msg'; }, 7000);
+  clearTimeout(msg.t); msg.t = setTimeout(() => { el.className = 'inv-msg'; }, 8000);
 }
 
-// ─── summary ─────────────────────────────────────────────────────────────
+// ─── totals ──────────────────────────────────────────────────────────────
 function totals(){
-  const byCat = {};
-  const countByCat = {};
-  let assets = 0, debts = 0, income = 0, stale = 0, noValue = 0;
+  const byCat = {}, countByCat = {}, byCur = {}, byLiq = { liquid: 0, slow: 0, locked: 0 };
+  let assets = 0, debts = 0, income = 0, stale = 0, noValue = 0, usUSD = 0;
   CATS.forEach(c => { byCat[c.key] = 0; countByCat[c.key] = 0; });
   state.items.forEach(it => {
-    const v = +it.value || 0;
-    byCat[it.cat] += v;
-    countByCat[it.cat]++;
-    if (it.cat === 'debt') debts += v; else assets += v;
-    if (it.cat !== 'debt') income += +it.income || 0;
-    // Term/medical insurance and social accounts often have no cash value,
-    // so a 0 there isn't treated as missing.
-    if (!v && !ZERO_OK.has(it.cat)) noValue++;
+    const v = twd(it);
+    byCat[it.cat] += v; countByCat[it.cat]++;
+    if (it.cat === 'debt') debts += v;
+    else {
+      assets += v;
+      income += twdIncome(it);
+      byCur[it.cur || 'TWD'] = (byCur[it.cur || 'TWD'] || 0) + v;
+      byLiq[liqOf(it)] += v;
+      if (it.usSitus && US_SITUS_CATS.has(it.cat)) usUSD += v / rate('USD');
+    }
+    if (!(+it.value) && !ZERO_OK.has(it.cat)) noValue++;
     const age = daysSince(it.checked);
     if (age === null || age > 365) stale++;
   });
-  return { byCat, countByCat, assets, debts, net: assets - debts, income, stale, noValue };
+  return { byCat, countByCat, byCur, byLiq, assets, debts, net: assets - debts, income, stale, noValue, usUSD };
 }
-
-const ZERO_OK = new Set(['insurance', 'digital']);
-
-// Share of total assets: one decimal below 10% / above 90% so it never
-// rounds to a misleading "0%" or "100%".
 function pctText(part, whole){
   if (!(whole > 0) || !(part > 0)) return '';
   const p = part / whole * 100;
   return ' · ' + (p < 10 || p > 90 ? p.toFixed(1) : p.toFixed(0)) + '%';
 }
 
-function renderSummary(){
-  const t = totals();
+// ─── summary + distribution ──────────────────────────────────────────────
+function renderSummary(t){
   $('invSum').innerHTML = `
     <div class="inv-stat"><div class="l">總資產</div><div class="v pos">${fmt(t.assets)}</div><div class="s">${state.items.filter(i => i.cat !== 'debt').length} 個項目</div></div>
     <div class="inv-stat"><div class="l">總負債</div><div class="v neg">${fmt(t.debts)}</div><div class="s">${state.items.filter(i => i.cat === 'debt').length} 個項目</div></div>
     <div class="inv-stat"><div class="l">淨資產</div><div class="v acc">${fmt(t.net)}</div><div class="s">${t.assets > 0 ? '負債比 ' + (t.debts / t.assets * 100).toFixed(1) + '%' : '—'}</div></div>
     <div class="inv-stat"><div class="l">每年被動收入</div><div class="v">${fmt(t.income)}</div><div class="s">${t.income > 0 ? '約每月 ' + fmt(t.income / 12) : '版稅、租金、利息、股利'}</div></div>
-    <div class="inv-stat" title="尚未填估值：估值為 0 的項目（保險、數位資產常沒有現金價值，不列入）。超過一年未確認：「最後確認日期」超過 365 天，建議每年檢查一次（保單價值、房價、受益人…）。">
-      <div class="l">待處理</div>
-      <div class="v ${t.noValue + t.stale ? 'neg' : ''}">${t.noValue + t.stale} 項</div>
+    <div class="inv-stat" title="尚未填估值：估值為 0 的項目（保險、數位資產常沒有現金價值，不列入）。超過一年未確認：「最後確認日期」超過 365 天，建議每年檢查一次。">
+      <div class="l">待處理</div><div class="v ${t.noValue + t.stale ? 'neg' : ''}">${t.noValue + t.stale} 項</div>
       <div class="s">尚未填估值 ${t.noValue} 項 · 超過一年未確認 ${t.stale} 項</div></div>`;
+
   const max = Math.max(1, ...CATS.map(c => t.byCat[c.key]));
-  // Show every category that has items — including ones whose values are
-  // still 0, so it's clear they exist but need a value.
   $('invBars').innerHTML = state.items.length ? CATS.filter(c => t.countByCat[c.key] > 0).map(c => `
     <div class="row"><span>${c.icon} ${c.zh}</span>
       <span class="track"><span class="fill${c.sign < 0 ? ' debt' : ''}" style="width:${(t.byCat[c.key] / max * 100).toFixed(1)}%;display:block"></span></span>
       <span class="amt">${t.byCat[c.key] > 0
         ? (c.sign < 0 ? '−' : '') + fmt(t.byCat[c.key]) + (c.sign < 0 ? '' : pctText(t.byCat[c.key], t.assets))
         : `<span class="noval">${ZERO_OK.has(c.key) ? '無現金價值或未填' : '尚未填估值'}（${t.countByCat[c.key]} 項）</span>`}</span></div>`).join('')
-    : '<div class="inv-empty">還沒有任何項目。從下方各類別點選建議項目，或按「新增」開始盤點。</div>';
-  CATS.forEach(c => {
-    const el = $('tot-' + c.key);
-    if (el) el.textContent = (c.sign < 0 ? '−' : '') + fmt(t.byCat[c.key]);
-  });
+    : '<div class="inv-empty">還沒有任何項目。從下方各類別點選建議項目開始盤點。</div>';
+
+  // currency split
+  const curs = Object.keys(t.byCur).filter(c => t.byCur[c] > 0).sort((a, b) => t.byCur[b] - t.byCur[a]);
+  const foreign = t.assets - (t.byCur.TWD || 0);
+  $('invCur').innerHTML = t.assets > 0 ? `
+    <div class="cur-line"><b>💱 幣別：</b>台幣 ${pctText(t.byCur.TWD || 0, t.assets).replace(' · ', '') || '0%'} · 外幣 ${pctText(foreign, t.assets).replace(' · ', '') || '0%'}
+      ${curs.filter(c => c !== 'TWD').map(c => `<span class="cur-chip">${c} ${fmtW(t.byCur[c])}</span>`).join('')}</div>
+    <div class="cur-rate">匯率：${CURRENCIES.filter(c => c !== 'TWD' && (t.byCur[c] || state.items.some(i => i.cur === c))).map(c => `1 ${c} = ${rate(c).toFixed(c === 'JPY' ? 4 : 2)}`).join('、') || '—'}
+      ${fxLive ? `（${fxDate || '已快取'} 更新）` : '（離線預設值）'}</div>` : '';
+}
+
+// ─── 2. snapshots / trend ────────────────────────────────────────────────
+function takeSnapshot(){
+  const t = totals();
+  const snap = { date: todayISO(), assets: Math.round(t.assets), debts: Math.round(t.debts), net: Math.round(t.net),
+    byCat: Object.fromEntries(CATS.map(c => [c.key, Math.round(t.byCat[c.key])])) };
+  state.snapshots = state.snapshots.filter(s => s.date !== snap.date).concat(snap).sort((a, b) => a.date.localeCompare(b.date));
+  save(); renderTrend();
+  msg(`📸 已記錄 ${snap.date} 的淨資產 ${fmt(snap.net)}。建議每年同一時間（例如報稅季）記錄一次。`);
+}
+function renderTrend(){
+  const S = state.snapshots;
+  if (!S.length) { $('trendBody').innerHTML = '<div class="inv-empty">還沒有記錄。按「📸 記錄今天的淨資產」存下第一筆，之後每年記錄一次就能看到趨勢。</div>'; return; }
+  const W = 640, H = 190, P = { l: 70, r: 16, t: 14, b: 28 };
+  const vals = S.map(s => s.net), mn = Math.min(0, ...vals), mx = Math.max(...vals, 1);
+  const x = i => S.length === 1 ? (W + P.l - P.r) / 2 : P.l + i * (W - P.l - P.r) / (S.length - 1);
+  const y = v => P.t + (mx - v) / (mx - mn || 1) * (H - P.t - P.b);
+  const pts = S.map((s, i) => `${x(i).toFixed(1)},${y(s.net).toFixed(1)}`).join(' ');
+  const svg = `<svg viewBox="0 0 ${W} ${H}" class="trend-svg" role="img" aria-label="淨資產趨勢">
+    <line x1="${P.l}" y1="${y(mx)}" x2="${W - P.r}" y2="${y(mx)}" class="g"/><line x1="${P.l}" y1="${y(mn)}" x2="${W - P.r}" y2="${y(mn)}" class="g"/>
+    <text x="${P.l - 6}" y="${y(mx) + 4}" class="ax" text-anchor="end">${fmtW(mx)}</text>
+    <text x="${P.l - 6}" y="${y(mn) + 4}" class="ax" text-anchor="end">${fmtW(mn)}</text>
+    <polyline points="${pts}" class="ln"/>
+    ${S.map((s, i) => `<circle cx="${x(i)}" cy="${y(s.net)}" r="4" class="pt"><title>${s.date} ${fmt(s.net)}</title></circle>
+      <text x="${x(i)}" y="${H - 8}" class="ax" text-anchor="middle">${s.date.slice(0, 7)}</text>`).join('')}
+  </svg>`;
+  const rows = S.slice().reverse().map((s, i, arr) => {
+    const prev = arr[i + 1];
+    const d = prev ? s.net - prev.net : null;
+    return `<tr><td>${s.date}</td><td class="num">${fmt(s.net)}</td>
+      <td class="num ${d > 0 ? 'up' : d < 0 ? 'down' : ''}">${d === null ? '—' : (d >= 0 ? '+' : '−') + fmt(Math.abs(d)).replace('NT$ ', 'NT$ ') + (prev.net ? ` (${(d / Math.abs(prev.net) * 100).toFixed(1)}%)` : '')}</td>
+      <td class="num">${fmt(s.assets)}</td><td class="num">${fmt(s.debts)}</td>
+      <td class="no-print"><button type="button" class="inv-btn small" data-snapdel="${s.date}" title="刪除這筆記錄">✕</button></td></tr>`;
+  }).join('');
+  $('trendBody').innerHTML = svg + `<div class="tbl-wrap"><table class="inv-tbl"><thead><tr><th>日期</th><th>淨資產</th><th>與上次相比</th><th>總資產</th><th>總負債</th><th class="no-print"></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+// ─── 3. liquidity & emergency fund ───────────────────────────────────────
+function renderLiquidity(t){
+  const me = +state.profile.monthlyExpense || 0;
+  const cash = t.byCat.cash || 0;
+  const months = v => me > 0 ? (v / me).toFixed(1) + ' 個月' : '—';
+  const cashMonths = me > 0 ? cash / me : null;
+  const verdict = cashMonths === null ? '<span class="dim">填入每月生活支出，即可算出緊急預備金能撐多久。</span>'
+    : cashMonths < 3 ? `<span class="warn-t">⚠ 現金只夠 ${cashMonths.toFixed(1)} 個月，一般建議至少 3–6 個月。</span>`
+    : cashMonths < 6 ? `<span class="ok-t">現金可支應 ${cashMonths.toFixed(1)} 個月，在 3–6 個月的建議範圍內。</span>`
+    : `<span class="ok-t">✓ 現金可支應 ${cashMonths.toFixed(1)} 個月，緊急預備金充足。</span>`;
+  $('liqOut').innerHTML = `
+    <div class="liq-grid">
+      ${Object.keys(LIQ).map(k => `<div class="liq-box ${k}"><div class="l">${LIQ[k]}</div><div class="v">${fmt(t.byLiq[k])}</div>
+        <div class="s">${pctText(t.byLiq[k], t.assets).replace(' · ', '') || '0%'}${k !== 'locked' ? ' · 可支應 ' + months(t.byLiq[k]) : ''}</div></div>`).join('')}
+    </div>`;
+  $('liqVerdict').innerHTML = verdict;
+}
+
+// ─── 4. estate tax estimate (Taiwan + US) ────────────────────────────────
+// Taiwan 2025: exemption 1,333萬; deductions spouse 553萬, each child 56萬,
+// each parent 138萬, funeral 138萬; rates 10% ≤5,621萬, 15% ≤11,242萬, 20%.
+const TW_ESTATE = { exempt: 13330000, spouse: 5530000, child: 560000, parent: 1380000, funeral: 1380000, b1: 56210000, b2: 112420000 };
+function twEstateTax(net){
+  if (net <= 0) return 0;
+  if (net <= TW_ESTATE.b1) return net * 0.10;
+  if (net <= TW_ESTATE.b2) return TW_ESTATE.b1 * 0.10 + (net - TW_ESTATE.b1) * 0.15;
+  return TW_ESTATE.b1 * 0.10 + (TW_ESTATE.b2 - TW_ESTATE.b1) * 0.15 + (net - TW_ESTATE.b2) * 0.20;
+}
+// US estate tax for non-resident non-citizens: §2001(c) schedule on the
+// US-situs gross estate, minus the $13,000 unified credit (≈ $60k exempt).
+const US_BRACKETS = [[0, 0.18, 0], [10000, 0.20, 1800], [20000, 0.22, 3800], [40000, 0.24, 8200], [60000, 0.26, 13000],
+  [80000, 0.28, 18200], [100000, 0.30, 23800], [150000, 0.32, 38800], [250000, 0.34, 70800], [500000, 0.37, 155800],
+  [750000, 0.39, 248300], [1000000, 0.40, 345800]];
+function usEstateTax(usd){
+  if (usd <= 60000) return 0;
+  let b = US_BRACKETS[0];
+  for (const br of US_BRACKETS) if (usd > br[0]) b = br;
+  return Math.max(0, b[2] + (usd - b[0]) * b[1] - 13000);
+}
+function renderEstate(t){
+  const pf = state.profile;
+  // Death benefits with a named beneficiary and statutory pensions are
+  // generally outside the estate, so insurance and 退休金 are excluded.
+  const gross = CATS.filter(c => c.key !== 'debt' && c.key !== 'insurance' && c.key !== 'retire').reduce((s, c) => s + t.byCat[c.key], 0);
+  const ded = TW_ESTATE.exempt + (pf.spouse ? TW_ESTATE.spouse : 0) + (+pf.children || 0) * TW_ESTATE.child + (+pf.parents || 0) * TW_ESTATE.parent + TW_ESTATE.funeral;
+  const net = gross - t.debts - ded;
+  const tax = twEstateTax(net);
+  const usTax = usEstateTax(t.usUSD);
+  const rateNote = net <= 0 ? '' : net <= TW_ESTATE.b1 ? '（適用 10%）' : net <= TW_ESTATE.b2 ? '（部分適用 15%）' : '（部分適用 20%）';
+  $('estateOut').innerHTML = `
+    <div class="est-grid">
+      <div class="est-card">
+        <h3>台灣遺產稅（粗估）</h3>
+        <table class="inv-kv">
+          <tr><td>遺產總額（不含保險、退休金）</td><td>${fmt(gross)}</td></tr>
+          <tr><td>− 負債</td><td>${fmt(t.debts)}</td></tr>
+          <tr><td>− 免稅額</td><td>${fmt(TW_ESTATE.exempt)}</td></tr>
+          <tr><td>− 扣除額（配偶 ${pf.spouse ? '553 萬' : '0'}、子女 ${+pf.children || 0}×56 萬、父母 ${+pf.parents || 0}×138 萬、喪葬費 138 萬）</td><td>${fmt(ded - TW_ESTATE.exempt)}</td></tr>
+          <tr class="tot"><td>課稅遺產淨額</td><td>${fmt(Math.max(0, net))}</td></tr>
+          <tr class="tot big"><td>估計遺產稅 ${rateNote}</td><td>${fmt(tax)}</td></tr>
+        </table>
+      </div>
+      <div class="est-card">
+        <h3>美國遺產稅（非美國人，粗估）</h3>
+        <table class="inv-kv">
+          <tr><td>標示為「美國資產」的項目</td><td>${fmtUSD(t.usUSD)}</td></tr>
+          <tr><td>免稅門檻（約）</td><td>US$ 60,000</td></tr>
+          <tr class="tot big"><td>估計美國遺產稅</td><td>${fmtUSD(usTax)}<br><span class="dim">≈ ${fmt(usTax * rate('USD'))}</span></td></tr>
+        </table>
+        <div class="inv-disclaimer">${t.usUSD > 60000
+          ? '⚠ 美國資產超過 6 萬美元。美國遺產稅可依規定申請扣抵台灣遺產稅（有上限），但兩邊程序都要跑。'
+          : t.usUSD > 0 ? '美國資產低於 6 萬美元門檻，目前不需繳美國遺產稅。' : '在「股票與投資」等項目勾選「美國資產」即可估算。'}</div>
+      </div>
+    </div>`;
+}
+
+// ─── 5. insurance coverage gap ───────────────────────────────────────────
+function renderGap(t){
+  const pf = state.profile;
+  const ins = state.items.filter(i => i.cat === 'insurance');
+  const lifeCover = ins.filter(i => i.itype === 'life').reduce((s, i) => s + (+i.cover || 0) * rate(i.cur), 0);
+  const need = t.debts + (+pf.monthlyExpense || 0) * 12 * (+pf.needYears || 0) + (+pf.eduFund || 0);
+  const gap = need - lifeCover;
+  const types = new Set(ins.map(i => i.itype).filter(Boolean));
+  const missing = ['medical', 'disability', 'ltc'].filter(k => !types.has(k)).map(k => INS_TYPES[k]);
+  $('gapExpense').textContent = fmt(+pf.monthlyExpense || 0);
+  $('gapOut').innerHTML = `
+    <table class="inv-kv">
+      <tr><td>負債（房貸等）</td><td>${fmt(t.debts)}</td></tr>
+      <tr><td>＋ 家庭生活費 ${fmt(+pf.monthlyExpense || 0)} × 12 × ${+pf.needYears || 0} 年</td><td>${fmt((+pf.monthlyExpense || 0) * 12 * (+pf.needYears || 0))}</td></tr>
+      <tr><td>＋ 子女教育金</td><td>${fmt(+pf.eduFund || 0)}</td></tr>
+      <tr class="tot"><td>壽險保障需求</td><td>${fmt(need)}</td></tr>
+      <tr><td>目前壽險保額（類型為「壽險」的保單）</td><td>${fmt(lifeCover)}</td></tr>
+      <tr class="tot big"><td>${gap > 0 ? '保障缺口' : '保障充足'}</td><td class="${gap > 0 ? 'down' : 'up'}">${gap > 0 ? fmt(gap) : '✓ 多出 ' + fmt(-gap)}</td></tr>
+    </table>
+    <div class="inv-disclaimer">${ins.length ? (missing.length ? `尚未記錄的保障類型：<b>${missing.join('、')}</b>。若已有相關保單，請在保險項目中選擇類型。` : '✓ 醫療、失能、長照都有記錄。') : '在「保險」類別新增保單並填入保額與類型，就能計算缺口。'}
+      這是常見的「負債＋生活費＋教育金」簡化算法；若已有足夠的流動資產可支應家人生活，實際需要的保額可以更低。</div>`;
+}
+
+// ─── 6. contacts + family summary ────────────────────────────────────────
+const ROLE_SUGG = ['配偶／家人', '會計師', '律師', '保險業務員', '理財顧問', '銀行理專', '遺囑執行人', '意定監護人'];
+function renderContacts(){
+  const C = state.contacts;
+  $('contactBody').innerHTML = (C.length ? `<div class="inv-items">${C.map(c => `
+    <div class="inv-item" data-cid="${c.id}">
+      <button type="button" class="del" data-cdel="${c.id}" title="刪除">✕</button>
+      <label>角色<input data-cf="role" value="${esc(c.role)}" placeholder="例如：會計師"></label>
+      <label>姓名<input data-cf="name" value="${esc(c.name)}"></label>
+      <label>電話 / Email<input data-cf="phone" value="${esc(c.phone)}"></label>
+      <label class="wide">備註<input data-cf="note" value="${esc(c.note)}" placeholder="例如：負責我的報稅；有遺囑副本"></label>
+    </div>`).join('')}</div>` : '<div class="inv-empty">還沒有聯絡人。家人在需要時最常問的就是「要找誰」。</div>') +
+    `<div class="inv-sugg">${ROLE_SUGG.map(r => `<button type="button" data-cadd="${esc(r)}">＋ ${esc(r)}</button>`).join('')}</div>`;
+}
+function buildFamilySheet(){
+  const t = totals();
+  const rows = CATS.map(c => {
+    const items = state.items.filter(i => i.cat === c.key);
+    if (!items.length) return '';
+    return `<h3>${c.icon} ${c.zh}</h3><table class="fam-tbl"><thead><tr><th>名稱</th><th>機構 / 位置</th><th>${c.key === 'debt' ? '保證人／共同借款人' : '受益人 / 繼承人'}</th><th>存取方式 / 文件存放</th></tr></thead><tbody>${
+      items.map(i => `<tr><td>${esc(i.name)}${c.key === 'insurance' && i.itype ? `（${INS_TYPES[i.itype]}）` : ''}</td><td>${esc(i.inst)}</td><td>${esc(i.heir)}</td><td>${esc(i.note)}</td></tr>`).join('')}</tbody></table>`;
+  }).join('');
+  const contacts = state.contacts.length
+    ? `<table class="fam-tbl"><thead><tr><th>角色</th><th>姓名</th><th>電話 / Email</th><th>備註</th></tr></thead><tbody>${state.contacts.map(c => `<tr><td>${esc(c.role)}</td><td>${esc(c.name)}</td><td>${esc(c.phone)}</td><td>${esc(c.note)}</td></tr>`).join('')}</tbody></table>`
+    : '<p>（尚未填寫）</p>';
+  $('familySheet').innerHTML = `
+    <h1>給家人的財產摘要</h1>
+    <p class="fam-meta">製表日期：${todayISO()}　·　共 ${state.items.length} 個項目　·　淨資產約 ${fmtW(t.net)} 元</p>
+    <p class="fam-meta">這份清單列出我的帳戶與文件在哪裡、可以找誰幫忙。密碼與私鑰不在這裡，請依「存取方式」欄的線索取得。</p>
+    <h2>📞 重要聯絡人</h2>${contacts}
+    <h2>🗂️ 財產與文件位置</h2>${rows || '<p>（尚未建立項目）</p>'}
+    <h2>✅ 需要時的第一步</h2>
+    <ul><li>先聯絡上方的會計師或律師，並找出遺囑與保單正本。</li>
+      <li>繼承人可在知悉繼承 3 個月內決定是否拋棄繼承；遺產稅須在死亡後 6 個月內申報（可申請延長）。</li>
+      <li>可到國稅局申請「遺產稅財產參考清單」，並向壽險公會查詢被繼承人的所有保單。</li></ul>`;
+}
+function printFamily(){
+  buildFamilySheet();
+  document.body.classList.add('print-family');
+  const done = () => { document.body.classList.remove('print-family'); window.removeEventListener('afterprint', done); };
+  window.addEventListener('afterprint', done);
+  window.print();
+  setTimeout(done, 1000); // browsers that don't fire afterprint
 }
 
 // ─── category sections ───────────────────────────────────────────────────
 function itemHtml(it){
   const age = daysSince(it.checked);
   const staleTxt = age === null ? '<span class="stale">尚未確認</span>' : age > 365 ? `<span class="stale">⚠ ${it.checked} 確認（超過一年）</span>` : `確認於 ${it.checked}`;
-  const isDebt = it.cat === 'debt';
+  const isDebt = it.cat === 'debt', isIns = it.cat === 'insurance';
+  const cur = it.cur || 'TWD';
+  const curSel = `<label>幣別<select data-f="cur">${CURRENCIES.map(c => `<option${c === cur ? ' selected' : ''}>${c}</option>`).join('')}</select></label>`;
+  const conv = cur !== 'TWD' && +it.value ? `<span class="conv">≈ ${fmt(twd(it))}</span>` : '';
   return `<div class="inv-item" data-id="${it.id}">
     <button type="button" class="del" title="刪除這個項目" data-del="${it.id}">✕</button>
     <label>名稱<input data-f="name" value="${esc(it.name)}" placeholder="例如：國泰世華活存"></label>
     <label>機構 / 位置<input data-f="inst" value="${esc(it.inst)}" placeholder="銀行、券商、地址、平台"></label>
-    <label>${isDebt ? '剩餘本金 (NT$)' : '估值 (NT$)'}<input type="number" inputmode="decimal" data-f="value" value="${it.value || ''}" placeholder="0"></label>
-    ${isDebt ? '' : `<label>每年收入 (NT$)<input type="number" inputmode="decimal" data-f="income" value="${it.income || ''}" placeholder="版稅、租金、利息"></label>`}
+    ${curSel}
+    <label>${isDebt ? '剩餘本金' : isIns ? '保單價值／解約金' : '估值'}<input type="number" inputmode="decimal" data-f="value" value="${it.value || ''}" placeholder="0">${conv}</label>
+    ${isIns ? `<label>保額<input type="number" inputmode="decimal" data-f="cover" value="${it.cover || ''}" placeholder="身故／保障金額"></label>
+      <label>保障類型<select data-f="itype"><option value="">— 選擇 —</option>${Object.keys(INS_TYPES).map(k => `<option value="${k}"${it.itype === k ? ' selected' : ''}>${INS_TYPES[k]}</option>`).join('')}</select></label>` : ''}
+    ${isDebt ? '' : `<label>每年收入<input type="number" inputmode="decimal" data-f="income" value="${it.income || ''}" placeholder="版稅、租金、利息"></label>`}
     <label>${isDebt ? '保證人 / 共同借款人' : '受益人 / 繼承人'}<input data-f="heir" value="${esc(it.heir)}" placeholder="${isDebt ? '若有' : '例如：配偶、子女'}"></label>
     <label class="wide">存取方式 / 文件存放（勿寫密碼）<input data-f="note" value="${esc(it.note)}" placeholder="例如：存摺在書房抽屜；保單正本在銀行保管箱"></label>
     <div class="meta"><span data-stale="${it.id}">${staleTxt}</span>
-      <button type="button" class="inv-btn small" data-check="${it.id}">✓ 今天已確認</button></div>
+      <button type="button" class="inv-btn small" data-check="${it.id}">✓ 今天已確認</button>
+      ${isDebt ? '' : `<label class="inl">流動性 <select data-f="liq">${Object.keys(LIQ).map(k => `<option value="${k}"${liqOf(it) === k ? ' selected' : ''}>${LIQ[k]}</option>`).join('')}</select></label>`}
+      ${US_SITUS_CATS.has(it.cat) ? `<label class="inl chk" title="美國公司股票、美國註冊 ETF、美國不動產等。美國銀行存款一般不算。"><input type="checkbox" data-f="usSitus" ${it.usSitus ? 'checked' : ''}> 美國資產（美股／美國 ETF／美國不動產）</label>` : ''}
+    </div>
   </div>`;
 }
 
 function renderCats(){
   $('invCats').innerHTML = CATS.map(c => {
     const items = state.items.filter(i => i.cat === c.key);
-    const closed = state.closed[c.key] === undefined ? false : state.closed[c.key];
+    const closed = !!state.closed[c.key];
     return `<section class="inv-cat${closed ? ' closed' : ''}" data-cat="${c.key}">
       <div class="inv-cat-head" data-toggle="${c.key}">
         <span class="ic">${c.icon}</span><span class="t">${c.zh}</span><span class="n">${items.length} 項</span>
@@ -336,11 +702,38 @@ function renderCats(){
       </div>
     </section>`;
   }).join('');
-  renderSummary();
+  renderAll();
+}
+
+// Everything except the item list (which keeps focus while typing).
+function renderAll(){
+  const t = totals();
+  renderSummary(t);
+  renderLiquidity(t);
+  renderEstate(t);
+  renderGap(t);
+  CATS.forEach(c => {
+    const el = $('tot-' + c.key);
+    if (el) el.textContent = (c.sign < 0 ? '−' : '') + fmt(t.byCat[c.key]);
+  });
+  document.querySelectorAll('.inv-item[data-id]').forEach(row => {
+    const it = state.items.find(i => i.id === row.dataset.id); if (!it) return;
+    const v = row.querySelector('input[data-f="value"]'); if (!v) return;
+    let conv = v.parentNode.querySelector('.conv');
+    const txt = (it.cur || 'TWD') !== 'TWD' && +it.value ? '≈ ' + fmt(twd(it)) : '';
+    if (txt && !conv) { conv = document.createElement('span'); conv.className = 'conv'; v.parentNode.appendChild(conv); }
+    if (conv) conv.textContent = txt;
+  });
 }
 
 function addItem(cat, name, extra){
-  const it = Object.assign({ id: uid(), cat, name: name || '', inst: '', value: 0, income: 0, heir: '', note: '', checked: todayISO() }, extra || {});
+  const it = Object.assign({ id: uid(), cat, name: name || '', inst: '', value: 0, income: 0, cur: 'TWD', heir: '', note: '', checked: todayISO() }, extra || {});
+  if (cat === 'insurance' && !it.itype) {
+    const guess = { '定期壽險': 'life', '終身壽險': 'life', '醫療險': 'medical', '意外險': 'accident', '失能／長照險': 'disability', '年金險': 'annuity', '儲蓄型保單': 'annuity', '房屋火險': 'property' };
+    it.itype = guess[name] || '';
+  }
+  if (/外幣|美股|海外/.test(name || '')) it.cur = 'USD';
+  if (/美股/.test(name || '') && cat === 'invest') it.usSitus = true;
   state.items.push(it);
   state.closed[cat] = false;
   save(); renderCats();
@@ -350,13 +743,17 @@ function addItem(cat, name, extra){
 }
 
 // ─── events ──────────────────────────────────────────────────────────────
-$('invCats').addEventListener('input', e => {
-  const inp = e.target.closest('input[data-f]'); if (!inp) return;
+function onField(e){
+  const inp = e.target.closest('[data-f]'); if (!inp) return;
   const it = state.items.find(i => i.id === inp.closest('.inv-item').dataset.id); if (!it) return;
   const f = inp.dataset.f;
-  it[f] = (f === 'value' || f === 'income') ? (parseFloat(inp.value) || 0) : inp.value;
-  save(); renderSummary();
-});
+  if (inp.type === 'checkbox') it[f] = inp.checked;
+  else if (f === 'value' || f === 'income' || f === 'cover') it[f] = parseFloat(inp.value) || 0;
+  else it[f] = inp.value;
+  save(); renderAll();
+}
+$('invCats').addEventListener('input', onField);
+$('invCats').addEventListener('change', e => { if (e.target.matches('select, input[type=checkbox]')) onField(e); });
 $('invCats').addEventListener('click', e => {
   const t = e.target;
   const add = t.closest('[data-add]');
@@ -370,7 +767,7 @@ $('invCats').addEventListener('click', e => {
   const chk = t.closest('[data-check]');
   if (chk) {
     const it = state.items.find(i => i.id === chk.dataset.check);
-    if (it) { it.checked = todayISO(); save(); document.querySelector(`[data-stale="${it.id}"]`).textContent = '確認於 ' + it.checked; renderSummary(); }
+    if (it) { it.checked = todayISO(); save(); document.querySelector(`[data-stale="${it.id}"]`).textContent = '確認於 ' + it.checked; renderAll(); }
     return;
   }
   const tog = t.closest('[data-toggle]');
@@ -382,10 +779,51 @@ $('invCats').addEventListener('click', e => {
   }
 });
 
+// Profile inputs (monthly expense, family) are static HTML in several
+// panels; only the computed outputs re-render, so typing keeps focus.
+function initProfileInputs(){
+  document.querySelectorAll('[data-prof]').forEach(inp => {
+    const v = state.profile[inp.dataset.prof];
+    if (inp.type === 'checkbox') inp.checked = !!v;
+    else inp.value = v ? v : (inp.dataset.prof === 'children' || inp.dataset.prof === 'parents' ? 0 : '');
+  });
+}
+document.addEventListener('input', e => {
+  const inp = e.target.closest('[data-prof]'); if (!inp || inp.type === 'checkbox') return;
+  state.profile[inp.dataset.prof] = parseFloat(inp.value) || 0;
+  save(); renderAll();
+});
+document.addEventListener('change', e => {
+  const inp = e.target.closest('[data-prof]'); if (!inp || inp.type !== 'checkbox') return;
+  state.profile[inp.dataset.prof] = inp.checked;
+  save(); renderAll();
+});
+
+$('btnSnapshot').addEventListener('click', takeSnapshot);
+$('trendBody').addEventListener('click', e => {
+  const b = e.target.closest('[data-snapdel]'); if (!b) return;
+  if (!confirm(`刪除 ${b.dataset.snapdel} 的記錄？`)) return;
+  state.snapshots = state.snapshots.filter(s => s.date !== b.dataset.snapdel); save(); renderTrend();
+});
+
+$('contactBody').addEventListener('click', e => {
+  const a = e.target.closest('[data-cadd]');
+  if (a) { state.contacts.push({ id: uid(), role: a.dataset.cadd, name: '', phone: '', note: '' }); save(); renderContacts();
+    const el = $('contactBody').querySelector(`[data-cid="${state.contacts[state.contacts.length - 1].id}"] input[data-cf="name"]`); if (el) el.focus(); return; }
+  const d = e.target.closest('[data-cdel]');
+  if (d) { state.contacts = state.contacts.filter(c => c.id !== d.dataset.cdel); save(); renderContacts(); }
+});
+$('contactBody').addEventListener('input', e => {
+  const inp = e.target.closest('[data-cf]'); if (!inp) return;
+  const c = state.contacts.find(x => x.id === inp.closest('[data-cid]').dataset.cid); if (!c) return;
+  c[inp.dataset.cf] = inp.value; save();
+});
+
 function setAllClosed(v){ CATS.forEach(c => state.closed[c.key] = v); save(); renderCats(); }
 $('btnExpandAll').addEventListener('click', () => setAllClosed(false));
 $('btnCollapseAll').addEventListener('click', () => setAllClosed(true));
 $('btnPrint').addEventListener('click', () => window.print());
+$('btnPrintFamily').addEventListener('click', printFamily);
 
 $('btnExport').addEventListener('click', () => {
   save();
@@ -406,43 +844,56 @@ $('importFile').addEventListener('change', e => {
       const d = JSON.parse(r.result);
       if (!d || !Array.isArray(d.items) || !d.items.every(validItem)) throw new Error('bad');
       if (state.items.length && !confirm(`匯入會取代目前的 ${state.items.length} 個項目，確定嗎？`)) return;
-      state = { v: 1, items: d.items, closed: d.closed || {} };
-      save(); renderCats(); msg(`✅ 已匯入 ${d.items.length} 個項目`);
+      state = { v: 2, items: d.items, closed: d.closed || {}, snapshots: Array.isArray(d.snapshots) ? d.snapshots : [],
+        contacts: Array.isArray(d.contacts) ? d.contacts : [], profile: Object.assign({}, PROFILE_DEFAULT, d.profile || {}) };
+      save(); initProfileInputs(); renderCats(); renderTrend(); renderContacts(); msg(`✅ 已匯入 ${d.items.length} 個項目`);
     } catch (err) { msg('⚠ 匯入失敗：檔案不是這個工具匯出的盤點清單。', true); }
   };
   r.readAsText(f);
 });
 $('btnClear').addEventListener('click', () => {
   if (!state.items.length) return;
-  if (!confirm('確定清空所有項目嗎？建議先「匯出」備份。此動作無法復原。')) return;
-  state.items = []; save(); renderCats(); msg('已清空。');
+  if (!confirm('確定清空所有項目嗎？（淨資產記錄與聯絡人會保留）建議先「匯出」備份。此動作無法復原。')) return;
+  state.items = []; save(); renderCats(); msg('已清空項目。');
 });
 
-// Pull the total value of the holdings saved by the Rebalance tool into a
-// single "investments" row (updated in place on later imports).
+// Pull the Rebalance holdings in as two rows: Taiwan stocks (TWD) and US
+// stocks (USD, flagged as US-situs for the US estate-tax estimate).
 $('btnFromRebalance').addEventListener('click', () => {
   let d = null;
   try { d = JSON.parse(localStorage.getItem('ftk-rebalance-v1') || 'null'); } catch (e) {}
   if (!d || !Array.isArray(d.portfolio) || !d.portfolio.length) {
     msg('還沒有儲存的持股：請先到 <a href="../rebalance/index.html">再平衡計算</a> 輸入持股（會自動儲存）。', true); return;
   }
-  const fx = d.fx > 0 ? +d.fx : 32;
-  let total = 0, tw = 0, us = 0;
+  let tw = 0, us = 0; const twN = [], usN = [];
   d.portfolio.forEach(a => {
     const local = (+a.price || 0) * (+a.shares || 0) * (a.market === 'TW' ? 1000 : 1);
-    if (a.market === 'US') { us += local; total += local * fx; } else { tw += local; total += local; }
+    if (a.market === 'US') { us += local; usN.push(a.ticker); } else { tw += local; twN.push(a.ticker); }
   });
-  const note = `${d.portfolio.length} 檔：台股 NT$${Math.round(tw).toLocaleString()}、美股 US$${Math.round(us).toLocaleString()}（匯率 ${fx.toFixed(2)}）`;
-  let it = state.items.find(i => i.fromRebalance);
-  if (it) { it.value = Math.round(total); it.note = note; it.checked = todayISO(); save(); renderCats(); }
-  else it = addItem('invest', '證券帳戶（再平衡持股）', { value: Math.round(total), note, fromRebalance: true });
-  msg(`✅ 已帶入投資總值 ${fmt(total)}（${note}）`
-      + (us > 60000 ? '<br>⚠ 美股部位超過 6 萬美元，請留意下方「整體提醒」的美國遺產稅。' : ''));
+  state.items = state.items.filter(i => i.fromRebalance !== true); // old single-row format
+  const upsert = (key, name, cur, value, tickers, extra) => {
+    if (!value) { state.items = state.items.filter(i => i.fromRebalance !== key); return; }
+    let it = state.items.find(i => i.fromRebalance === key);
+    const note = `再平衡持股：${tickers.join('、')}`;
+    if (it) Object.assign(it, { value: Math.round(value), cur, note, checked: todayISO() }, extra);
+    else state.items.push(Object.assign({ id: uid(), cat: 'invest', name, inst: '', value: Math.round(value), income: 0, cur, heir: '', note, checked: todayISO(), fromRebalance: key }, extra));
+  };
+  upsert('tw', '台股（再平衡持股）', 'TWD', tw, twN, {});
+  upsert('us', '美股（再平衡持股）', 'USD', us, usN, { usSitus: true });
+  state.closed.invest = false;
+  save(); renderCats();
+  msg(`✅ 已帶入：台股 ${fmt(tw)}、美股 ${fmtUSD(us)}（≈ ${fmt(us * rate('USD'))}）`
+      + (us > 60000 ? '<br>⚠ 美股部位超過 6 萬美元，請看下方「遺產稅粗估」中的美國遺產稅。' : ''));
 });
 
+loadFxCache();
 load();
+initProfileInputs();
 renderCats();
+renderTrend();
+renderContacts();
 showSaved();
+refreshFx();
 </script>
 
 <script>window.FTK_ROOT = '../../'; window.FTK_PAGE = 'inventory';</script>
