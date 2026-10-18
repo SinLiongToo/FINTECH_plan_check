@@ -157,6 +157,15 @@
 .inv-kv tr.tot td{ font-weight:700; border-bottom:1px solid var(--ftk-border); }
 .inv-kv tr.big td{ font-size:14.5px; color:var(--ftk-accent); border-bottom:none; }
 
+.steps{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+.step{ border:1px solid var(--ftk-border); border-radius:9px; padding:8px 11px; background:var(--ftk-bg); }
+.step.final{ border-color:var(--ftk-accent); }
+.st-h{ display:flex; justify-content:space-between; gap:10px; align-items:baseline; font-size:13px; }
+.st-h b{ font-family:Consolas,monospace; white-space:nowrap; }
+.step.final .st-h b{ color:var(--ftk-accent); font-size:15px; }
+.st-no{ color:var(--ftk-accent); font-weight:700; margin-right:6px; }
+.st-f{ font-size:12px; margin-top:4px; line-height:1.6; color:var(--ftk-text); font-family:Consolas,var(--ftk-font); }
+.st-n{ font-size:11px; margin-top:3px; color:var(--ftk-text-dim); line-height:1.5; }
 .family-sheet{ display:none; }
 
 @media (max-width:600px){
@@ -551,45 +560,84 @@ function usEstateTax(usd){
   for (const br of US_BRACKETS) if (usd > br[0]) b = br;
   return Math.max(0, b[2] + (usd - b[0]) * b[1] - 13000);
 }
+// Numbered calculation steps: each shows its result and the arithmetic
+// that produced it (amounts in 萬 for readability), so every figure can be
+// traced back to the items above.
+function W(n){ return fmtW(n) + (Math.abs(n) >= 1e4 ? '' : ' 元'); }
+function step(no, title, value, formula, note, cls){
+  return `<li class="step${cls ? ' ' + cls : ''}"><div class="st-h"><span><span class="st-no">${no}</span>${title}</span><b>${value}</b></div>` +
+    (formula ? `<div class="st-f">${formula}</div>` : '') + (note ? `<div class="st-n">${note}</div>` : '') + '</li>';
+}
 function renderEstate(t){
   const pf = state.profile;
-  // Death benefits with a named beneficiary and statutory pensions are
-  // generally outside the estate, so insurance and 退休金 are excluded.
   // Taiwan real estate is taxed at 公告土地現值 + 房屋評定現值, usually far
   // below market value: use the item's taxValue when given, else its value.
   const reItems = state.items.filter(i => i.cat === 'realestate');
   const reTaxed = reItems.reduce((s, i) => s + (+i.taxValue > 0 ? +i.taxValue * rate(i.cur) : twd(i)), 0);
   const reMissing = reItems.filter(i => +i.value && !(+i.taxValue > 0)).length;
-  const gross = CATS.filter(c => !['debt', 'insurance', 'retire', 'realestate'].includes(c.key)).reduce((s, c) => s + t.byCat[c.key], 0) + reTaxed;
-  const ded = TW_ESTATE.exempt + (pf.spouse ? TW_ESTATE.spouse : 0) + (+pf.children || 0) * TW_ESTATE.child + (+pf.parents || 0) * TW_ESTATE.parent + TW_ESTATE.funeral;
-  const net = gross - t.debts - ded;
+  // Death benefits with a named beneficiary and statutory pensions are
+  // generally outside the estate, so insurance and 退休金 are excluded.
+  const parts = [];
+  CATS.forEach(c => {
+    if (['debt', 'insurance', 'retire'].includes(c.key)) return;
+    const v = c.key === 'realestate' ? reTaxed : t.byCat[c.key];
+    if (v > 0) parts.push({ label: c.key === 'realestate' ? `不動產（${reMissing ? (reMissing === reItems.length ? '市價' : '公告現值＋部分市價') : '公告現值'}）` : c.zh, v });
+  });
+  const gross = parts.reduce((s, p) => s + p.v, 0);
+  const excluded = ['insurance', 'retire'].filter(k => t.byCat[k] > 0).map(k => `${CATS.find(c => c.key === k).zh} ${W(t.byCat[k])}`);
+  const afterDebt = gross - t.debts;
+  const kids = +pf.children || 0, parents = +pf.parents || 0;
+  const dedParts = [`免稅額 ${W(TW_ESTATE.exempt)}`];
+  if (pf.spouse) dedParts.push(`配偶 ${W(TW_ESTATE.spouse)}`);
+  if (kids) dedParts.push(`子女 ${W(kids * TW_ESTATE.child)}（${kids} × 56 萬）`);
+  if (parents) dedParts.push(`父母 ${W(parents * TW_ESTATE.parent)}（${parents} × 138 萬）`);
+  dedParts.push(`喪葬費 ${W(TW_ESTATE.funeral)}`);
+  const ded = TW_ESTATE.exempt + (pf.spouse ? TW_ESTATE.spouse : 0) + kids * TW_ESTATE.child + parents * TW_ESTATE.parent + TW_ESTATE.funeral;
+  const net = afterDebt - ded;
   const tax = twEstateTax(net);
-  const usTax = usEstateTax(t.usUSD);
-  const rateNote = net <= 0 ? '' : net <= TW_ESTATE.b1 ? '（適用 10%）' : net <= TW_ESTATE.b2 ? '（部分適用 15%）' : '（部分適用 20%）';
+  let taxF;
+  if (net <= 0) taxF = '課稅淨額 ≤ 0，不用繳遺產稅';
+  else if (net <= TW_ESTATE.b1) taxF = `${W(net)} × 10% ＝ ${W(tax)}`;
+  else if (net <= TW_ESTATE.b2) taxF = `5,621 萬 × 10% ＋（${W(net)} − 5,621 萬）× 15% ＝ ${W(tax)}`;
+  else taxF = `5,621 萬 × 10% ＋ 5,621 萬 × 15% ＋（${W(net)} − 11,242 萬）× 20% ＝ ${W(tax)}`;
+
+  // US estate tax (non-resident aliens) on items flagged as US assets.
+  const usItems = state.items.filter(i => i.usSitus && US_SITUS_CATS.has(i.cat) && +i.value);
+  const usd = t.usUSD;
+  let b = US_BRACKETS[0];
+  for (const br of US_BRACKETS) if (usd > br[0]) b = br;
+  const tentative = b[2] + (usd - b[0]) * b[1];
+  const usTax = usEstateTax(usd);
+  const fx = rate('USD');
+  const usdTxt = n => 'US$ ' + Math.round(n).toLocaleString('en-US');
+
   $('estateOut').innerHTML = `
     <div class="est-grid">
       <div class="est-card">
         <h3>台灣遺產稅（粗估）</h3>
-        <table class="inv-kv">
-          <tr><td>遺產總額（不含保險、退休金）</td><td>${fmt(gross)}</td></tr>
-          ${reItems.length ? `<tr><td class="dim">　其中不動產以${reMissing ? (reMissing === reItems.length ? '<b class="warn-t">市價</b>' : '公告現值與<b class="warn-t">部分市價</b>') : '公告現值'}計：${fmt(reTaxed)}（市價 ${fmt(t.byCat.realestate)}）${reMissing ? `<br>　⚠ ${reMissing} 筆不動產未填「課稅價值」，以市價估算會偏高` : ''}</td><td></td></tr>` : ''}
-          <tr><td>− 負債</td><td>${fmt(t.debts)}</td></tr>
-          <tr><td>− 免稅額</td><td>${fmt(TW_ESTATE.exempt)}</td></tr>
-          <tr><td>− 扣除額（配偶 ${pf.spouse ? '553 萬' : '0'}、子女 ${+pf.children || 0}×56 萬、父母 ${+pf.parents || 0}×138 萬、喪葬費 138 萬）</td><td>${fmt(ded - TW_ESTATE.exempt)}</td></tr>
-          <tr class="tot"><td>課稅遺產淨額</td><td>${fmt(Math.max(0, net))}</td></tr>
-          <tr class="tot big"><td>估計遺產稅 ${rateNote}</td><td>${fmt(tax)}</td></tr>
-        </table>
+        <ol class="steps">
+          ${step('①', '遺產總額', fmt(gross),
+            parts.length ? parts.map(p => `${p.label} ${W(p.v)}`).join(' ＋ ') + ` ＝ ${W(gross)}` : '尚未填入可計入遺產的項目',
+            (excluded.length ? `不計入：${excluded.join('、')}（指定受益人的保險給付、依法給付的退休金不屬遺產）` : '') +
+            (reMissing ? `${excluded.length ? '<br>' : ''}<span class="warn-t">⚠ ${reMissing} 筆不動產未填「課稅價值」，以市價計算會偏高</span>` : ''))}
+          ${step('②', '扣掉負債', fmt(afterDebt), `${W(gross)} − 負債 ${W(t.debts)} ＝ ${W(afterDebt)}`)}
+          ${step('③', '免稅額＋扣除額', fmt(ded), dedParts.join(' ＋ ') + ` ＝ ${W(ded)}`, '配偶、子女、父母人數在上方設定')}
+          ${step('④', '課稅遺產淨額', fmt(Math.max(0, net)), `${W(afterDebt)} − ${W(ded)} ＝ ${net > 0 ? W(net) : '0（小於 0 以 0 計）'}`)}
+          ${step('⑤', '估計遺產稅', fmt(tax), taxF, '稅率：5,621 萬以下 10%、5,621–11,242 萬 15%、超過 20%', 'final')}
+        </ol>
       </div>
       <div class="est-card">
         <h3>美國遺產稅（非美國人，粗估）</h3>
-        <table class="inv-kv">
-          <tr><td>標示為「美國資產」的項目</td><td>${fmtUSD(t.usUSD)}</td></tr>
-          <tr><td>免稅門檻（約）</td><td>US$ 60,000</td></tr>
-          <tr class="tot big"><td>估計美國遺產稅</td><td>${fmtUSD(usTax)}<br><span class="dim">≈ ${fmt(usTax * rate('USD'))}</span></td></tr>
-        </table>
-        <div class="inv-disclaimer">${t.usUSD > 60000
-          ? '⚠ 美國資產超過 6 萬美元。美國遺產稅可依規定申請扣抵台灣遺產稅（有上限），但兩邊程序都要跑。'
-          : t.usUSD > 0 ? '美國資產低於 6 萬美元門檻，目前不需繳美國遺產稅。' : '在「股票與投資」等項目勾選「美國資產」即可估算。'}</div>
+        <ol class="steps">
+          ${step('①', '美國資產合計', usdTxt(usd),
+            usItems.length ? usItems.map(i => `${esc(i.name || '未命名')} ${i.cur === 'USD' ? usdTxt(+i.value) : usdTxt(twd(i) / fx)}`).join(' ＋ ') + (usItems.length > 1 ? ` ＝ ${usdTxt(usd)}` : '') : '尚未勾選任何「美國資產」項目',
+            '在「股票與投資」等項目勾選「美國資產」的才計入')}
+          ${usd <= 60000
+            ? step('②', '是否超過門檻', '未超過', `${usdTxt(usd)} ≤ 免稅門檻 US$ 60,000`, '不需繳美國遺產稅', 'final')
+            : step('②', '暫定稅額', usdTxt(tentative), `US$ ${b[2].toLocaleString('en-US')} ＋（${usdTxt(usd)} − US$ ${b[0].toLocaleString('en-US')}）× ${Math.round(b[1] * 100)}% ＝ ${usdTxt(tentative)}`, '依美國稅法 §2001(c) 累進稅率表（18%–40%）')
+              + step('③', '扣掉抵免額', usdTxt(usTax), `${usdTxt(tentative)} − 非美國人抵免額 US$ 13,000 ＝ ${usdTxt(usTax)}`, 'US$ 13,000 抵免額 ≈ 6 萬美元免稅')
+              + step('④', '換算台幣', fmt(usTax * fx), `${usdTxt(usTax)} × 匯率 ${fx.toFixed(2)} ＝ ${W(usTax * fx)}`, '可依規定申請扣抵台灣遺產稅（有上限）', 'final')}
+        </ol>
       </div>
     </div>`;
 }
@@ -598,21 +646,26 @@ function renderEstate(t){
 function renderGap(t){
   const pf = state.profile;
   const ins = state.items.filter(i => i.cat === 'insurance');
-  const lifeCover = ins.filter(i => i.itype === 'life').reduce((s, i) => s + (+i.cover || 0) * rate(i.cur), 0);
-  const need = t.debts + (+pf.monthlyExpense || 0) * 12 * (+pf.needYears || 0) + (+pf.eduFund || 0);
+  const lifeItems = ins.filter(i => i.itype === 'life' && +i.cover);
+  const lifeCover = lifeItems.reduce((s, i) => s + (+i.cover || 0) * rate(i.cur), 0);
+  const me = +pf.monthlyExpense || 0, yrs = +pf.needYears || 0, edu = +pf.eduFund || 0;
+  const living = me * 12 * yrs;
+  const need = t.debts + living + edu;
   const gap = need - lifeCover;
   const types = new Set(ins.map(i => i.itype).filter(Boolean));
   const missing = ['medical', 'disability', 'ltc'].filter(k => !types.has(k)).map(k => INS_TYPES[k]);
-  $('gapExpense').textContent = fmt(+pf.monthlyExpense || 0);
+  $('gapExpense').textContent = fmt(me);
   $('gapOut').innerHTML = `
-    <table class="inv-kv">
-      <tr><td>負債（房貸等）</td><td>${fmt(t.debts)}</td></tr>
-      <tr><td>＋ 家庭生活費 ${fmt(+pf.monthlyExpense || 0)} × 12 × ${+pf.needYears || 0} 年</td><td>${fmt((+pf.monthlyExpense || 0) * 12 * (+pf.needYears || 0))}</td></tr>
-      <tr><td>＋ 子女教育金</td><td>${fmt(+pf.eduFund || 0)}</td></tr>
-      <tr class="tot"><td>壽險保障需求</td><td>${fmt(need)}</td></tr>
-      <tr><td>目前壽險保額（類型為「壽險」的保單）</td><td>${fmt(lifeCover)}</td></tr>
-      <tr class="tot big"><td>${gap > 0 ? '保障缺口' : '保障充足'}</td><td class="${gap > 0 ? 'down' : 'up'}">${gap > 0 ? fmt(gap) : '✓ 多出 ' + fmt(-gap)}</td></tr>
-    </table>
+    <ol class="steps">
+      ${step('①', '家人需要的保障', fmt(need),
+        `負債 ${W(t.debts)} ＋ 生活費（${W(me)}／月 × 12 × ${yrs} 年 ＝ ${W(living)}）＋ 教育金 ${W(edu)} ＝ ${W(need)}`,
+        '負債取自下方「負債」類別；每月生活支出取自「流動性」的設定')}
+      ${step('②', '目前壽險保額', fmt(lifeCover),
+        lifeItems.length ? lifeItems.map(i => `${esc(i.name || '未命名')} ${W((+i.cover || 0) * rate(i.cur))}`).join(' ＋ ') + (lifeItems.length > 1 ? ` ＝ ${W(lifeCover)}` : '') : '尚未有填入保額、類型為「壽險」的保單',
+        '只計入保障類型選「壽險」的保單「保額」')}
+      ${step('③', gap > 0 ? '保障缺口' : '保障充足', gap > 0 ? fmt(gap) : '✓ 多出 ' + fmt(-gap),
+        `${W(need)} − ${W(lifeCover)} ＝ ${gap > 0 ? W(gap) : '−' + W(-gap)}`, '', 'final')}
+    </ol>
     <div class="inv-disclaimer">${ins.length ? (missing.length ? `尚未記錄的保障類型：<b>${missing.join('、')}</b>。若已有相關保單，請在保險項目中選擇類型。` : '✓ 醫療、失能、長照都有記錄。') : '在「保險」類別新增保單並填入保額與類型，就能計算缺口。'}
       這是常見的「負債＋生活費＋教育金」簡化算法；若已有足夠的流動資產可支應家人生活，實際需要的保額可以更低。</div>`;
 }
