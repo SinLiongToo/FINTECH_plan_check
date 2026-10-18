@@ -310,7 +310,7 @@ const CATS = [
   { key: 'realestate', icon: '🏠', zh: '不動產', sugg: ['自住房屋', '出租房屋', '土地', '預售屋', '停車位'],
     tax: ['房屋稅每年 5 月、地價稅每年 11 月繳納；2024 年起「房屋稅 2.0」對非自住的多屋提高稅率。', '出租收入屬租賃所得，未舉證時可減除 43% 必要費用。', '房地合一稅 2.0（境內個人）：持有 2 年內 45%、2–5 年 35%、5–10 年 20%、超過 10 年 15%；自住滿 6 年且符合條件，獲利 400 萬元以內免稅，超過部分 10%。'],
     care: ['「估值」填市價（可參考實價登錄），用來算淨資產；「課稅價值」填公告土地現值＋房屋評定現值，用來估遺產稅——兩者常差好幾倍。',
-           '公告土地現值可在地政局「地籍資料查詢」或地價稅單查到，房屋評定現值在房屋稅單上；每年 1 月公告土地現值會調整。', '房貸請另外列在「負債」，才能算出正確的淨資產。', '共有持分、借名登記等情況容易產生糾紛，記錄清楚。', '火險、地震險的保單一併列在「保險」。'] },
+           '公告土地現值：用權狀上的地號到各縣市地政局的「地價查詢」網站查，或看土地登記謄本；注意地價稅單上的是「公告地價」，不是公告現值。房屋評定現值：房屋稅繳款書上的「課稅現值」。公告土地現值每年 1 月 1 日調整。', '房貸請另外列在「負債」，才能算出正確的淨資產。', '共有持分、借名登記等情況容易產生糾紛，記錄清楚。', '火險、地震險的保單一併列在「保險」。'] },
   { key: 'insurance', icon: '🛡️', zh: '保險', sugg: ['定期壽險', '終身壽險', '醫療險', '意外險', '失能／長照險', '年金險', '儲蓄型保單', '房屋火險'],
     tax: ['人身保險費每人每年最多 2.4 萬元可列舉扣除（健保費不受此限）。', '指定受益人的人壽保險死亡給付，原則上不計入遺產；但高齡、帶病、躉繳、短期投保等「實質課稅」案例仍可能被課遺產稅。', '受益人與要保人不同的壽險死亡給付，每戶超過 3,740 萬元的部分計入最低稅負。'],
     care: ['估值欄填「保單價值準備金／解約金」，保額寫在備註（保額不是你現在的資產）。', '結婚、離婚、生子後，確認受益人是否需要更新。', '寫下保險公司、保單號碼、要保人／被保險人／受益人。', '可到壽險公會「保險存摺」查詢自己名下所有保單。'] },
@@ -731,7 +731,7 @@ function itemHtml(it){
     <label>${isDebt ? '剩餘本金' : isIns ? '保單價值／解約金' : '估值'}<input type="number" inputmode="decimal" data-f="value" value="${it.value || ''}" placeholder="0">${conv}</label>
     ${isIns ? `<label>保額<input type="number" inputmode="decimal" data-f="cover" value="${it.cover || ''}" placeholder="身故／保障金額"></label>
       <label>保障類型<select data-f="itype"><option value="">— 選擇 —</option>${Object.keys(INS_TYPES).map(k => `<option value="${k}"${it.itype === k ? ' selected' : ''}>${INS_TYPES[k]}</option>`).join('')}</select></label>` : ''}
-    ${it.cat === 'realestate' ? `<label title="公告土地現值 × 持分面積 ＋ 房屋評定現值。土地可在地政局「地籍資料查詢」或地價稅單查到；房屋評定現值在房屋稅單上。遺產稅以此計算，通常遠低於市價。">課稅價值（公告現值）<input type="number" inputmode="decimal" data-f="taxValue" value="${it.taxValue || ''}" placeholder="土地公告現值＋房屋評定現值"></label>` : ''}
+    ${it.cat === 'realestate' ? `<label title="公告土地現值 × 持分面積 ＋ 房屋評定現值。土地：用地號到縣市地政局「地價查詢」或看土地登記謄本（地價稅單上的「公告地價」不是公告現值）；房屋：房屋稅繳款書上的「課稅現值」。遺產稅以此計算，通常遠低於市價。">課稅價值（公告現值）<input type="number" inputmode="decimal" data-f="taxValue" value="${it.taxValue || ''}" placeholder="土地公告現值＋房屋評定現值"></label>` : ''}
     ${isDebt ? '' : `<label>每年收入<input type="number" inputmode="decimal" data-f="income" value="${it.income || ''}" placeholder="版稅、租金、利息"></label>`}
     <label>${isDebt ? '保證人 / 共同借款人' : '受益人 / 繼承人'}<input data-f="heir" value="${esc(it.heir)}" placeholder="${isDebt ? '若有' : '例如：配偶、子女'}"></label>
     <label class="wide">存取方式 / 文件存放（勿寫密碼）<input data-f="note" value="${esc(it.note)}" placeholder="例如：存摺在書房抽屜；保單正本在銀行保管箱"></label>
