@@ -95,6 +95,17 @@
 .inv-note li{ margin:3px 0; }
 .inv-note.tax{ background:rgba(47,158,143,.08); border:1px solid rgba(47,158,143,.4); }
 .inv-note.care{ background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.45); }
+.inv-note.guide{ background:rgba(59,130,246,.07); border:1px solid rgba(59,130,246,.4); grid-column:1/-1; }
+.inv-note.guide li:has(> b:only-child){ list-style:none; margin-left:-16px; margin-top:8px; }
+
+/* 🧮 real-estate tax-value calculator */
+.re-calc{ grid-column:1/-1; border:1px dashed var(--ftk-border); border-radius:9px; padding:6px 10px; font-size:12px; }
+.re-calc summary{ cursor:pointer; color:var(--ftk-accent-2); font-weight:600; }
+.re-calc .rc-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px 10px; margin-top:8px; }
+.re-calc .rc-own{ display:flex; align-items:center; gap:4px; }
+.re-calc .rc-own input{ width:50%; }
+.re-calc .rc-out{ margin-top:8px; font-family:Consolas,var(--ftk-font); line-height:1.6; }
+.re-calc .rc-out b{ color:var(--ftk-accent); }
 
 .inv-general ul{ margin:0; padding-left:20px; font-size:13px; line-height:1.75; }
 .inv-disclaimer{ font-size:12px; color:var(--ftk-text-dim); line-height:1.6; margin-top:10px; }
@@ -165,6 +176,7 @@
 .step.final .st-h b{ color:var(--ftk-accent); font-size:15px; }
 .st-no{ color:var(--ftk-accent); font-weight:700; margin-right:6px; }
 .st-f{ font-size:12px; margin-top:4px; line-height:1.6; color:var(--ftk-text); font-family:Consolas,var(--ftk-font); }
+.kid-effect{ list-style:none; font-size:12px; line-height:1.65; padding:8px 11px; border-radius:9px; background:rgba(59,130,246,.07); border:1px solid rgba(59,130,246,.35); }
 .st-n{ font-size:11px; margin-top:3px; color:var(--ftk-text-dim); line-height:1.5; }
 .family-sheet{ display:none; }
 
@@ -308,6 +320,15 @@ const CATS = [
     tax: ['台股股利：可選擇合併計稅（8.5% 可抵減稅額，上限 8 萬）或 28% 分開計稅。', '台股證券交易所得目前停徵，但有千分之三證交稅（ETF 千分之一）。', '美股股利會被美國先扣 30% 稅；海外券商的已實現獲利屬海外所得，每戶全年 100 萬元以上須計入最低稅負。'],
     care: ['持有美國股票／美國 ETF 合計超過 6 萬美元（不論在哪個券商），身故時可能課美國遺產稅（見下方整體提醒）。', '海外券商帳戶繼承常需公證、翻譯、合法化文件，耗時數月，務必讓家人知道帳戶存在。', '記下每個帳戶的券商、帳號末四碼與交割銀行。'] },
   { key: 'realestate', icon: '🏠', zh: '不動產', sugg: ['自住房屋', '出租房屋', '土地', '預售屋', '停車位'],
+    guide: [
+      '<b>土地：公告土地現值</b>（元／㎡）',
+      '① 從土地權狀找出<b>地號</b>（例如「○○區○○段○小段 123 地號」）、<b>面積</b>與<b>權利範圍（持分）</b>。',
+      '② 到房子所在<b>縣市政府地政局（處）網站</b>的「地價查詢／公告土地現值查詢」輸入地號；或申請<b>土地登記謄本</b>（地政事務所或線上電子謄本，一筆約 20 元），標示部會列出當期公告土地現值。',
+      '⚠ 地價稅單上的是「公告地價」，不是公告土地現值，兩者不同。',
+      '<b>房屋：房屋評定現值</b>',
+      '③ 每年 5 月的<b>房屋稅繳款書</b>上的「<b>課稅現值</b>」就是房屋評定現值；找不到可向稅捐稽徵處（地方稅務局）申請房屋稅籍證明。',
+      '<b>合計</b>：公告土地現值 × 面積 × 持分 ＋ 房屋評定現值 → 可用每個房產下方的「🧮 課稅價值試算」直接算好填入。公告土地現值每年 1 月 1 日調整。'
+    ],
     tax: ['房屋稅每年 5 月、地價稅每年 11 月繳納；2024 年起「房屋稅 2.0」對非自住的多屋提高稅率。', '出租收入屬租賃所得，未舉證時可減除 43% 必要費用。', '房地合一稅 2.0（境內個人）：持有 2 年內 45%、2–5 年 35%、5–10 年 20%、超過 10 年 15%；自住滿 6 年且符合條件，獲利 400 萬元以內免稅，超過部分 10%。'],
     care: ['「估值」填市價（可參考實價登錄），用來算淨資產；「課稅價值」填公告土地現值＋房屋評定現值，用來估遺產稅——兩者常差好幾倍。',
            '公告土地現值：用權狀上的地號到各縣市地政局的「地價查詢」網站查，或看土地登記謄本；注意地價稅單上的是「公告地價」，不是公告現值。房屋評定現值：房屋稅繳款書上的「課稅現值」。公告土地現值每年 1 月 1 日調整。', '房貸請另外列在「負債」，才能算出正確的淨資產。', '共有持分、借名登記等情況容易產生糾紛，記錄清楚。', '火險、地震險的保單一併列在「保險」。'] },
@@ -624,6 +645,10 @@ function renderEstate(t){
           ${step('③', '免稅額＋扣除額', fmt(ded), dedParts.join(' ＋ ') + ` ＝ ${W(ded)}`, '配偶、子女、父母人數在上方設定')}
           ${step('④', '課稅遺產淨額', fmt(Math.max(0, net)), `${W(afterDebt)} − ${W(ded)} ＝ ${net > 0 ? W(net) : '0（小於 0 以 0 計）'}`)}
           ${step('⑤', '估計遺產稅', fmt(tax), taxF, '稅率：5,621 萬以下 10%、5,621–11,242 萬 15%、超過 20%', 'final')}
+          <li class="kid-effect">👶 <b>子女人數的影響：</b>${net > 0
+            ? `每位子女可扣除 56 萬，以你目前的稅率，<b>每多 1 位子女，遺產稅約少 ${((tax - twEstateTax(net - TW_ESTATE.child)) / 1e4).toFixed(1)} 萬</b>（${kids} 位 → ${kids + 1} 位：${W(tax)} → ${W(twEstateTax(net - TW_ESTATE.child))}）。`
+            : `目前課稅淨額 ≤ 0，不用繳遺產稅，子女人數不影響稅額。`}
+            未成年子女另可按距 18 歲的年數，每年再加扣 56 萬（此粗估未計入）；辦理拋棄繼承的子女不能扣除。遺產稅是對整筆遺產課徵，子女多寡主要影響「每人分到多少」。</li>
         </ol>
       </div>
       <div class="est-card">
@@ -716,6 +741,39 @@ function printFamily(){
 }
 
 // ─── category sections ───────────────────────────────────────────────────
+// 🧮 課稅價值試算: 公告土地現值 (元/㎡) × 面積 × 持分 ＋ 房屋評定現值.
+// Inputs are kept on the item (it.calc) so next year's update is quick.
+const PING = 3.305785; // 1 坪 = 3.305785 ㎡
+function reCalc(c){
+  c = c || {};
+  const area = (+c.area || 0) * (c.unit === 'ping' ? PING : 1);
+  const share = (+c.den > 0) ? (+c.num || 0) / (+c.den) : 1;
+  const land = (+c.landPrice || 0) * area * share;
+  return { area, share, land, total: land + (+c.house || 0) };
+}
+function reCalcOut(c){
+  const r = reCalc(c);
+  if (!(+c.landPrice) && !(+c.house)) return '<span class="dim">填入下方數字即可算出課稅價值。</span>';
+  const shareTxt = (+c.den > 0) ? `${+c.num || 0}/${+c.den}` : '1';
+  return `土地 ${(+c.landPrice || 0).toLocaleString()} 元/㎡ × ${r.area.toLocaleString(undefined, { maximumFractionDigits: 2 })} ㎡ × 持分 ${shareTxt} ＝ ${fmt(r.land)}<br>`
+    + `＋ 房屋評定現值 ${fmt(+c.house || 0)} ＝ <b>${fmt(r.total)}</b>`;
+}
+function reCalcHtml(it){
+  const c = it.calc || {};
+  return `<details class="re-calc"${c.open ? ' open' : ''} data-calc="${it.id}">
+    <summary>🧮 課稅價值試算（公告土地現值 × 面積 × 持分 ＋ 房屋評定現值）</summary>
+    <div class="rc-grid">
+      <label>公告土地現值（元／㎡）<input type="number" inputmode="decimal" data-c="landPrice" value="${c.landPrice || ''}" placeholder="地政局查詢或謄本"></label>
+      <label>土地面積<span class="rc-own"><input type="number" inputmode="decimal" data-c="area" value="${c.area || ''}" placeholder="權狀面積">
+        <select data-c="unit"><option value="m2"${c.unit !== 'ping' ? ' selected' : ''}>㎡</option><option value="ping"${c.unit === 'ping' ? ' selected' : ''}>坪</option></select></span></label>
+      <label>權利範圍（持分）<span class="rc-own"><input type="number" data-c="num" value="${c.num || ''}" placeholder="分子"> / <input type="number" data-c="den" value="${c.den || ''}" placeholder="分母"></span></label>
+      <label>房屋評定現值（元）<input type="number" inputmode="decimal" data-c="house" value="${c.house || ''}" placeholder="房屋稅單「課稅現值」"></label>
+    </div>
+    <div class="rc-out" data-calcout="${it.id}">${reCalcOut(c)}</div>
+    <button type="button" class="inv-btn small" data-calcfill="${it.id}" style="margin-top:6px">⇢ 填入「課稅價值」</button>
+  </details>`;
+}
+
 function itemHtml(it){
   const age = daysSince(it.checked);
   const staleTxt = age === null ? '<span class="stale">尚未確認</span>' : age > 365 ? `<span class="stale">⚠ ${it.checked} 確認（超過一年）</span>` : `確認於 ${it.checked}`;
@@ -732,6 +790,7 @@ function itemHtml(it){
     ${isIns ? `<label>保額<input type="number" inputmode="decimal" data-f="cover" value="${it.cover || ''}" placeholder="身故／保障金額"></label>
       <label>保障類型<select data-f="itype"><option value="">— 選擇 —</option>${Object.keys(INS_TYPES).map(k => `<option value="${k}"${it.itype === k ? ' selected' : ''}>${INS_TYPES[k]}</option>`).join('')}</select></label>` : ''}
     ${it.cat === 'realestate' ? `<label title="公告土地現值 × 持分面積 ＋ 房屋評定現值。土地：用地號到縣市地政局「地價查詢」或看土地登記謄本（地價稅單上的「公告地價」不是公告現值）；房屋：房屋稅繳款書上的「課稅現值」。遺產稅以此計算，通常遠低於市價。">課稅價值（公告現值）<input type="number" inputmode="decimal" data-f="taxValue" value="${it.taxValue || ''}" placeholder="土地公告現值＋房屋評定現值"></label>` : ''}
+    ${it.cat === 'realestate' ? reCalcHtml(it) : ''}
     ${isDebt ? '' : `<label>每年收入<input type="number" inputmode="decimal" data-f="income" value="${it.income || ''}" placeholder="版稅、租金、利息"></label>`}
     <label>${isDebt ? '保證人 / 共同借款人' : '受益人 / 繼承人'}<input data-f="heir" value="${esc(it.heir)}" placeholder="${isDebt ? '若有' : '例如：配偶、子女'}"></label>
     <label class="wide">存取方式 / 文件存放（勿寫密碼）<input data-f="note" value="${esc(it.note)}" placeholder="例如：存摺在書房抽屜；保單正本在銀行保管箱"></label>
@@ -759,6 +818,7 @@ function renderCats(){
         <div class="inv-notes">
           <div class="inv-note tax"><h4>💰 稅務重點</h4><ul>${c.tax.map(x => `<li>${x}</li>`).join('')}</ul></div>
           <div class="inv-note care"><h4>⚠ 要小心的事</h4><ul>${c.care.map(x => `<li>${x}</li>`).join('')}</ul></div>
+          ${c.guide ? `<div class="inv-note guide"><h4>📍 怎麼查公告現值</h4><ul>${c.guide.map(x => `<li>${x}</li>`).join('')}</ul></div>` : ''}
         </div>
       </div>
     </section>`;
@@ -804,7 +864,18 @@ function addItem(cat, name, extra){
 }
 
 // ─── events ──────────────────────────────────────────────────────────────
+function onCalc(e){
+  const inp = e.target.closest('[data-c]'); if (!inp) return false;
+  const it = state.items.find(i => i.id === inp.closest('[data-calc]').dataset.calc); if (!it) return true;
+  it.calc = it.calc || {};
+  it.calc[inp.dataset.c] = inp.tagName === 'SELECT' ? inp.value : (parseFloat(inp.value) || 0);
+  save();
+  const out = document.querySelector(`[data-calcout="${it.id}"]`);
+  if (out) out.innerHTML = reCalcOut(it.calc);
+  return true;
+}
 function onField(e){
+  if (onCalc(e)) return;
   const inp = e.target.closest('[data-f]'); if (!inp) return;
   const it = state.items.find(i => i.id === inp.closest('.inv-item').dataset.id); if (!it) return;
   const f = inp.dataset.f;
@@ -814,6 +885,11 @@ function onField(e){
   save(); renderAll();
 }
 $('invCats').addEventListener('input', onField);
+$('invCats').addEventListener('toggle', e => {
+  const d = e.target.closest && e.target.closest('[data-calc]'); if (!d) return;
+  const it = state.items.find(i => i.id === d.dataset.calc); if (!it) return;
+  it.calc = it.calc || {}; it.calc.open = d.open; save();
+}, true);
 $('invCats').addEventListener('change', e => { if (e.target.matches('select, input[type=checkbox]')) onField(e); });
 $('invCats').addEventListener('click', e => {
   const t = e.target;
@@ -823,6 +899,20 @@ $('invCats').addEventListener('click', e => {
   if (del) {
     const it = state.items.find(i => i.id === del.dataset.del);
     if (it && confirm(`刪除「${it.name || '未命名項目'}」？`)) { state.items = state.items.filter(i => i !== it); save(); renderCats(); }
+    return;
+  }
+  const fill = t.closest('[data-calcfill]');
+  if (fill) {
+    const it = state.items.find(i => i.id === fill.dataset.calcfill);
+    if (!it) return;
+    const total = Math.round(reCalc(it.calc).total);
+    if (!total) { msg('請先在試算中填入公告土地現值或房屋評定現值。', true); return; }
+    it.taxValue = total; it.cur = it.cur || 'TWD';
+    save();
+    const inp = document.querySelector(`.inv-item[data-id="${it.id}"] input[data-f="taxValue"]`);
+    if (inp) inp.value = total;
+    renderAll();
+    msg(`⇢ 已填入課稅價值 ${fmt(total)}（${esc(it.name || '不動產')}）`);
     return;
   }
   const chk = t.closest('[data-check]');
