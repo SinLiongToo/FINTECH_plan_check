@@ -300,7 +300,8 @@ const CATS = [
     care: ['持有美國股票／美國 ETF 合計超過 6 萬美元（不論在哪個券商），身故時可能課美國遺產稅（見下方整體提醒）。', '海外券商帳戶繼承常需公證、翻譯、合法化文件，耗時數月，務必讓家人知道帳戶存在。', '記下每個帳戶的券商、帳號末四碼與交割銀行。'] },
   { key: 'realestate', icon: '🏠', zh: '不動產', sugg: ['自住房屋', '出租房屋', '土地', '預售屋', '停車位'],
     tax: ['房屋稅每年 5 月、地價稅每年 11 月繳納；2024 年起「房屋稅 2.0」對非自住的多屋提高稅率。', '出租收入屬租賃所得，未舉證時可減除 43% 必要費用。', '房地合一稅 2.0（境內個人）：持有 2 年內 45%、2–5 年 35%、5–10 年 20%、超過 10 年 15%；自住滿 6 年且符合條件，獲利 400 萬元以內免稅，超過部分 10%。'],
-    care: ['估值建議用實價登錄或公告現值，並註明估值日期。', '房貸請另外列在「負債」，才能算出正確的淨資產。', '共有持分、借名登記等情況容易產生糾紛，記錄清楚。', '火險、地震險的保單一併列在「保險」。'] },
+    care: ['「估值」填市價（可參考實價登錄），用來算淨資產；「課稅價值」填公告土地現值＋房屋評定現值，用來估遺產稅——兩者常差好幾倍。',
+           '公告土地現值可在地政局「地籍資料查詢」或地價稅單查到，房屋評定現值在房屋稅單上；每年 1 月公告土地現值會調整。', '房貸請另外列在「負債」，才能算出正確的淨資產。', '共有持分、借名登記等情況容易產生糾紛，記錄清楚。', '火險、地震險的保單一併列在「保險」。'] },
   { key: 'insurance', icon: '🛡️', zh: '保險', sugg: ['定期壽險', '終身壽險', '醫療險', '意外險', '失能／長照險', '年金險', '儲蓄型保單', '房屋火險'],
     tax: ['人身保險費每人每年最多 2.4 萬元可列舉扣除（健保費不受此限）。', '指定受益人的人壽保險死亡給付，原則上不計入遺產；但高齡、帶病、躉繳、短期投保等「實質課稅」案例仍可能被課遺產稅。', '受益人與要保人不同的壽險死亡給付，每戶超過 3,740 萬元的部分計入最低稅負。'],
     care: ['估值欄填「保單價值準備金／解約金」，保額寫在備註（保額不是你現在的資產）。', '結婚、離婚、生子後，確認受益人是否需要更新。', '寫下保險公司、保單號碼、要保人／被保險人／受益人。', '可到壽險公會「保險存摺」查詢自己名下所有保單。'] },
@@ -554,7 +555,12 @@ function renderEstate(t){
   const pf = state.profile;
   // Death benefits with a named beneficiary and statutory pensions are
   // generally outside the estate, so insurance and 退休金 are excluded.
-  const gross = CATS.filter(c => c.key !== 'debt' && c.key !== 'insurance' && c.key !== 'retire').reduce((s, c) => s + t.byCat[c.key], 0);
+  // Taiwan real estate is taxed at 公告土地現值 + 房屋評定現值, usually far
+  // below market value: use the item's taxValue when given, else its value.
+  const reItems = state.items.filter(i => i.cat === 'realestate');
+  const reTaxed = reItems.reduce((s, i) => s + (+i.taxValue > 0 ? +i.taxValue * rate(i.cur) : twd(i)), 0);
+  const reMissing = reItems.filter(i => +i.value && !(+i.taxValue > 0)).length;
+  const gross = CATS.filter(c => !['debt', 'insurance', 'retire', 'realestate'].includes(c.key)).reduce((s, c) => s + t.byCat[c.key], 0) + reTaxed;
   const ded = TW_ESTATE.exempt + (pf.spouse ? TW_ESTATE.spouse : 0) + (+pf.children || 0) * TW_ESTATE.child + (+pf.parents || 0) * TW_ESTATE.parent + TW_ESTATE.funeral;
   const net = gross - t.debts - ded;
   const tax = twEstateTax(net);
@@ -566,6 +572,7 @@ function renderEstate(t){
         <h3>台灣遺產稅（粗估）</h3>
         <table class="inv-kv">
           <tr><td>遺產總額（不含保險、退休金）</td><td>${fmt(gross)}</td></tr>
+          ${reItems.length ? `<tr><td class="dim">　其中不動產以${reMissing ? (reMissing === reItems.length ? '<b class="warn-t">市價</b>' : '公告現值與<b class="warn-t">部分市價</b>') : '公告現值'}計：${fmt(reTaxed)}（市價 ${fmt(t.byCat.realestate)}）${reMissing ? `<br>　⚠ ${reMissing} 筆不動產未填「課稅價值」，以市價估算會偏高` : ''}</td><td></td></tr>` : ''}
           <tr><td>− 負債</td><td>${fmt(t.debts)}</td></tr>
           <tr><td>− 免稅額</td><td>${fmt(TW_ESTATE.exempt)}</td></tr>
           <tr><td>− 扣除額（配偶 ${pf.spouse ? '553 萬' : '0'}、子女 ${+pf.children || 0}×56 萬、父母 ${+pf.parents || 0}×138 萬、喪葬費 138 萬）</td><td>${fmt(ded - TW_ESTATE.exempt)}</td></tr>
@@ -671,6 +678,7 @@ function itemHtml(it){
     <label>${isDebt ? '剩餘本金' : isIns ? '保單價值／解約金' : '估值'}<input type="number" inputmode="decimal" data-f="value" value="${it.value || ''}" placeholder="0">${conv}</label>
     ${isIns ? `<label>保額<input type="number" inputmode="decimal" data-f="cover" value="${it.cover || ''}" placeholder="身故／保障金額"></label>
       <label>保障類型<select data-f="itype"><option value="">— 選擇 —</option>${Object.keys(INS_TYPES).map(k => `<option value="${k}"${it.itype === k ? ' selected' : ''}>${INS_TYPES[k]}</option>`).join('')}</select></label>` : ''}
+    ${it.cat === 'realestate' ? `<label title="公告土地現值 × 持分面積 ＋ 房屋評定現值。土地可在地政局「地籍資料查詢」或地價稅單查到；房屋評定現值在房屋稅單上。遺產稅以此計算，通常遠低於市價。">課稅價值（公告現值）<input type="number" inputmode="decimal" data-f="taxValue" value="${it.taxValue || ''}" placeholder="土地公告現值＋房屋評定現值"></label>` : ''}
     ${isDebt ? '' : `<label>每年收入<input type="number" inputmode="decimal" data-f="income" value="${it.income || ''}" placeholder="版稅、租金、利息"></label>`}
     <label>${isDebt ? '保證人 / 共同借款人' : '受益人 / 繼承人'}<input data-f="heir" value="${esc(it.heir)}" placeholder="${isDebt ? '若有' : '例如：配偶、子女'}"></label>
     <label class="wide">存取方式 / 文件存放（勿寫密碼）<input data-f="note" value="${esc(it.note)}" placeholder="例如：存摺在書房抽屜；保單正本在銀行保管箱"></label>
@@ -748,7 +756,7 @@ function onField(e){
   const it = state.items.find(i => i.id === inp.closest('.inv-item').dataset.id); if (!it) return;
   const f = inp.dataset.f;
   if (inp.type === 'checkbox') it[f] = inp.checked;
-  else if (f === 'value' || f === 'income' || f === 'cover') it[f] = parseFloat(inp.value) || 0;
+  else if (f === 'value' || f === 'income' || f === 'cover' || f === 'taxValue') it[f] = parseFloat(inp.value) || 0;
   else it[f] = inp.value;
   save(); renderAll();
 }
