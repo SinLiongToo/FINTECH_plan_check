@@ -55,7 +55,7 @@
 <div class="rules-hero-row">
   <div class="ftk-hero">
     <h1 id="heroTitle">📜 人生財務守則</h1>
-    <p id="heroSub">九個能幫你有效存錢、控制風險與維持紀律的個人理財法則。</p>
+    <p id="heroSub">十一個幫你有效存錢、控制風險、維持紀律，並活出富足人生的理財法則。</p>
   </div>
   <button type="button" class="lang-toggle" id="langToggle">🌐 English</button>
 </div>
@@ -112,12 +112,58 @@ const RULES = [
     no: 9, head_zh: '複利成長法則', head_en: '1% Compound Rule',
     zh: '每天只要進步（或獲利）1%，持續 365 天，最終會成長到原本的 <b>37 倍以上</b>；但如果每天退步 1%，一年後只會剩下原本的 <b>3% 左右</b>。差距的關鍵，不在於某一天進步多少，而在於「絕對不要輕易打斷這個複利循環」。<div class="rule-formula">(1 + 1%)<sup>365</sup> &asymp; 37.8 倍<br>(1 &minus; 1%)<sup>365</sup> &asymp; 0.03 倍</div><ul><li>每天進步 1%，持續一年 → 原本的 1 變成約 <b>37.8</b></li><li>每天退步 1%，持續一年 → 原本的 1 剩下約 <b>0.03</b></li></ul><div class="rule-example">中斷一次、放棄一次，複利循環就得被迫重新計算——這正是為什麼「持續不中斷」比「單次進步的幅度」更重要。</div>',
     en: 'Improve (or earn) just 1% a day for 365 days, and you’ll end up <b>more than 37x</b> better. But lose 1% a day, and after a year you’re left with only <b>about 3%</b> of where you started. The gap isn’t about how much you improve on any single day &mdash; it’s about never breaking the compounding cycle.<div class="rule-formula">(1 + 1%)<sup>365</sup> &asymp; 37.8x<br>(1 &minus; 1%)<sup>365</sup> &asymp; 0.03x</div><ul><li>Improve 1%/day for a year &rarr; 1 becomes about <b>37.8</b></li><li>Decline 1%/day for a year &rarr; 1 shrinks to about <b>0.03</b></li></ul><div class="rule-example">Break the streak once, give up once, and the compounding has to restart from scratch &mdash; that’s why staying consistent matters more than the size of any single improvement.</div>'
+  },
+  {
+    no: 10, head_zh: '財富階梯（6 個等級）', head_en: 'The Wealth Ladder (6 Levels)',
+    zh: '依<b>淨資產</b>把財富分成 6 級，每一級大約是上一級的 10 倍；每一級代表一種新的「花錢自由」。<ul>'
+      + '<li><b>第 1 級</b>　未滿 1 萬美元（約 32 萬台幣）——<b>月光過活</b></li>'
+      + '<li><b>第 2 級</b>　1 萬–10 萬美元（約 32 萬–320 萬）——<b>買菜自由</b>：在超市不必看價格</li>'
+      + '<li><b>第 3 級</b>　10 萬–100 萬美元（約 320 萬–3,200 萬）——<b>餐廳自由</b>：上餐廳不必看價格</li>'
+      + '<li><b>第 4 級</b>　100 萬–1,000 萬美元（約 3,200 萬–3.2 億）——<b>旅行自由</b>：想去哪就去哪</li>'
+      + '<li><b>第 5 級</b>　1,000 萬–1 億美元（約 3.2 億–32 億）——<b>房屋自由</b>：想住哪就住哪</li>'
+      + '<li><b>第 6 級</b>　1 億美元以上（約 32 億以上）——<b>影響力自由</b>：能用財富改變社會</li></ul>'
+      + '<div class="rule-formula">0.01% 法則：單筆花費 &lt; 淨資產 × 0.01%，就不必為它煩惱<br>例：淨資產 1,000 萬台幣 → 1,000 元以下的花費不必糾結</div>'
+      + '<ul><li>低等級時，<b>提高收入與技能</b>最重要；越往上，<b>投資與資產配置</b>的影響越大。</li>'
+      + '<li>讓你爬到這一級的方法，不一定能帶你到下一級。</li>'
+      + '<li>照你現在的等級花錢；提早過下一級的生活，反而可能掉下去。</li></ul>'
+      + '<div class="rule-example">每往上一級，額外的財富帶來的快樂就越少。作者也提醒：第 4 級對多數人可能已經足夠，到了第 5 級要認真想想繼續往上爬是否值得。<br>出處：Nick Maggiulli《The Wealth Ladder》（2025）。台幣以 1 美元 ≈ 32 元概算。</div>',
+    en: 'Wealth is grouped into 6 levels by <b>net worth</b>, each roughly 10x the one below; each level unlocks a new kind of spending freedom.<ul>'
+      + '<li><b>Level 1</b>　under $10K &mdash; <b>paycheck-to-paycheck</b></li>'
+      + '<li><b>Level 2</b>　$10K&ndash;$100K &mdash; <b>grocery freedom</b>: no checking prices at the store</li>'
+      + '<li><b>Level 3</b>　$100K&ndash;$1M &mdash; <b>restaurant freedom</b></li>'
+      + '<li><b>Level 4</b>　$1M&ndash;$10M &mdash; <b>travel freedom</b></li>'
+      + '<li><b>Level 5</b>　$10M&ndash;$100M &mdash; <b>house freedom</b></li>'
+      + '<li><b>Level 6</b>　$100M+ &mdash; <b>impact freedom</b></li></ul>'
+      + '<div class="rule-formula">The 0.01% rule: don’t sweat any purchase below 0.01% of your net worth<br>e.g. $100K net worth &rarr; decisions under $10 don’t matter</div>'
+      + '<ul><li>At lower levels, <b>raising income and skills</b> matters most; higher up, <b>investing and allocation</b> take over.</li>'
+      + '<li>What got you to one level may not get you to the next.</li>'
+      + '<li>Spend like your current level; living like the next one can knock you back down.</li></ul>'
+      + '<div class="rule-example">Each step up adds less happiness than the last. The author notes Level 4 may be enough for most people, and Level 5 is where to seriously ask whether climbing further is worth it.<br>Source: Nick Maggiulli, <i>The Wealth Ladder</i> (2025).</div>'
+  },
+  {
+    no: 11, head_zh: '五種財富', head_en: 'The 5 Types of Wealth',
+    zh: '真正的富足不只是錢。一個好的人生，需要同時經營這五種財富：<ul>'
+      + '<li>⏳ <b>時間財富</b>：能自由選擇怎麼運用時間、和誰在一起。時間是唯一有限又無法再生的資產。</li>'
+      + '<li>🤝 <b>社交財富</b>：深厚的親情、友誼與社群連結——再多錢也買不到。</li>'
+      + '<li>🧠 <b>心理財富</b>：找到目標感、持續成長，並照顧好心理健康。</li>'
+      + '<li>💪 <b>身體財富</b>：健康是一切的基礎；運動、營養、睡眠三件事做好就夠了。</li>'
+      + '<li>💰 <b>財務財富</b>：錢提供安全感與選擇權；關鍵是定義自己的「夠了」，而不是無止盡地要更多。</li></ul>'
+      + '<div class="rule-formula">每年問自己：這五種財富，哪一種最缺？<br>用多出來的錢，去換回時間、健康和關係</div>'
+      + '<div class="rule-example">小心「到達謬誤」：以為達成某個目標（升職、存到某個數字）就會一直快樂，結果達到後很快又覺得不夠。五種財富彼此相連，只追其中一種，常會犧牲其他四種。<br>出處：Sahil Bloom《The 5 Types of Wealth》（2025）。</div>',
+    en: 'True wealth isn’t just money. A good life tends all five types at once:<ul>'
+      + '<li>⏳ <b>Time wealth</b>: freedom to choose how you spend your time and with whom &mdash; the one asset that’s finite and non-renewable.</li>'
+      + '<li>🤝 <b>Social wealth</b>: deep family bonds, friendships and community &mdash; money can’t replace them.</li>'
+      + '<li>🧠 <b>Mental wealth</b>: purpose, continuous growth, and mental well-being.</li>'
+      + '<li>💪 <b>Physical wealth</b>: health is the foundation &mdash; movement, nutrition and sleep.</li>'
+      + '<li>💰 <b>Financial wealth</b>: money buys security and options; the key is defining your own “enough.”</li></ul>'
+      + '<div class="rule-formula">Each year, ask: which of the five am I poorest in?<br>Use extra money to buy back time, health and relationships</div>'
+      + '<div class="rule-example">Beware the <i>arrival fallacy</i> &mdash; believing that reaching a goal will bring lasting contentment. The five types are interconnected; chasing one alone usually costs you the other four.<br>Source: Sahil Bloom, <i>The 5 Types of Wealth</i> (2025).</div>'
   }
 ];
 
 const HERO = {
-  zh: { title: '📜 人生財務守則', sub: '九個能幫你有效存錢、控制風險與維持紀律的個人理財法則。' },
-  en: { title: '📜 Life Financial Rules', sub: '9 personal finance rules that will help you save more money, manage risk, and stay disciplined.' }
+  zh: { title: '📜 人生財務守則', sub: '十一個幫你有效存錢、控制風險、維持紀律，並活出富足人生的理財法則。' },
+  en: { title: '📜 Life Financial Rules', sub: '11 rules to help you save more, manage risk, stay disciplined, and build a truly rich life.' }
 };
 
 const LANG_KEY = 'ftk-rules-lang';
