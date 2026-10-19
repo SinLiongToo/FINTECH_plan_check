@@ -179,6 +179,10 @@
 .kid-effect{ list-style:none; font-size:12px; line-height:1.65; padding:8px 11px; border-radius:9px; background:rgba(59,130,246,.07); border:1px solid rgba(59,130,246,.35); }
 .st-n{ font-size:11px; margin-top:3px; color:var(--ftk-text-dim); line-height:1.5; }
 .heir-card{ margin-top:12px; }
+.foreign-card{ margin-top:12px; }
+.foreign-tbl td{ white-space:normal; vertical-align:top; font-size:12px; line-height:1.55; }
+.foreign-note{ grid-column:1/-1; font-size:12px; line-height:1.55; padding:7px 10px; border-radius:8px; background:rgba(59,130,246,.07); border:1px solid rgba(59,130,246,.35); }
+.inv-general ul.sub{ margin:4px 0 6px; padding-left:20px; }
 .heir-tbl td, .heir-tbl th{ white-space:normal; }
 .direct-box{ margin-top:10px; padding:9px 12px; border-radius:9px; border:1px solid rgba(47,158,143,.45); background:rgba(47,158,143,.07); font-size:12.5px; line-height:1.6; }
 .direct-box ul{ margin:4px 0; padding-left:18px; }
@@ -267,6 +271,7 @@
       <label>受扶養父母人數<input type="number" min="0" data-prof="parents"></label>
     </div>
     <div id="estateOut"></div>
+    <div id="foreignOut"></div>
     <div id="heirOut"></div>
     <div class="inv-disclaimer">⚠ 粗估僅供參考：依 2025 年度免稅額、扣除額與級距計算，未計入未成年子女加扣、身心障礙扣除、生存配偶剩餘財產差額分配（可大幅降低遺產）、生前贈與等。不動產多以公告現值而非市價課稅，實際稅額通常低於以市價估算的結果。請以會計師試算為準。</div>
   </div>
@@ -316,6 +321,13 @@
       <li><b>遺產稅</b>：免稅額 1,333 萬元，另有配偶、子女、喪葬費等扣除額；稅率 10%／15%／20% 三級累進。生前贈與<b>每人每年 244 萬元</b>免稅，可分年規劃。</li>
       <li><b>最低稅負制（基本稅額）</b>：海外所得（每戶全年 100 萬元以上須計入）、受益人與要保人不同的人壽保險死亡給付（每戶 3,740 萬元以內免計）等加總後，基本所得額超過 <b>750 萬元</b>的部分按 20% 計算。</li>
       <li><b>持有美股的人特別注意</b>：非美國人持有的美國資產（美國公司股票、美國註冊的 ETF，<b>不論透過美國券商或台灣複委託</b>）超過 <b>6 萬美元</b>，身故時依法可能被課<b>最高 40% 的美國遺產稅</b>，海外券商的繼承手續也很繁瑣。常見的因應方式包括改持有非美國註冊（如愛爾蘭註冊）的 ETF、生前分年贈與等，請諮詢熟悉跨境稅務的專業人士。</li>
+      <li><b>國外資產的繼承手續</b>：
+        <ul class="sub">
+          <li><b>美國券商帳戶</b>：沒有預先安排時，家人可能要走美國遺囑認證（probate），耗時數月到一年以上。多數美國券商可設定 <b>TOD（Transfer on Death，身故轉移受益人）</b>，直接指定給家人，建議盡早設定。</li>
+          <li><b>國外銀行、房產</b>：死亡證明、繼承系統表、遺囑等文件通常要翻譯、公證，並經當地或我國駐外單位驗證；外國房產可能還要當地律師辦理過戶。</li>
+          <li><b>資訊交換</b>：台灣已參與 CRS（共同申報準則），國稅局可取得你在許多國家的金融帳戶資料；國外資產漏報遺產稅，罰則很重。</li>
+          <li>在每個國外項目的「存取方式」寫下當地券商／銀行的聯絡方式，並在「重要聯絡人」加上熟悉當地的律師或會計師。</li>
+        </ul></li>
       <li><b>夫妻財產</b>：一方過世時，生存配偶可主張「剩餘財產差額分配請求權」，這部分不計入遺產稅；平時保留婚後財產的紀錄有助主張。</li>
       <li><b>預立醫療決定、意定監護、遺囑</b>：資產清單之外，這三份文件決定了你失能或離世時誰能替你處理財產。</li>
     </ul>
@@ -416,6 +428,24 @@ function liqOf(it){ return it.liq || LIQ_DEFAULT[it.cat] || 'slow'; }
 
 const INS_TYPES = { life: '壽險', medical: '醫療險', accident: '意外險', disability: '失能險', ltc: '長照險', annuity: '年金／儲蓄險', property: '產險（火險等）' };
 const US_SITUS_CATS = new Set(['invest', 'realestate', 'other']);
+// Where an asset is located. Taiwan residents pay Taiwan estate tax on
+// worldwide assets; the asset's own country may tax it too (credit capped,
+// 遺贈稅法 §11). Rules below are simplified for non-residents of that country.
+const COUNTRIES = {
+  TW: { zh: '台灣', rule: '' },
+  US: { zh: '美國', rule: '美國股票、美國註冊 ETF、美國不動產等合計超過 US$6 萬，課美國遺產稅（最高 40%）；美國銀行存款一般不算。' },
+  JP: { zh: '日本', rule: '日本境內的財產（如日本不動產、日本帳戶）須課日本繼承稅，稅率 10%–55%，由繼承人依各自分得的部分申報。' },
+  UK: { zh: '英國', rule: '英國境內資產（如英國房產）超過 £325,000 的部分，課 40% 英國遺產稅（Inheritance Tax）。' },
+  CA: { zh: '加拿大', rule: '沒有遺產稅，但身故時資產「視同出售」，要對增值部分課資本利得稅。' },
+  SG: { zh: '新加坡', rule: '目前沒有遺產稅。' },
+  HK: { zh: '香港', rule: '目前沒有遺產稅。' },
+  AU: { zh: '澳洲', rule: '沒有遺產稅；繼承後出售時才可能有資本利得稅。' },
+  CN: { zh: '中國大陸', rule: '目前沒有遺產稅，但繼承不動產、資金匯出等有其他規定與手續。' },
+  OT: { zh: '其他國家', rule: '請查詢當地是否有遺產稅或繼承稅，以及外國人繼承的手續。' },
+};
+const COUNTRY_CATS = new Set(['cash', 'invest', 'realestate', 'retire', 'royalty', 'digital', 'other']);
+function countryOf(it){ return COUNTRIES[it.country] ? it.country : (it.usSitus ? 'US' : 'TW'); }
+function isUSSitus(it){ return countryOf(it) === 'US' && !!it.usSitus && US_SITUS_CATS.has(it.cat); }
 const ZERO_OK = new Set(['insurance', 'digital']);
 
 // ─── state ───────────────────────────────────────────────────────────────
@@ -427,7 +457,7 @@ function load(){
     const d = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
     if (d && Array.isArray(d.items)) {
       state = {
-        v: 2, items: d.items.filter(validItem), closed: d.closed || {}, savedAt: d.savedAt,
+        v: 2, items: d.items.filter(validItem).map(it => (it.usSitus && !it.country ? Object.assign(it, { country: 'US' }) : it)), closed: d.closed || {}, savedAt: d.savedAt,
         snapshots: Array.isArray(d.snapshots) ? d.snapshots : [],
         contacts: Array.isArray(d.contacts) ? d.contacts : [],
         expected: Array.isArray(d.expected) ? d.expected : [],
@@ -482,7 +512,7 @@ function totals(){
       income += twdIncome(it);
       byCur[it.cur || 'TWD'] = (byCur[it.cur || 'TWD'] || 0) + v;
       byLiq[liqOf(it)] += v;
-      if (it.usSitus && US_SITUS_CATS.has(it.cat)) usUSD += v / rate('USD');
+      if (isUSSitus(it)) usUSD += v / rate('USD');
     }
     if (!(+it.value) && !ZERO_OK.has(it.cat)) noValue++;
     const age = daysSince(it.checked);
@@ -614,8 +644,10 @@ function renderEstate(t){
   // Taiwan real estate is taxed at 公告土地現值 + 房屋評定現值, usually far
   // below market value: use the item's taxValue when given, else its value.
   const reItems = state.items.filter(i => i.cat === 'realestate');
-  const reTaxed = reItems.reduce((s, i) => s + (+i.taxValue > 0 ? +i.taxValue * rate(i.cur) : twd(i)), 0);
-  const reMissing = reItems.filter(i => +i.value && !(+i.taxValue > 0)).length;
+  const reTW = i => countryOf(i) === 'TW';
+  const reTaxed = reItems.reduce((s, i) => s + (reTW(i) && +i.taxValue > 0 ? +i.taxValue * rate(i.cur) : twd(i)), 0);
+  const reMissing = reItems.filter(i => reTW(i) && +i.value && !(+i.taxValue > 0)).length;
+  const reForeign = reItems.filter(i => !reTW(i) && +i.value).length;
   // Life-insurance payouts to a named beneficiary (and 勞保/公保 death
   // benefits) are outside the estate (遺贈稅法 §16-9). 勞退專戶餘額 is the
   // worker's own money and IS part of the estate, so 退休金 stays in.
@@ -623,7 +655,9 @@ function renderEstate(t){
   CATS.forEach(c => {
     if (['debt', 'insurance'].includes(c.key)) return;
     const v = c.key === 'realestate' ? reTaxed : t.byCat[c.key];
-    if (v > 0) parts.push({ label: c.key === 'realestate' ? `不動產（${reMissing ? (reMissing === reItems.length ? '市價' : '公告現值＋部分市價') : '公告現值'}）` : c.zh, v });
+    if (v > 0) parts.push({ label: c.key === 'realestate'
+      ? `不動產（${reMissing ? (reMissing + reForeign === reItems.length ? '市價' : '公告現值＋部分市價') : (reForeign === reItems.length ? '國外以市價' : reForeign ? '台灣以公告現值、國外以市價' : '公告現值')}）`
+      : c.zh, v });
   });
   const gross = parts.reduce((s, p) => s + p.v, 0);
   const excluded = ['insurance'].filter(k => t.byCat[k] > 0).map(k => `${CATS.find(c => c.key === k).zh} ${W(t.byCat[k])}`);
@@ -644,7 +678,7 @@ function renderEstate(t){
   else taxF = `5,621 萬 × 10% ＋ 5,621 萬 × 15% ＋（${W(net)} − 11,242 萬）× 20% ＝ ${W(tax)}`;
 
   // US estate tax (non-resident aliens) on items flagged as US assets.
-  const usItems = state.items.filter(i => i.usSitus && US_SITUS_CATS.has(i.cat) && +i.value);
+  const usItems = state.items.filter(i => isUSSitus(i) && +i.value);
   const usd = t.usUSD;
   let b = US_BRACKETS[0];
   for (const br of US_BRACKETS) if (usd > br[0]) b = br;
@@ -686,6 +720,7 @@ function renderEstate(t){
         </ol>
       </div>
     </div>`;
+  renderForeign(t, usTax * fx);
   renderHeirs(t, { tax, net, usTaxTWD: usTax * fx, usTWD: usd * fx, kids, parents });
 }
 
@@ -728,6 +763,32 @@ function expectedOut(x){
     + `遺產稅約 ${W(r.tax)} → 稅後 ${W(r.after)} × 你的比例 ${r.pct.toFixed(1)}% ＝ <b>${fmt(r.mine)}</b>`;
 }
 
+// 🌏 Assets outside Taiwan, grouped by country, with that country's rule.
+function renderForeign(t, usTaxTWD){
+  const by = {};
+  state.items.forEach(it => {
+    if (it.cat === 'debt' || it.cat === 'insurance' || !+it.value) return;
+    const c = countryOf(it); if (c === 'TW') return;
+    (by[c] = by[c] || { sum: 0, items: [] }).sum += twd(it);
+    by[c].items.push(it);
+  });
+  const keys = Object.keys(by);
+  if (!keys.length) {
+    $('foreignOut').innerHTML = `<div class="est-card foreign-card"><h3>🌏 國外資產</h3><div class="dim">目前沒有標示為國外的資產。在各項目的「所在國家」選擇國家，就會列在這裡。台灣居民的國外資產同樣要計入台灣遺產稅。</div></div>`;
+    return;
+  }
+  const total = keys.reduce((s, k) => s + by[k].sum, 0);
+  const ukGBP = by.UK ? by.UK.sum / rate('GBP') : 0;
+  $('foreignOut').innerHTML = `<div class="est-card foreign-card"><h3>🌏 國外資產：${fmt(total)}（${pctText(total, t.assets).replace(' · ', '') || '0%'}）</h3>
+    <div class="tbl-wrap"><table class="inv-tbl foreign-tbl"><thead><tr><th>國家</th><th class="num">金額</th><th>當地規定（非當地居民，簡化）</th></tr></thead><tbody>
+    ${keys.sort((a, b) => by[b].sum - by[a].sum).map(k => `<tr><td>${COUNTRIES[k].zh}<div class="dim">${by[k].items.map(i => esc(i.name || '未命名')).join('、')}</div></td>
+      <td class="num">${fmt(by[k].sum)}</td>
+      <td>${COUNTRIES[k].rule}${k === 'US' ? `<div class="dim">→ 上方已估算：${fmt(usTaxTWD)}</div>` : ''}${k === 'UK' && ukGBP > 325000 ? `<div class="dim">→ 粗估：(£${Math.round(ukGBP).toLocaleString()} − £325,000) × 40% ≈ £${Math.round((ukGBP - 325000) * 0.4).toLocaleString()}（≈ ${fmt((ukGBP - 325000) * 0.4 * rate('GBP'))}）</div>` : ''}</td></tr>`).join('')}
+    </tbody></table></div>
+    <div class="inv-disclaimer">✓ 這些國外資產<b>都已計入</b>上方的台灣遺產稅（國外不動產以市價計）。在當地繳的遺產稅可扣抵台灣遺產稅，上限為因計入該國資產而增加的台灣稅額，並須檢附當地稅單、經我國駐外單位驗證。</div>
+  </div>`;
+}
+
 // ─── A. what the family actually receives (after tax) ───────────────────
 // Legal shares per 民法 §1144 (simplified to the inputs we have): spouse +
 // children share equally; with parents (no children) the spouse takes ½.
@@ -754,10 +815,22 @@ function renderHeirs(t, e){
   // debts and both estate taxes. Taiwan credits US estate tax only up to the
   // Taiwan tax increase caused by including the US assets (遺贈稅法 §11).
   const market = CATS.filter(c => !['debt', 'insurance'].includes(c.key)).reduce((s, c) => s + t.byCat[c.key], 0);
-  const twNoUS = twEstateTax(e.net - e.usTWD);
-  const credit = Math.min(e.usTaxTWD, Math.max(0, e.tax - twNoUS));
+  // Foreign estate taxes we can estimate: US (computed above) and UK
+  // (40% above £325k). Each is credited against Taiwan tax up to the Taiwan
+  // tax increase caused by that country's assets (§11); Japan isn't
+  // estimated (heir-based progressive tax) and is only flagged.
+  const ukTWD = state.items.filter(i => countryOf(i) === 'UK' && !['debt', 'insurance'].includes(i.cat)).reduce((s, i) => s + twd(i), 0);
+  const ukTaxTWD = Math.max(0, (ukTWD / rate('GBP') - 325000) * 0.4) * rate('GBP');
+  const foreignTaxes = [
+    { zh: '美國', assets: e.usTWD, tax: e.usTaxTWD },
+    { zh: '英國', assets: ukTWD, tax: ukTaxTWD },
+  ].filter(f => f.tax > 0);
+  foreignTaxes.forEach(f => { f.credit = Math.min(f.tax, Math.max(0, e.tax - twEstateTax(e.net - f.assets))); });
+  const credit = Math.min(e.tax, foreignTaxes.reduce((s, f) => s + f.credit, 0));
   const twPay = e.tax - credit;
-  const taxes = twPay + e.usTaxTWD;
+  const foreignSum = foreignTaxes.reduce((s, f) => s + f.tax, 0);
+  const taxes = twPay + foreignSum;
+  const hasJP = state.items.some(i => countryOf(i) === 'JP' && !['debt', 'insurance'].includes(i.cat) && +i.value);
   const after = Math.max(0, market - t.debts - taxes);
   const shares = legalShares(!!pf.spouse, e.kids, e.parents);
   // Paid straight to beneficiaries, outside the estate split.
@@ -770,8 +843,9 @@ function renderHeirs(t, e){
         ${step('①', '遺產（市價）', fmt(market), `${CATS.filter(c => !['debt', 'insurance'].includes(c.key) && t.byCat[c.key] > 0).map(c => `${c.zh} ${W(t.byCat[c.key])}`).join(' ＋ ') || '—'}`,
           '家人實際拿到的是資產本身，所以這裡用市價（課稅才用公告現值）')}
         ${step('②', '扣掉負債與遺產稅', '− ' + fmt(t.debts + taxes),
-          `負債 ${W(t.debts)} ＋ 台灣遺產稅 ${W(twPay)}${credit > 0 ? `（${W(e.tax)} − 美國稅扣抵 ${W(credit)}）` : ''} ＋ 美國遺產稅 ${W(e.usTaxTWD)}`,
-          credit > 0 ? '美國已繳的遺產稅可扣抵台灣遺產稅，上限為「因計入美國資產而增加的台灣稅額」' : '')}
+          `負債 ${W(t.debts)} ＋ 台灣遺產稅 ${W(twPay)}${credit > 0 ? `（${W(e.tax)} − 國外稅扣抵 ${W(credit)}）` : ''}${foreignTaxes.map(f => ` ＋ ${f.zh}遺產稅 ${W(f.tax)}`).join('')}`,
+          (credit > 0 ? '國外已繳的遺產稅可扣抵台灣遺產稅，每國上限為「因計入該國資產而增加的台灣稅額」' : '')
+          + (hasJP ? `${credit > 0 ? '<br>' : ''}<span class="warn-t">⚠ 日本資產的繼承稅（10%–55%，依繼承人分得部分計算）未計入，實際可得會更少</span>` : ''))}
         ${step('③', '稅後可分配遺產', fmt(after), `${W(market)} − ${W(t.debts + taxes)} ＝ ${W(after)}`, '', 'final')}
       </ol>
       <div class="tbl-wrap"><table class="inv-tbl heir-tbl">
@@ -837,7 +911,7 @@ function buildFamilySheet(){
     const items = state.items.filter(i => i.cat === c.key);
     if (!items.length) return '';
     return `<h3>${c.icon} ${c.zh}</h3><table class="fam-tbl"><thead><tr><th>名稱</th><th>機構 / 位置</th><th>${c.key === 'debt' ? '保證人／共同借款人' : '受益人 / 繼承人'}</th><th>存取方式 / 文件存放</th></tr></thead><tbody>${
-      items.map(i => `<tr><td>${esc(i.name)}${c.key === 'insurance' && i.itype ? `（${INS_TYPES[i.itype]}）` : ''}</td><td>${esc(i.inst)}</td><td>${esc(i.heir)}</td><td>${esc(i.note)}</td></tr>`).join('')}</tbody></table>`;
+      items.map(i => `<tr><td>${esc(i.name)}${c.key === 'insurance' && i.itype ? `（${INS_TYPES[i.itype]}）` : ''}${COUNTRY_CATS.has(i.cat) && countryOf(i) !== 'TW' ? `【${COUNTRIES[countryOf(i)].zh}】` : ''}</td><td>${esc(i.inst)}</td><td>${esc(i.heir)}</td><td>${esc(i.note)}</td></tr>`).join('')}</tbody></table>`;
   }).join('');
   const contacts = state.contacts.length
     ? `<table class="fam-tbl"><thead><tr><th>角色</th><th>姓名</th><th>電話 / Email</th><th>備註</th></tr></thead><tbody>${state.contacts.map(c => `<tr><td>${esc(c.role)}</td><td>${esc(c.name)}</td><td>${esc(c.phone)}</td><td>${esc(c.note)}</td></tr>`).join('')}</tbody></table>`
@@ -911,15 +985,17 @@ function itemHtml(it){
     <label>${isDebt ? '剩餘本金' : isIns ? '保單價值／解約金' : '估值'}<input type="number" inputmode="decimal" data-f="value" value="${it.value || ''}" placeholder="0">${conv}</label>
     ${isIns ? `<label>保額<input type="number" inputmode="decimal" data-f="cover" value="${it.cover || ''}" placeholder="身故／保障金額"></label>
       <label>保障類型<select data-f="itype"><option value="">— 選擇 —</option>${Object.keys(INS_TYPES).map(k => `<option value="${k}"${it.itype === k ? ' selected' : ''}>${INS_TYPES[k]}</option>`).join('')}</select></label>` : ''}
-    ${it.cat === 'realestate' ? `<label title="公告土地現值 × 持分面積 ＋ 房屋評定現值。土地：用地號到縣市地政局「地價查詢」或看土地登記謄本（地價稅單上的「公告地價」不是公告現值）；房屋：房屋稅繳款書上的「課稅現值」。遺產稅以此計算，通常遠低於市價。">課稅價值（公告現值）<input type="number" inputmode="decimal" data-f="taxValue" value="${it.taxValue || ''}" placeholder="土地公告現值＋房屋評定現值"></label>` : ''}
-    ${it.cat === 'realestate' ? reCalcHtml(it) : ''}
+    ${COUNTRY_CATS.has(it.cat) ? `<label>所在國家<select data-f="country">${Object.keys(COUNTRIES).map(k => `<option value="${k}"${countryOf(it) === k ? ' selected' : ''}>${COUNTRIES[k].zh}</option>`).join('')}</select></label>` : ''}
+    ${it.cat === 'realestate' && countryOf(it) !== 'TW' ? `<div class="foreign-note">🌏 國外不動產以<b>市價</b>計入台灣遺產稅，不需填公告現值。${COUNTRIES[countryOf(it)].rule}</div>` : ''}
+    ${it.cat === 'realestate' && countryOf(it) === 'TW' ? `<label title="公告土地現值 × 持分面積 ＋ 房屋評定現值。土地：用地號到縣市地政局「地價查詢」或看土地登記謄本（地價稅單上的「公告地價」不是公告現值）；房屋：房屋稅繳款書上的「課稅現值」。遺產稅以此計算，通常遠低於市價。">課稅價值（公告現值）<input type="number" inputmode="decimal" data-f="taxValue" value="${it.taxValue || ''}" placeholder="土地公告現值＋房屋評定現值"></label>` : ''}
+    ${it.cat === 'realestate' && countryOf(it) === 'TW' ? reCalcHtml(it) : ''}
     ${isDebt ? '' : `<label>每年收入<input type="number" inputmode="decimal" data-f="income" value="${it.income || ''}" placeholder="版稅、租金、利息"></label>`}
     <label>${isDebt ? '保證人 / 共同借款人' : '受益人 / 繼承人'}<input data-f="heir" value="${esc(it.heir)}" placeholder="${isDebt ? '若有' : '例如：配偶、子女'}"></label>
     <label class="wide">存取方式 / 文件存放（勿寫密碼）<input data-f="note" value="${esc(it.note)}" placeholder="例如：存摺在書房抽屜；保單正本在銀行保管箱"></label>
     <div class="meta"><span data-stale="${it.id}">${staleTxt}</span>
       <button type="button" class="inv-btn small" data-check="${it.id}">✓ 今天已確認</button>
       ${isDebt ? '' : `<label class="inl">流動性 <select data-f="liq">${Object.keys(LIQ).map(k => `<option value="${k}"${liqOf(it) === k ? ' selected' : ''}>${LIQ[k]}</option>`).join('')}</select></label>`}
-      ${US_SITUS_CATS.has(it.cat) ? `<label class="inl chk" title="美國公司股票、美國註冊 ETF、美國不動產等。美國銀行存款一般不算。"><input type="checkbox" data-f="usSitus" ${it.usSitus ? 'checked' : ''}> 美國資產（美股／美國 ETF／美國不動產）</label>` : ''}
+      ${US_SITUS_CATS.has(it.cat) && countryOf(it) === 'US' ? `<label class="inl chk" title="美國公司股票、美國註冊 ETF、美國不動產等。美國銀行存款一般不算。"><input type="checkbox" data-f="usSitus" ${it.usSitus ? 'checked' : ''}> 美國資產（美股／美國 ETF／美國不動產）</label>` : ''}
     </div>
   </div>`;
 }
@@ -976,7 +1052,8 @@ function addItem(cat, name, extra){
     it.itype = guess[name] || '';
   }
   if (/外幣|美股|海外/.test(name || '')) it.cur = 'USD';
-  if (/美股/.test(name || '') && cat === 'invest') it.usSitus = true;
+  if (/美股/.test(name || '') && cat === 'invest') { it.usSitus = true; it.country = 'US'; }
+  if (/海外退休帳戶|401k|IRA/.test(name || '')) { it.country = 'US'; it.cur = 'USD'; }
   state.items.push(it);
   state.closed[cat] = false;
   save(); renderCats();
@@ -1004,6 +1081,11 @@ function onField(e){
   if (inp.type === 'checkbox') it[f] = inp.checked;
   else if (f === 'value' || f === 'income' || f === 'cover' || f === 'taxValue') it[f] = parseFloat(inp.value) || 0;
   else it[f] = inp.value;
+  if (f === 'country') {
+    if (inp.value === 'US' && US_SITUS_CATS.has(it.cat) && it.usSitus === undefined) it.usSitus = true;
+    if (inp.value !== 'US') it.usSitus = false;
+    save(); renderCats(); return;
+  }
   save(); renderAll();
 }
 $('invCats').addEventListener('input', onField);
@@ -1178,8 +1260,8 @@ $('btnFromRebalance').addEventListener('click', () => {
     if (it) Object.assign(it, { value: Math.round(value), cur, note, checked: todayISO() }, extra);
     else state.items.push(Object.assign({ id: uid(), cat: 'invest', name, inst: '', value: Math.round(value), income: 0, cur, heir: '', note, checked: todayISO(), fromRebalance: key }, extra));
   };
-  upsert('tw', '台股（再平衡持股）', 'TWD', tw, twN, {});
-  upsert('us', '美股（再平衡持股）', 'USD', us, usN, { usSitus: true });
+  upsert('tw', '台股（再平衡持股）', 'TWD', tw, twN, { country: 'TW' });
+  upsert('us', '美股（再平衡持股）', 'USD', us, usN, { usSitus: true, country: 'US' });
   state.closed.invest = false;
   save(); renderCats();
   msg(`✅ 已帶入：台股 ${fmt(tw)}、美股 ${fmtUSD(us)}（≈ ${fmt(us * rate('USD'))}）`
