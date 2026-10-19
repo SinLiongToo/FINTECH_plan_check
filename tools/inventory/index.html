@@ -178,6 +178,17 @@
 .st-f{ font-size:12px; margin-top:4px; line-height:1.6; color:var(--ftk-text); font-family:Consolas,var(--ftk-font); }
 .kid-effect{ list-style:none; font-size:12px; line-height:1.65; padding:8px 11px; border-radius:9px; background:rgba(59,130,246,.07); border:1px solid rgba(59,130,246,.35); }
 .st-n{ font-size:11px; margin-top:3px; color:var(--ftk-text-dim); line-height:1.5; }
+.heir-card{ margin-top:12px; }
+.heir-tbl td, .heir-tbl th{ white-space:normal; }
+.direct-box{ margin-top:10px; padding:9px 12px; border-radius:9px; border:1px solid rgba(47,158,143,.45); background:rgba(47,158,143,.07); font-size:12.5px; line-height:1.6; }
+.direct-box ul{ margin:4px 0; padding-left:18px; }
+.heir-total{ margin-top:10px; font-size:14px; }
+.heir-total b{ color:var(--ftk-accent); font-family:Consolas,monospace; }
+.exp-item{ margin-bottom:10px; }
+.exp-item .chk-col span{ display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ftk-text); padding:6px 0; }
+.exp-item .chk-col input{ width:auto; }
+.exp-out{ grid-column:1/-1; font-size:12px; line-height:1.65; font-family:Consolas,var(--ftk-font); }
+.exp-out b{ color:var(--ftk-accent); }
 .family-sheet{ display:none; }
 
 @media (max-width:600px){
@@ -256,7 +267,15 @@
       <label>受扶養父母人數<input type="number" min="0" data-prof="parents"></label>
     </div>
     <div id="estateOut"></div>
+    <div id="heirOut"></div>
     <div class="inv-disclaimer">⚠ 粗估僅供參考：依 2025 年度免稅額、扣除額與級距計算，未計入未成年子女加扣、身心障礙扣除、生存配偶剩餘財產差額分配（可大幅降低遺產）、生前贈與等。不動產多以公告現值而非市價課稅，實際稅額通常低於以市價估算的結果。請以會計師試算為準。</div>
+  </div>
+
+  <div class="inv-panel">
+    <div class="panel-head"><h2>🎁 預期繼承（尚未取得）</h2>
+      <button type="button" class="inv-btn small" id="btnAddExpected">＋ 新增一位被繼承人</button></div>
+    <div id="expectedBody"></div>
+    <div class="inv-disclaimer">記錄將來可能從父母或其他長輩繼承的財產，估算對方繳完遺產稅後、你可分得的金額。這筆錢<b>不計入</b>上方的總資產與淨資產，只另外顯示「含預期繼承的淨資產」。遺產稅依 2025 年度標準以遺產淨額粗估，實際金額取決於對方的財產、遺囑與屆時的法規。</div>
   </div>
 
   <div class="inv-panel">
@@ -337,7 +356,7 @@ const CATS = [
     care: ['估值欄填「保單價值準備金／解約金」，保額寫在備註（保額不是你現在的資產）。', '結婚、離婚、生子後，確認受益人是否需要更新。', '寫下保險公司、保單號碼、要保人／被保險人／受益人。', '可到壽險公會「保險存摺」查詢自己名下所有保單。'] },
   { key: 'retire', icon: '🧓', zh: '退休金', sugg: ['勞退個人專戶', '勞保年金', '公教退休金', '企業退休金／自提', '海外退休帳戶（401k／IRA）'],
     tax: ['勞退自提 6% 以內可從當年薪資所得中減除，領取時再適用退職所得的免稅額度。', '一次領與月領的退職所得計算方式不同，退休前可先試算。'],
-    care: ['勞退個人專戶餘額可在勞動部勞工保險局網站查詢。', '身故時勞退專戶餘額由遺屬或指定請領人領取，記得告知家人。', '海外退休帳戶需留意當地的繼承與稅務規定。'] },
+    care: ['勞退個人專戶餘額可在勞動部勞工保險局網站查詢。', '身故時勞退專戶餘額由遺屬或遺囑指定的請領人一次領取，記得告知家人；請求權 10 年內不行使會消滅。', '注意：勞退專戶餘額屬於勞工個人財產，<b>要計入遺產總額</b>課遺產稅；勞保死亡給付才不計入。', '海外退休帳戶需留意當地的繼承與稅務規定。'] },
   { key: 'royalty', icon: '✍️', zh: '版稅與智慧財產', sugg: ['書籍版稅', '音樂／歌曲版權', '專利授權', '線上課程收入', '圖庫／素材授權', '商標'],
     tax: ['稿費、版稅、樂譜、作曲、編劇、漫畫、講演鐘點費，每人全年合計 18 萬元以內免稅。', '超過 18 萬元的部分，可減除 30% 成本費用（自行出版為 75%），以餘額申報執行業務所得；或檢附憑證核實減除。', '海外平台（如 YouTube、Amazon KDP）的收入可能被來源國扣繳，保留扣繳憑單。'],
     care: ['列出每份合約：出版社／平台、到期日、續約與分潤條件。', '著作財產權可繼承，存續期間通常為作者生存期間加 50 年，指定由誰繼承與管理。', '記下收款帳戶與平台登入方式的線索，讓繼承人能持續收取版稅。', '「年收入」欄填每年版稅，可算出你的被動收入。'] },
@@ -401,7 +420,7 @@ const ZERO_OK = new Set(['insurance', 'digital']);
 
 // ─── state ───────────────────────────────────────────────────────────────
 const PROFILE_DEFAULT = { monthlyExpense: 0, spouse: true, children: 0, parents: 0, needYears: 10, eduFund: 0 };
-let state = { v: 2, items: [], closed: {}, snapshots: [], contacts: [], profile: Object.assign({}, PROFILE_DEFAULT) };
+let state = { v: 2, items: [], closed: {}, snapshots: [], contacts: [], expected: [], profile: Object.assign({}, PROFILE_DEFAULT) };
 
 function load(){
   try {
@@ -411,6 +430,7 @@ function load(){
         v: 2, items: d.items.filter(validItem), closed: d.closed || {}, savedAt: d.savedAt,
         snapshots: Array.isArray(d.snapshots) ? d.snapshots : [],
         contacts: Array.isArray(d.contacts) ? d.contacts : [],
+        expected: Array.isArray(d.expected) ? d.expected : [],
         profile: Object.assign({}, PROFILE_DEFAULT, d.profile || {})
       };
     }
@@ -481,7 +501,7 @@ function renderSummary(t){
   $('invSum').innerHTML = `
     <div class="inv-stat"><div class="l">總資產</div><div class="v pos">${fmt(t.assets)}</div><div class="s">${state.items.filter(i => i.cat !== 'debt').length} 個項目</div></div>
     <div class="inv-stat"><div class="l">總負債</div><div class="v neg">${fmt(t.debts)}</div><div class="s">${state.items.filter(i => i.cat === 'debt').length} 個項目</div></div>
-    <div class="inv-stat"><div class="l">淨資產</div><div class="v acc">${fmt(t.net)}</div><div class="s">${t.assets > 0 ? '負債比 ' + (t.debts / t.assets * 100).toFixed(1) + '%' : '—'}</div></div>
+    <div class="inv-stat"><div class="l">淨資產</div><div class="v acc">${fmt(t.net)}</div><div class="s">${t.assets > 0 ? '負債比 ' + (t.debts / t.assets * 100).toFixed(1) + '%' : '—'}${typeof expectedTotal === 'function' && expectedTotal() > 0 ? '<br>含預期繼承 ' + fmt(t.net + expectedTotal()) : ''}</div></div>
     <div class="inv-stat"><div class="l">每年被動收入</div><div class="v">${fmt(t.income)}</div><div class="s">${t.income > 0 ? '約每月 ' + fmt(t.income / 12) : '版稅、租金、利息、股利'}</div></div>
     <div class="inv-stat" title="尚未填估值：估值為 0 的項目（保險、數位資產常沒有現金價值，不列入）。超過一年未確認：「最後確認日期」超過 365 天，建議每年檢查一次。">
       <div class="l">待處理</div><div class="v ${t.noValue + t.stale ? 'neg' : ''}">${t.noValue + t.stale} 項</div>
@@ -596,16 +616,17 @@ function renderEstate(t){
   const reItems = state.items.filter(i => i.cat === 'realestate');
   const reTaxed = reItems.reduce((s, i) => s + (+i.taxValue > 0 ? +i.taxValue * rate(i.cur) : twd(i)), 0);
   const reMissing = reItems.filter(i => +i.value && !(+i.taxValue > 0)).length;
-  // Death benefits with a named beneficiary and statutory pensions are
-  // generally outside the estate, so insurance and 退休金 are excluded.
+  // Life-insurance payouts to a named beneficiary (and 勞保/公保 death
+  // benefits) are outside the estate (遺贈稅法 §16-9). 勞退專戶餘額 is the
+  // worker's own money and IS part of the estate, so 退休金 stays in.
   const parts = [];
   CATS.forEach(c => {
-    if (['debt', 'insurance', 'retire'].includes(c.key)) return;
+    if (['debt', 'insurance'].includes(c.key)) return;
     const v = c.key === 'realestate' ? reTaxed : t.byCat[c.key];
     if (v > 0) parts.push({ label: c.key === 'realestate' ? `不動產（${reMissing ? (reMissing === reItems.length ? '市價' : '公告現值＋部分市價') : '公告現值'}）` : c.zh, v });
   });
   const gross = parts.reduce((s, p) => s + p.v, 0);
-  const excluded = ['insurance', 'retire'].filter(k => t.byCat[k] > 0).map(k => `${CATS.find(c => c.key === k).zh} ${W(t.byCat[k])}`);
+  const excluded = ['insurance'].filter(k => t.byCat[k] > 0).map(k => `${CATS.find(c => c.key === k).zh} ${W(t.byCat[k])}`);
   const afterDebt = gross - t.debts;
   const kids = +pf.children || 0, parents = +pf.parents || 0;
   const dedParts = [`免稅額 ${W(TW_ESTATE.exempt)}`];
@@ -639,7 +660,7 @@ function renderEstate(t){
         <ol class="steps">
           ${step('①', '遺產總額', fmt(gross),
             parts.length ? parts.map(p => `${p.label} ${W(p.v)}`).join(' ＋ ') + ` ＝ ${W(gross)}` : '尚未填入可計入遺產的項目',
-            (excluded.length ? `不計入：${excluded.join('、')}（指定受益人的保險給付、依法給付的退休金不屬遺產）` : '') +
+            (excluded.length ? `不計入：${excluded.join('、')}（指定受益人的人壽保險給付不屬遺產）` : '') +
             (reMissing ? `${excluded.length ? '<br>' : ''}<span class="warn-t">⚠ ${reMissing} 筆不動產未填「課稅價值」，以市價計算會偏高</span>` : ''))}
           ${step('②', '扣掉負債', fmt(afterDebt), `${W(gross)} − 負債 ${W(t.debts)} ＝ ${W(afterDebt)}`)}
           ${step('③', '免稅額＋扣除額', fmt(ded), dedParts.join(' ＋ ') + ` ＝ ${W(ded)}`, '配偶、子女、父母人數在上方設定')}
@@ -664,6 +685,107 @@ function renderEstate(t){
               + step('④', '換算台幣', fmt(usTax * fx), `${usdTxt(usTax)} × 匯率 ${fx.toFixed(2)} ＝ ${W(usTax * fx)}`, '可依規定申請扣抵台灣遺產稅（有上限）', 'final')}
         </ol>
       </div>
+    </div>`;
+  renderHeirs(t, { tax, net, usTaxTWD: usTax * fx, usTWD: usd * fx, kids, parents });
+}
+
+// ─── B. expected inheritance (not yet received) ───────────────────────────
+// Each entry: from, estate (預估遺產總額), debts, spouse alive, children
+// (incl. me — used for deductions and the default equal share), myPct.
+function expectedCalc(x){
+  const kids = Math.max(0, +x.children || 0);
+  const ded = TW_ESTATE.exempt + (x.spouse ? TW_ESTATE.spouse : 0) + kids * TW_ESTATE.child + TW_ESTATE.funeral;
+  const base = Math.max(0, (+x.estate || 0) - (+x.debts || 0));
+  const taxable = base - ded;
+  const tax = twEstateTax(taxable);
+  const after = Math.max(0, base - tax);
+  const heirs = kids + (x.spouse ? 1 : 0);
+  const pct = x.myPct > 0 ? +x.myPct : (heirs ? 100 / heirs : 100);
+  return { kids, ded, base, taxable, tax, after, heirs, pct, mine: after * pct / 100 };
+}
+function expectedTotal(){ return (state.expected || []).reduce((s, x) => s + expectedCalc(x).mine, 0); }
+function renderExpected(){
+  const X = state.expected || [];
+  if (!X.length) { $('expectedBody').innerHTML = '<div class="inv-empty">還沒有記錄。按「＋ 新增一位被繼承人」開始。</div>'; return; }
+  $('expectedBody').innerHTML = X.map(x => {
+    const r = expectedCalc(x);
+    return `<div class="inv-item exp-item" data-xid="${x.id}">
+      <button type="button" class="del" data-xdel="${x.id}" title="刪除">✕</button>
+      <label>被繼承人<input data-x="from" value="${esc(x.from)}" placeholder="例如：父親"></label>
+      <label>預估遺產總額 (NT$)<input type="number" inputmode="decimal" data-x="estate" value="${x.estate || ''}" placeholder="不動產可用公告現值"></label>
+      <label>對方的負債 (NT$)<input type="number" inputmode="decimal" data-x="debts" value="${x.debts || ''}" placeholder="0"></label>
+      <label>子女人數（含你）<input type="number" min="0" data-x="children" value="${x.children || ''}" placeholder="例如 2"></label>
+      <label class="chk-col">對方有配偶<span><input type="checkbox" data-x="spouse" ${x.spouse ? 'checked' : ''}> 是</span></label>
+      <label>你的分配比例 (%)<input type="number" inputmode="decimal" data-x="myPct" value="${x.myPct || ''}" placeholder="預設 ${r.heirs ? (100 / r.heirs).toFixed(1) : 100}%"></label>
+      <div class="exp-out" data-xout="${x.id}">${expectedOut(x)}</div>
+    </div>`;
+  }).join('') + `<div class="heir-total">預期繼承合計（稅後、你的份額）：<b>${fmt(expectedTotal())}</b>　·　含預期繼承的淨資產：<b>${fmt(totals().net + expectedTotal())}</b></div>`;
+}
+function expectedOut(x){
+  const r = expectedCalc(x);
+  if (!(+x.estate)) return '<span class="dim">填入預估遺產總額即可試算。</span>';
+  return `遺產淨額 ${W(r.base)} − 免稅額＋扣除額 ${W(r.ded)}（配偶 ${x.spouse ? '553 萬' : '0'}、子女 ${r.kids} × 56 萬、喪葬費 138 萬）＝ 課稅淨額 ${r.taxable > 0 ? W(r.taxable) : '0'}<br>`
+    + `遺產稅約 ${W(r.tax)} → 稅後 ${W(r.after)} × 你的比例 ${r.pct.toFixed(1)}% ＝ <b>${fmt(r.mine)}</b>`;
+}
+
+// ─── A. what the family actually receives (after tax) ───────────────────
+// Legal shares per 民法 §1144 (simplified to the inputs we have): spouse +
+// children share equally; with parents (no children) the spouse takes ½.
+function legalShares(spouse, kids, parents){
+  if (kids > 0) {
+    const n = kids + (spouse ? 1 : 0);
+    return [...(spouse ? [{ who: '配偶', frac: 1 / n }] : []), ...Array.from({ length: kids }, (_, i) => ({ who: `子女 ${i + 1}`, frac: 1 / n }))];
+  }
+  if (parents > 0) {
+    if (!spouse) return Array.from({ length: parents }, (_, i) => ({ who: `父母 ${i + 1}`, frac: 1 / parents }));
+    return [{ who: '配偶', frac: 1 / 2 }, ...Array.from({ length: parents }, (_, i) => ({ who: `父母 ${i + 1}`, frac: 1 / 2 / parents }))];
+  }
+  if (spouse) return [{ who: '配偶', frac: 1 / 2 }, { who: '兄弟姊妹（或祖父母、其他順位）', frac: 1 / 2, note: '若無兄弟姊妹，與祖父母同為繼承人時配偶得 2/3；都沒有則配偶得全部' }];
+  return [{ who: '兄弟姊妹等其他順位繼承人', frac: 1 }];
+}
+function fracTxt(f){
+  const known = [[1, '全部'], [1 / 2, '1/2'], [1 / 3, '1/3'], [2 / 3, '2/3'], [1 / 4, '1/4'], [1 / 5, '1/5'], [1 / 6, '1/6'], [1 / 8, '1/8']];
+  const k = known.find(([v]) => Math.abs(v - f) < 1e-9);
+  return k ? k[1] : (f * 100).toFixed(1) + '%';
+}
+function renderHeirs(t, e){
+  const pf = state.profile;
+  // Heirs receive actual assets at MARKET value (not 公告現值), net of
+  // debts and both estate taxes. Taiwan credits US estate tax only up to the
+  // Taiwan tax increase caused by including the US assets (遺贈稅法 §11).
+  const market = CATS.filter(c => !['debt', 'insurance'].includes(c.key)).reduce((s, c) => s + t.byCat[c.key], 0);
+  const twNoUS = twEstateTax(e.net - e.usTWD);
+  const credit = Math.min(e.usTaxTWD, Math.max(0, e.tax - twNoUS));
+  const twPay = e.tax - credit;
+  const taxes = twPay + e.usTaxTWD;
+  const after = Math.max(0, market - t.debts - taxes);
+  const shares = legalShares(!!pf.spouse, e.kids, e.parents);
+  // Paid straight to beneficiaries, outside the estate split.
+  const direct = state.items.filter(i => i.cat === 'insurance' && i.itype === 'life' && +i.cover);
+  const directSum = direct.reduce((s, i) => s + (+i.cover || 0) * rate(i.cur), 0);
+  $('heirOut').innerHTML = `
+    <div class="est-card heir-card">
+      <h3>繼承人實際可得（稅後）</h3>
+      <ol class="steps">
+        ${step('①', '遺產（市價）', fmt(market), `${CATS.filter(c => !['debt', 'insurance'].includes(c.key) && t.byCat[c.key] > 0).map(c => `${c.zh} ${W(t.byCat[c.key])}`).join(' ＋ ') || '—'}`,
+          '家人實際拿到的是資產本身，所以這裡用市價（課稅才用公告現值）')}
+        ${step('②', '扣掉負債與遺產稅', '− ' + fmt(t.debts + taxes),
+          `負債 ${W(t.debts)} ＋ 台灣遺產稅 ${W(twPay)}${credit > 0 ? `（${W(e.tax)} − 美國稅扣抵 ${W(credit)}）` : ''} ＋ 美國遺產稅 ${W(e.usTaxTWD)}`,
+          credit > 0 ? '美國已繳的遺產稅可扣抵台灣遺產稅，上限為「因計入美國資產而增加的台灣稅額」' : '')}
+        ${step('③', '稅後可分配遺產', fmt(after), `${W(market)} − ${W(t.debts + taxes)} ＝ ${W(after)}`, '', 'final')}
+      </ol>
+      <div class="tbl-wrap"><table class="inv-tbl heir-tbl">
+        <thead><tr><th>繼承人</th><th>法定應繼分</th><th class="num">約可分得</th></tr></thead>
+        <tbody>${shares.map(sh => `<tr><td>${sh.who}${sh.note ? `<div class="dim">${sh.note}</div>` : ''}</td><td>${fracTxt(sh.frac)}</td><td class="num">${fmt(after * sh.frac)}</td></tr>`).join('')}</tbody>
+      </table></div>
+      <div class="direct-box">
+        <b>＋ 不經遺產分配、直接給受益人：${fmt(directSum)}</b>
+        ${direct.length ? `<ul>${direct.map(i => `<li>${esc(i.name || '壽險')} ${fmt((+i.cover || 0) * rate(i.cur))} → ${esc(i.heir || '（未填受益人）')}</li>`).join('')}</ul>`
+          : '<div class="dim">在「保險」填入壽險的保額與受益人，就會列在這裡。</div>'}
+        <div class="dim">指定受益人的壽險身故給付不屬遺產、不必等遺產分割，通常最快到手。</div>
+      </div>
+      <div class="heir-total">家人合計約可得：<b>${fmt(after + directSum)}</b></div>
+      <div class="inv-disclaimer">依民法法定應繼分試算（配偶與子女平均；無子女時配偶與父母各半…）。實際分配會受<b>遺囑、特留分、生存配偶剩餘財產差額分配</b>（配偶可先取回婚後財產差額的一半，不計入遺產稅）、生前贈與與拋棄繼承影響，僅供參考。</div>
     </div>`;
 }
 
@@ -951,6 +1073,32 @@ document.addEventListener('change', e => {
 });
 
 $('btnSnapshot').addEventListener('click', takeSnapshot);
+$('btnAddExpected').addEventListener('click', () => {
+  state.expected = state.expected || [];
+  state.expected.push({ id: uid(), from: '', estate: 0, debts: 0, children: 0, spouse: true, myPct: 0 });
+  save(); renderExpected();
+  const el = $('expectedBody').querySelector(`[data-xid="${state.expected[state.expected.length - 1].id}"] input[data-x="from"]`);
+  if (el) el.focus();
+});
+function onExpected(e){
+  const inp = e.target.closest('[data-x]'); if (!inp) return;
+  const x = (state.expected || []).find(v => v.id === inp.closest('[data-xid]').dataset.xid); if (!x) return;
+  const f = inp.dataset.x;
+  x[f] = inp.type === 'checkbox' ? inp.checked : (f === 'from' ? inp.value : (parseFloat(inp.value) || 0));
+  save();
+  const out = document.querySelector(`[data-xout="${x.id}"]`); if (out) out.innerHTML = expectedOut(x);
+  const tot = $('expectedBody').querySelector('.heir-total');
+  if (tot) tot.innerHTML = `預期繼承合計（稅後、你的份額）：<b>${fmt(expectedTotal())}</b>　·　含預期繼承的淨資產：<b>${fmt(totals().net + expectedTotal())}</b>`;
+  if (f === 'children' || f === 'spouse') { const pc = inp.closest('[data-xid]').querySelector('[data-x="myPct"]'); const r = expectedCalc(x); if (pc) pc.placeholder = `預設 ${r.heirs ? (100 / r.heirs).toFixed(1) : 100}%`; }
+  renderSummary(totals());
+}
+$('expectedBody').addEventListener('input', onExpected);
+$('expectedBody').addEventListener('change', e => { if (e.target.type === 'checkbox') onExpected(e); });
+$('expectedBody').addEventListener('click', e => {
+  const d = e.target.closest('[data-xdel]'); if (!d) return;
+  if (!confirm('刪除這筆預期繼承？')) return;
+  state.expected = state.expected.filter(x => x.id !== d.dataset.xdel); save(); renderExpected(); renderSummary(totals());
+});
 $('trendBody').addEventListener('click', e => {
   const b = e.target.closest('[data-snapdel]'); if (!b) return;
   if (!confirm(`刪除 ${b.dataset.snapdel} 的記錄？`)) return;
@@ -996,8 +1144,9 @@ $('importFile').addEventListener('change', e => {
       if (!d || !Array.isArray(d.items) || !d.items.every(validItem)) throw new Error('bad');
       if (state.items.length && !confirm(`匯入會取代目前的 ${state.items.length} 個項目，確定嗎？`)) return;
       state = { v: 2, items: d.items, closed: d.closed || {}, snapshots: Array.isArray(d.snapshots) ? d.snapshots : [],
-        contacts: Array.isArray(d.contacts) ? d.contacts : [], profile: Object.assign({}, PROFILE_DEFAULT, d.profile || {}) };
-      save(); initProfileInputs(); renderCats(); renderTrend(); renderContacts(); msg(`✅ 已匯入 ${d.items.length} 個項目`);
+        contacts: Array.isArray(d.contacts) ? d.contacts : [], expected: Array.isArray(d.expected) ? d.expected : [],
+        profile: Object.assign({}, PROFILE_DEFAULT, d.profile || {}) };
+      save(); initProfileInputs(); renderCats(); renderTrend(); renderContacts(); renderExpected(); msg(`✅ 已匯入 ${d.items.length} 個項目`);
     } catch (err) { msg('⚠ 匯入失敗：檔案不是這個工具匯出的盤點清單。', true); }
   };
   r.readAsText(f);
@@ -1043,6 +1192,7 @@ initProfileInputs();
 renderCats();
 renderTrend();
 renderContacts();
+renderExpected();
 showSaved();
 refreshFx();
 </script>
