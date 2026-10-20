@@ -179,6 +179,13 @@
 .kid-effect{ list-style:none; font-size:12px; line-height:1.65; padding:8px 11px; border-radius:9px; background:rgba(59,130,246,.07); border:1px solid rgba(59,130,246,.35); }
 .st-n{ font-size:11px; margin-top:3px; color:var(--ftk-text-dim); line-height:1.5; }
 .heir-card{ margin-top:12px; }
+.ins-warn{ grid-column:1/-1; font-size:12px; line-height:1.55; padding:6px 10px; border-radius:8px; border:1px solid var(--ftk-border); color:var(--ftk-text-dim); }
+.ins-warn.warn{ border-color:rgba(245,158,11,.55); background:rgba(245,158,11,.08); color:var(--ftk-text); }
+.ins-warn.bad{ border-color:rgba(229,83,75,.55); background:rgba(229,83,75,.08); color:var(--ftk-text); }
+.inv-item .chk-col span{ display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ftk-text); padding:6px 0; }
+.inv-item .chk-col input{ width:auto; }
+.ins-tl{ margin-top:12px; }
+.ins-tl .tl-v{ text-align:left !important; font-family:var(--ftk-font) !important; white-space:normal !important; }
 .foreign-card{ margin-top:12px; }
 .foreign-tbl td{ white-space:normal; vertical-align:top; font-size:12px; line-height:1.55; }
 .foreign-note{ grid-column:1/-1; font-size:12px; line-height:1.55; padding:7px 10px; border-radius:8px; background:rgba(59,130,246,.07); border:1px solid rgba(59,130,246,.35); }
@@ -286,11 +293,13 @@
   <div class="inv-panel">
     <h2>🛡️ 壽險保障缺口</h2>
     <div class="est-inputs">
+      <label>你目前的年齡<input type="number" min="0" data-prof="age" placeholder="例如 45"></label>
       <label>需保障年數<input type="number" min="0" data-prof="needYears"></label>
       <label>子女教育金 (NT$)<input type="number" min="0" data-prof="eduFund" placeholder="0"></label>
       <span class="dim">每月生活支出沿用「流動性」的設定（<span id="gapExpense"></span>）</span>
     </div>
     <div id="gapOut"></div>
+    <div id="insTimeline"></div>
   </div>
 
   <div class="inv-panel">
@@ -365,7 +374,10 @@ const CATS = [
            '公告土地現值：用權狀上的地號到各縣市地政局的「地價查詢」網站查，或看土地登記謄本；注意地價稅單上的是「公告地價」，不是公告現值。房屋評定現值：房屋稅繳款書上的「課稅現值」。公告土地現值每年 1 月 1 日調整。', '房貸請另外列在「負債」，才能算出正確的淨資產。', '共有持分、借名登記等情況容易產生糾紛，記錄清楚。', '火險、地震險的保單一併列在「保險」。'] },
   { key: 'insurance', icon: '🛡️', zh: '保險', sugg: ['定期壽險', '終身壽險', '醫療險', '意外險', '失能／長照險', '年金險', '儲蓄型保單', '房屋火險'],
     tax: ['人身保險費每人每年最多 2.4 萬元可列舉扣除（健保費不受此限）。', '指定受益人的人壽保險死亡給付，原則上不計入遺產；但高齡、帶病、躉繳、短期投保等「實質課稅」案例仍可能被課遺產稅。', '受益人與要保人不同的壽險死亡給付，每戶超過 3,740 萬元的部分計入最低稅負。'],
-    care: ['估值欄填「保單價值準備金／解約金」，保額寫在備註（保額不是你現在的資產）。', '結婚、離婚、生子後，確認受益人是否需要更新。', '寫下保險公司、保單號碼、要保人／被保險人／受益人。', '可到壽險公會「保險存摺」查詢自己名下所有保單。'] },
+    care: ['估值欄填「保單價值準備金／解約金」，保額寫在備註（保額不是你現在的資產）。', '結婚、離婚、生子後，確認受益人是否需要更新。', '寫下保險公司、保單號碼、要保人／被保險人／受益人。', '可到壽險公會「保險存摺」查詢自己名下所有保單。',
+           '<b>意外險多為一年期</b>，每年要續約；忘了續約保障就中斷，年紀大或理賠過後，保險公司也可能拒絕續保或加費。看清楚是「保證續保」還是「不保證續保」。',
+           '<b>醫療險常只保到 75 或 80 歲</b>（尤其定期型與附約），但晚年才是醫療支出最高的時候。到期前要想好：改買終身醫療、轉換長照險，或另外準備一筆醫療準備金。',
+           '主約到期或解約，掛在上面的附約（醫療、意外）通常也會一起失效。'] },
   { key: 'retire', icon: '🧓', zh: '退休金', sugg: ['勞退個人專戶', '勞保年金', '公教退休金', '企業退休金／自提', '海外退休帳戶（401k／IRA）'],
     tax: ['勞退自提 6% 以內可從當年薪資所得中減除，領取時再適用退職所得的免稅額度。', '一次領與月領的退職所得計算方式不同，退休前可先試算。'],
     care: ['勞退個人專戶餘額可在勞動部勞工保險局網站查詢。', '身故時勞退專戶餘額由遺屬或遺囑指定的請領人一次領取，記得告知家人；請求權 10 年內不行使會消滅。', '注意：勞退專戶餘額屬於勞工個人財產，<b>要計入遺產總額</b>課遺產稅；勞保死亡給付才不計入。', '海外退休帳戶需留意當地的繼承與稅務規定。'] },
@@ -426,6 +438,34 @@ const LIQ = { liquid: '可立即動用', slow: '需時間變現', locked: '暫�
 const LIQ_DEFAULT = { cash: 'liquid', invest: 'liquid', realestate: 'slow', insurance: 'slow', retire: 'locked', royalty: 'slow', digital: 'slow', other: 'slow' };
 function liqOf(it){ return it.liq || LIQ_DEFAULT[it.cat] || 'slow'; }
 
+const TERMS = { annual: '一年期（每年續約）', term: '定期（保到某個年齡）', whole: '終身' };
+// Per-policy warnings: one-year policies need renewing (insurer may refuse);
+// term policies end at an age — flag when that's near or before old age.
+function insWarn(it){
+  const age = +state.profile.age || 0;
+  if (it.term === 'annual') {
+    const d = daysUntil(it.renewDate);
+    if (d !== null && d < 0) return { lvl: 'bad', txt: `⚠ 續約日已過 ${-d} 天：確認是否已續約，否則保障已中斷。` };
+    if (d !== null && d <= 30) return { lvl: 'warn', txt: `⏰ ${d} 天後到期（${it.renewDate}），記得續約。` };
+    return { lvl: 'info', txt: `一年期保單，每年要續約${it.guaranteed ? '' : '；<b>不保證續保</b>，保險公司可拒保或加費'}${it.renewDate ? `，下次續約：${it.renewDate}` : '，建議填入續約日'}。` };
+  }
+  if (it.term === 'term' && +it.endAge) {
+    const left = age ? +it.endAge - age : null;
+    const late = (it.itype === 'medical' || it.itype === 'ltc') && +it.endAge <= 80;
+    if (left !== null && left <= 0) return { lvl: 'bad', txt: `⚠ 已超過保障年齡（保到 ${it.endAge} 歲），這張保單應該已經到期。` };
+    const base = `保到 ${it.endAge} 歲${left !== null ? `，還剩 <b>${left} 年</b>` : ''}`;
+    if (late) return { lvl: left !== null && left <= 10 ? 'bad' : 'warn', txt: `⚠ ${base}。${INS_TYPES[it.itype]}在 ${it.endAge} 歲後就沒有了，偏偏晚年醫療支出最高；考慮終身型、長照險或預留醫療準備金。` };
+    return { lvl: left !== null && left <= 5 ? 'warn' : 'info', txt: `${base}${left !== null && left <= 5 ? '，快到期了' : ''}。` };
+  }
+  if (it.term === 'term') return { lvl: 'info', txt: '定期保單：請填「保到幾歲」，才能提醒到期。' };
+  return null;
+}
+function insWarnHtml(it){
+  const w = insWarn(it);
+  return w ? `<div class="ins-warn ${w.lvl}" data-inswarn="${it.id}">${w.txt}</div>` : `<div class="ins-warn" data-inswarn="${it.id}" hidden></div>`;
+}
+function daysUntil(iso){ const d = daysSince(iso); return d === null ? null : -d; }
+
 const INS_TYPES = { life: '壽險', medical: '醫療險', accident: '意外險', disability: '失能險', ltc: '長照險', annuity: '年金／儲蓄險', property: '產險（火險等）' };
 const US_SITUS_CATS = new Set(['invest', 'realestate', 'other']);
 // Where an asset is located. Taiwan residents pay Taiwan estate tax on
@@ -449,7 +489,7 @@ function isUSSitus(it){ return countryOf(it) === 'US' && !!it.usSitus && US_SITU
 const ZERO_OK = new Set(['insurance', 'digital']);
 
 // ─── state ───────────────────────────────────────────────────────────────
-const PROFILE_DEFAULT = { monthlyExpense: 0, spouse: true, children: 0, parents: 0, needYears: 10, eduFund: 0 };
+const PROFILE_DEFAULT = { monthlyExpense: 0, spouse: true, children: 0, parents: 0, needYears: 10, eduFund: 0, age: 0 };
 let state = { v: 2, items: [], closed: {}, snapshots: [], contacts: [], expected: [], profile: Object.assign({}, PROFILE_DEFAULT) };
 
 function load(){
@@ -876,6 +916,7 @@ function renderGap(t){
   const types = new Set(ins.map(i => i.itype).filter(Boolean));
   const missing = ['medical', 'disability', 'ltc'].filter(k => !types.has(k)).map(k => INS_TYPES[k]);
   $('gapExpense').textContent = fmt(me);
+  renderInsTimeline(ins);
   $('gapOut').innerHTML = `
     <ol class="steps">
       ${step('①', '家人需要的保障', fmt(need),
@@ -889,6 +930,33 @@ function renderGap(t){
     </ol>
     <div class="inv-disclaimer">${ins.length ? (missing.length ? `尚未記錄的保障類型：<b>${missing.join('、')}</b>。若已有相關保單，請在保險項目中選擇類型。` : '✓ 醫療、失能、長照都有記錄。') : '在「保險」類別新增保單並填入保額與類型，就能計算缺口。'}
       這是常見的「負債＋生活費＋教育金」簡化算法；若已有足夠的流動資產可支應家人生活，實際需要的保額可以更低。</div>`;
+}
+
+// Coverage timeline: until what age is each kind of protection in force?
+function renderInsTimeline(ins){
+  const age = +state.profile.age || 0;
+  const kinds = ['life', 'medical', 'accident', 'disability', 'ltc'];
+  if (!ins.length) { $('insTimeline').innerHTML = ''; return; }
+  const rows = kinds.map(k => {
+    const ps = ins.filter(i => i.itype === k);
+    if (!ps.length) return { k, txt: '<span class="warn-t">尚未記錄</span>', until: null };
+    const untilOf = i => i.term === 'whole' ? 999 : i.term === 'term' && +i.endAge ? +i.endAge : i.term === 'annual' ? 'annual' : null;
+    const us = ps.map(untilOf);
+    const nums = us.filter(u => typeof u === 'number');
+    const best = nums.length ? Math.max(...nums) : null;
+    let txt;
+    if (best === 999) txt = '<span class="ok-t">終身</span>';
+    else if (best !== null) {
+      const left = age ? best - age : null;
+      txt = `到 <b>${best} 歲</b>${left !== null ? `（還剩 ${left} 年）` : ''}`;
+      if ((k === 'medical' || k === 'ltc') && best <= 80) txt += `　<span class="warn-t">⚠ ${best} 歲後沒有${INS_TYPES[k]}</span>`;
+    } else if (us.includes('annual')) txt = '一年期，<b>每年續約</b>' + (ps.some(i => i.term === 'annual' && !i.guaranteed) ? '　<span class="warn-t">⚠ 不保證續保</span>' : '');
+    else txt = '<span class="dim">未填保障期間</span>';
+    return { k, txt };
+  });
+  $('insTimeline').innerHTML = `<div class="est-card ins-tl"><h3>🗓️ 保障時間軸${age ? `（你現在 ${age} 歲）` : ''}</h3>
+    <table class="inv-kv">${rows.map(r => `<tr><td>${INS_TYPES[r.k]}</td><td class="tl-v">${r.txt}</td></tr>`).join('')}</table>
+    <div class="inv-disclaimer">${age ? '' : '在上方填入「你目前的年齡」，就能算出每種保障還剩幾年。'}每張保單的「保障期間」在下方「保險」類別設定。晚年最需要的是醫療與長照；若這兩項在 75–80 歲就到期，建議提早規劃。</div></div>`;
 }
 
 // ─── 6. contacts + family summary ────────────────────────────────────────
@@ -911,7 +979,7 @@ function buildFamilySheet(){
     const items = state.items.filter(i => i.cat === c.key);
     if (!items.length) return '';
     return `<h3>${c.icon} ${c.zh}</h3><table class="fam-tbl"><thead><tr><th>名稱</th><th>機構 / 位置</th><th>${c.key === 'debt' ? '保證人／共同借款人' : '受益人 / 繼承人'}</th><th>存取方式 / 文件存放</th></tr></thead><tbody>${
-      items.map(i => `<tr><td>${esc(i.name)}${c.key === 'insurance' && i.itype ? `（${INS_TYPES[i.itype]}）` : ''}${COUNTRY_CATS.has(i.cat) && countryOf(i) !== 'TW' ? `【${COUNTRIES[countryOf(i)].zh}】` : ''}</td><td>${esc(i.inst)}</td><td>${esc(i.heir)}</td><td>${esc(i.note)}</td></tr>`).join('')}</tbody></table>`;
+      items.map(i => `<tr><td>${esc(i.name)}${c.key === 'insurance' && i.itype ? `（${INS_TYPES[i.itype]}${i.term === 'annual' ? '，一年期' + (i.renewDate ? '，續約日 ' + i.renewDate : '') : i.term === 'term' && i.endAge ? `，保到 ${i.endAge} 歲` : i.term === 'whole' ? '，終身' : ''}）` : ''}${COUNTRY_CATS.has(i.cat) && countryOf(i) !== 'TW' ? `【${COUNTRIES[countryOf(i)].zh}】` : ''}</td><td>${esc(i.inst)}</td><td>${esc(i.heir)}</td><td>${esc(i.note)}</td></tr>`).join('')}</tbody></table>`;
   }).join('');
   const contacts = state.contacts.length
     ? `<table class="fam-tbl"><thead><tr><th>角色</th><th>姓名</th><th>電話 / Email</th><th>備註</th></tr></thead><tbody>${state.contacts.map(c => `<tr><td>${esc(c.role)}</td><td>${esc(c.name)}</td><td>${esc(c.phone)}</td><td>${esc(c.note)}</td></tr>`).join('')}</tbody></table>`
@@ -984,7 +1052,12 @@ function itemHtml(it){
     ${curSel}
     <label>${isDebt ? '剩餘本金' : isIns ? '保單價值／解約金' : '估值'}<input type="number" inputmode="decimal" data-f="value" value="${it.value || ''}" placeholder="0">${conv}</label>
     ${isIns ? `<label>保額<input type="number" inputmode="decimal" data-f="cover" value="${it.cover || ''}" placeholder="身故／保障金額"></label>
-      <label>保障類型<select data-f="itype"><option value="">— 選擇 —</option>${Object.keys(INS_TYPES).map(k => `<option value="${k}"${it.itype === k ? ' selected' : ''}>${INS_TYPES[k]}</option>`).join('')}</select></label>` : ''}
+      <label>保障類型<select data-f="itype"><option value="">— 選擇 —</option>${Object.keys(INS_TYPES).map(k => `<option value="${k}"${it.itype === k ? ' selected' : ''}>${INS_TYPES[k]}</option>`).join('')}</select></label>
+      <label>保障期間<select data-f="term"><option value="">— 選擇 —</option>${Object.keys(TERMS).map(k => `<option value="${k}"${it.term === k ? ' selected' : ''}>${TERMS[k]}</option>`).join('')}</select></label>
+      ${it.term === 'term' ? `<label>保到幾歲<input type="number" min="0" data-f="endAge" value="${it.endAge || ''}" placeholder="例如 75"></label>` : ''}
+      ${it.term === 'annual' ? `<label>續約日<input type="date" data-f="renewDate" value="${esc(it.renewDate || '')}"></label>` : ''}
+      ${it.term && it.term !== 'whole' ? `<label class="chk-col">續保條款<span><input type="checkbox" data-f="guaranteed" ${it.guaranteed ? 'checked' : ''}> 保證續保</span></label>` : ''}
+      ${insWarnHtml(it)}` : ''}
     ${COUNTRY_CATS.has(it.cat) ? `<label>所在國家<select data-f="country">${Object.keys(COUNTRIES).map(k => `<option value="${k}"${countryOf(it) === k ? ' selected' : ''}>${COUNTRIES[k].zh}</option>`).join('')}</select></label>` : ''}
     ${it.cat === 'realestate' && countryOf(it) !== 'TW' ? `<div class="foreign-note">🌏 國外不動產以<b>市價</b>計入台灣遺產稅，不需填公告現值。${COUNTRIES[countryOf(it)].rule}</div>` : ''}
     ${it.cat === 'realestate' && countryOf(it) === 'TW' ? `<label title="公告土地現值 × 持分面積 ＋ 房屋評定現值。土地：用地號到縣市地政局「地價查詢」或看土地登記謄本（地價稅單上的「公告地價」不是公告現值）；房屋：房屋稅繳款書上的「課稅現值」。遺產稅以此計算，通常遠低於市價。">課稅價值（公告現值）<input type="number" inputmode="decimal" data-f="taxValue" value="${it.taxValue || ''}" placeholder="土地公告現值＋房屋評定現值"></label>` : ''}
@@ -1027,6 +1100,12 @@ function renderCats(){
 // Everything except the item list (which keeps focus while typing).
 function renderAll(){
   const t = totals();
+  // Per-policy expiry warnings depend on the age in the profile too.
+  document.querySelectorAll('[data-inswarn]').forEach(box => {
+    const it = state.items.find(i => i.id === box.dataset.inswarn); if (!it) return;
+    const w = insWarn(it);
+    box.hidden = !w; box.className = 'ins-warn ' + (w ? w.lvl : ''); box.innerHTML = w ? w.txt : '';
+  });
   renderSummary(t);
   renderLiquidity(t);
   renderEstate(t);
@@ -1050,6 +1129,8 @@ function addItem(cat, name, extra){
   if (cat === 'insurance' && !it.itype) {
     const guess = { '定期壽險': 'life', '終身壽險': 'life', '醫療險': 'medical', '意外險': 'accident', '失能／長照險': 'disability', '年金險': 'annuity', '儲蓄型保單': 'annuity', '房屋火險': 'property' };
     it.itype = guess[name] || '';
+    const termGuess = { '意外險': ['annual'], '醫療險': ['term', 75], '房屋火險': ['annual'], '定期壽險': ['term', 65], '終身壽險': ['whole'], '失能／長照險': ['whole'] };
+    if (termGuess[name]) { it.term = termGuess[name][0]; if (termGuess[name][1]) it.endAge = termGuess[name][1]; }
   }
   if (/外幣|美股|海外/.test(name || '')) it.cur = 'USD';
   if (/美股/.test(name || '') && cat === 'invest') { it.usSitus = true; it.country = 'US'; }
@@ -1079,8 +1160,13 @@ function onField(e){
   const it = state.items.find(i => i.id === inp.closest('.inv-item').dataset.id); if (!it) return;
   const f = inp.dataset.f;
   if (inp.type === 'checkbox') it[f] = inp.checked;
-  else if (f === 'value' || f === 'income' || f === 'cover' || f === 'taxValue') it[f] = parseFloat(inp.value) || 0;
+  else if (f === 'value' || f === 'income' || f === 'cover' || f === 'taxValue' || f === 'endAge') it[f] = parseFloat(inp.value) || 0;
   else it[f] = inp.value;
+  if (f === 'term') { save(); renderCats(); return; }
+  if (f === 'endAge' || f === 'renewDate' || f === 'guaranteed') {
+    const box = document.querySelector(`[data-inswarn="${it.id}"]`), w = insWarn(it);
+    if (box) { box.hidden = !w; box.className = 'ins-warn ' + (w ? w.lvl : ''); box.innerHTML = w ? w.txt : ''; }
+  }
   if (f === 'country') {
     if (inp.value === 'US' && US_SITUS_CATS.has(it.cat) && it.usSitus === undefined) it.usSitus = true;
     if (inp.value !== 'US') it.usSitus = false;
