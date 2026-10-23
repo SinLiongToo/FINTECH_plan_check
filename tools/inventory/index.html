@@ -185,6 +185,9 @@
 .inv-item .chk-col span{ display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ftk-text); padding:6px 0; }
 .inv-item .chk-col input{ width:auto; }
 .ins-tl{ margin-top:12px; }
+.ins-estate{ grid-column:1/-1; font-size:12px; line-height:1.55; padding:6px 10px; border-radius:8px; border:1px dashed var(--ftk-border); color:var(--ftk-text-dim); }
+.ins-estate.in{ border-style:solid; border-color:rgba(47,158,143,.55); background:rgba(47,158,143,.07); color:var(--ftk-text); }
+.ins-estate.risk{ border-style:solid; border-color:rgba(245,158,11,.55); background:rgba(245,158,11,.08); color:var(--ftk-text); }
 .ins-tl .tl-v{ text-align:left !important; font-family:var(--ftk-font) !important; white-space:normal !important; }
 .foreign-card{ margin-top:12px; }
 .foreign-tbl td{ white-space:normal; vertical-align:top; font-size:12px; line-height:1.55; }
@@ -377,7 +380,9 @@ const CATS = [
     care: ['估值欄填「保單價值準備金／解約金」，保額寫在備註（保額不是你現在的資產）。', '結婚、離婚、生子後，確認受益人是否需要更新。', '寫下保險公司、保單號碼、要保人／被保險人／受益人。', '可到壽險公會「保險存摺」查詢自己名下所有保單。',
            '<b>意外險多為一年期</b>，每年要續約；忘了續約保障就中斷，年紀大或理賠過後，保險公司也可能拒絕續保或加費。看清楚是「保證續保」還是「不保證續保」。',
            '<b>醫療險常只保到 75 或 80 歲</b>（尤其定期型與附約），但晚年才是醫療支出最高的時候。到期前要想好：改買終身醫療、轉換長照險，或另外準備一筆醫療準備金。',
-           '主約到期或解約，掛在上面的附約（醫療、意外）通常也會一起失效。'] },
+           '主約到期或解約，掛在上面的附約（醫療、意外）通常也會一起失效。',
+           '<b>保險與遺產稅</b>：被保險人是你且已指定受益人 → 不計入遺產；<b>未指定受益人</b> → 保險金變成遺產；<b>你是要保人、被保險人是別人</b>（例如幫孩子買的保單）→ 保單價值算你的遺產。',
+           '<b>實質課稅</b>：高齡、帶病、躉繳、短期、借款、密集或鉅額投保、保費接近保額等情況，國稅局可能照樣把保險金計入遺產。'] },
   { key: 'retire', icon: '🧓', zh: '退休金', sugg: ['勞退個人專戶', '勞保年金', '公教退休金', '企業退休金／自提', '海外退休帳戶（401k／IRA）'],
     tax: ['勞退自提 6% 以內可從當年薪資所得中減除，領取時再適用退職所得的免稅額度。', '一次領與月領的退職所得計算方式不同，退休前可先試算。'],
     care: ['勞退個人專戶餘額可在勞動部勞工保險局網站查詢。', '身故時勞退專戶餘額由遺屬或遺囑指定的請領人一次領取，記得告知家人；請求權 10 年內不行使會消滅。', '注意：勞退專戶餘額屬於勞工個人財產，<b>要計入遺產總額</b>課遺產稅；勞保死亡給付才不計入。', '海外退休帳戶需留意當地的繼承與稅務規定。'] },
@@ -460,6 +465,40 @@ function insWarn(it){
   if (it.term === 'term') return { lvl: 'info', txt: '定期保單：請填「保到幾歲」，才能提醒到期。' };
   return null;
 }
+// How a policy is treated in MY estate:
+//  - I'm the policyholder, someone else is insured → the policy's cash value
+//    (保單價值準備金) is my property → in the estate.
+//  - I'm the insured with NO named beneficiary → the payout becomes my estate
+//    (保險法 §113) → death benefit in the estate.
+//  - I'm the insured with a named beneficiary → outside the estate
+//    (遺贈稅法 §16-9), unless the substance-over-form test applies (高齡、
+//    躉繳、帶病、借款投保…) → flagged, not added.
+//  - someone else is the policyholder and I'm the insured → not my property.
+function insEstate(it){
+  if (it.cat !== 'insurance') return null;
+  const ownerMe = it.owner !== 'other', insuredMe = it.insured !== 'other', named = it.benNamed !== false;
+  const cash = twd(it), cover = (+it.cover || 0) * rate(it.cur);
+  const risks = [];
+  if (+it.issueAge >= 70) risks.push(`${it.issueAge} 歲高齡投保`);
+  if (it.singlePrem) risks.push('躉繳（一次繳清）');
+  if (it.illLoan) risks.push('帶病或借款投保');
+  if (ownerMe && !insuredMe) return { amount: cash, kind: 'cash', risks: [],
+    txt: `計入遺產：<b>保單價值 ${fmt(cash)}</b>（你是要保人，被保險人是別人，保單價值屬於你的財產）` };
+  if (insuredMe && !named) return { amount: cover, kind: 'cover', risks: [],
+    txt: `計入遺產：<b>保險金 ${fmt(cover)}</b>（未指定受益人，保險金會成為你的遺產）——建議盡快指定受益人` };
+  if (!ownerMe && insuredMe) return { amount: 0, kind: 'none', risks: [],
+    txt: '不計入你的遺產（要保人不是你）。若要保人與受益人不同人，身故時保險金可能被視為要保人對受益人的<b>贈與</b>。' };
+  if (insuredMe && named) return { amount: 0, kind: 'none', risks, cover,
+    txt: risks.length
+      ? `<span class="warn-t">⚠ 可能被「實質課稅」：${risks.join('、')}。</span>國稅局可能把保險金 ${fmt(cover)} 計入遺產。`
+      : '不計入遺產（被保險人是你、已指定受益人）。要保人與受益人不同人時，每戶超過 3,740 萬元的部分計入受益人的最低稅負。' };
+  return null;
+}
+function insEstateHtml(it){
+  const e = insEstate(it);
+  return e ? `<div class="ins-estate${e.risks && e.risks.length ? ' risk' : e.amount ? ' in' : ''}" data-insestate="${it.id}">🏛️ ${e.txt}</div>` : '';
+}
+
 function insWarnHtml(it){
   const w = insWarn(it);
   return w ? `<div class="ins-warn ${w.lvl}" data-inswarn="${it.id}">${w.txt}</div>` : `<div class="ins-warn" data-inswarn="${it.id}" hidden></div>`;
@@ -699,8 +738,14 @@ function renderEstate(t){
       ? `不動產（${reMissing ? (reMissing + reForeign === reItems.length ? '市價' : '公告現值＋部分市價') : (reForeign === reItems.length ? '國外以市價' : reForeign ? '台灣以公告現值、國外以市價' : '公告現值')}）`
       : c.zh, v });
   });
+  const insE = state.items.filter(i => i.cat === 'insurance').map(i => ({ it: i, e: insEstate(i) }));
+  const insIn = insE.reduce((s, x) => s + (x.e ? x.e.amount : 0), 0);
+  if (insIn > 0) parts.push({ label: '保險（計入遺產的部分）', v: insIn });
+  const insRisk = insE.filter(x => x.e && x.e.risks && x.e.risks.length);
+  const insRiskSum = insRisk.reduce((s, x) => s + (x.e.cover || 0), 0);
   const gross = parts.reduce((s, p) => s + p.v, 0);
-  const excluded = ['insurance'].filter(k => t.byCat[k] > 0).map(k => `${CATS.find(c => c.key === k).zh} ${W(t.byCat[k])}`);
+  const insOut = insE.filter(x => x.e && x.e.kind === 'none').length;
+  const excluded = insOut ? [`保險 ${insOut} 張（指定受益人的壽險給付等）`] : [];
   const afterDebt = gross - t.debts;
   const kids = +pf.children || 0, parents = +pf.parents || 0;
   const dedParts = [`免稅額 ${W(TW_ESTATE.exempt)}`];
@@ -710,6 +755,8 @@ function renderEstate(t){
   dedParts.push(`喪葬費 ${W(TW_ESTATE.funeral)}`);
   const ded = TW_ESTATE.exempt + (pf.spouse ? TW_ESTATE.spouse : 0) + kids * TW_ESTATE.child + parents * TW_ESTATE.parent + TW_ESTATE.funeral;
   const net = afterDebt - ded;
+  // Extra tax if the risky policies were pulled into the estate.
+  const riskExtra = twEstateTax(net + insRiskSum) - twEstateTax(net);
   const tax = twEstateTax(net);
   let taxF;
   if (net <= 0) taxF = '課稅淨額 ≤ 0，不用繳遺產稅';
@@ -734,7 +781,9 @@ function renderEstate(t){
         <ol class="steps">
           ${step('①', '遺產總額', fmt(gross),
             parts.length ? parts.map(p => `${p.label} ${W(p.v)}`).join(' ＋ ') + ` ＝ ${W(gross)}` : '尚未填入可計入遺產的項目',
-            (excluded.length ? `不計入：${excluded.join('、')}（指定受益人的人壽保險給付不屬遺產）` : '') +
+            (excluded.length ? `不計入：${excluded.join('、')}` : '') +
+            (insIn > 0 ? `${excluded.length ? '<br>' : ''}保險計入：${insE.filter(x => x.e && x.e.amount).map(x => `${esc(x.it.name || '保單')} ${W(x.e.amount)}（${x.e.kind === 'cash' ? '保單價值' : '未指定受益人'}）`).join('、')}` : '') +
+            (insRisk.length ? `<br><span class="warn-t">⚠ ${insRisk.length} 張保單有實質課稅風險（${insRisk.map(x => esc(x.it.name || '保單')).join('、')}），若被認定，遺產再增加約 ${W(insRiskSum)}，遺產稅約多 ${W(riskExtra)}</span>` : '') +
             (reMissing ? `${excluded.length ? '<br>' : ''}<span class="warn-t">⚠ ${reMissing} 筆不動產未填「課稅價值」，以市價計算會偏高</span>` : ''))}
           ${step('②', '扣掉負債', fmt(afterDebt), `${W(gross)} − 負債 ${W(t.debts)} ＝ ${W(afterDebt)}`)}
           ${step('③', '免稅額＋扣除額', fmt(ded), dedParts.join(' ＋ ') + ` ＝ ${W(ded)}`, '配偶、子女、父母人數在上方設定')}
@@ -854,7 +903,8 @@ function renderHeirs(t, e){
   // Heirs receive actual assets at MARKET value (not 公告現值), net of
   // debts and both estate taxes. Taiwan credits US estate tax only up to the
   // Taiwan tax increase caused by including the US assets (遺贈稅法 §11).
-  const market = CATS.filter(c => !['debt', 'insurance'].includes(c.key)).reduce((s, c) => s + t.byCat[c.key], 0);
+  const insInEstate = state.items.filter(i => i.cat === 'insurance').reduce((s, i) => { const x = insEstate(i); return s + (x ? x.amount : 0); }, 0);
+  const market = CATS.filter(c => !['debt', 'insurance'].includes(c.key)).reduce((s, c) => s + t.byCat[c.key], 0) + insInEstate;
   // Foreign estate taxes we can estimate: US (computed above) and UK
   // (40% above £325k). Each is credited against Taiwan tax up to the Taiwan
   // tax increase caused by that country's assets (§11); Japan isn't
@@ -874,13 +924,13 @@ function renderHeirs(t, e){
   const after = Math.max(0, market - t.debts - taxes);
   const shares = legalShares(!!pf.spouse, e.kids, e.parents);
   // Paid straight to beneficiaries, outside the estate split.
-  const direct = state.items.filter(i => i.cat === 'insurance' && i.itype === 'life' && +i.cover);
+  const direct = state.items.filter(i => i.cat === 'insurance' && i.itype === 'life' && +i.cover && i.insured !== 'other' && i.benNamed !== false);
   const directSum = direct.reduce((s, i) => s + (+i.cover || 0) * rate(i.cur), 0);
   $('heirOut').innerHTML = `
     <div class="est-card heir-card">
       <h3>繼承人實際可得（稅後）</h3>
       <ol class="steps">
-        ${step('①', '遺產（市價）', fmt(market), `${CATS.filter(c => !['debt', 'insurance'].includes(c.key) && t.byCat[c.key] > 0).map(c => `${c.zh} ${W(t.byCat[c.key])}`).join(' ＋ ') || '—'}`,
+        ${step('①', '遺產（市價）', fmt(market), `${CATS.filter(c => !['debt', 'insurance'].includes(c.key) && t.byCat[c.key] > 0).map(c => `${c.zh} ${W(t.byCat[c.key])}`).concat(insInEstate > 0 ? [`保險（計入遺產）${W(insInEstate)}`] : []).join(' ＋ ') || '—'}`,
           '家人實際拿到的是資產本身，所以這裡用市價（課稅才用公告現值）')}
         ${step('②', '扣掉負債與遺產稅', '− ' + fmt(t.debts + taxes),
           `負債 ${W(t.debts)} ＋ 台灣遺產稅 ${W(twPay)}${credit > 0 ? `（${W(e.tax)} − 國外稅扣抵 ${W(credit)}）` : ''}${foreignTaxes.map(f => ` ＋ ${f.zh}遺產稅 ${W(f.tax)}`).join('')}`,
@@ -1057,7 +1107,14 @@ function itemHtml(it){
       ${it.term === 'term' ? `<label>保到幾歲<input type="number" min="0" data-f="endAge" value="${it.endAge || ''}" placeholder="例如 75"></label>` : ''}
       ${it.term === 'annual' ? `<label>續約日<input type="date" data-f="renewDate" value="${esc(it.renewDate || '')}"></label>` : ''}
       ${it.term && it.term !== 'whole' ? `<label class="chk-col">續保條款<span><input type="checkbox" data-f="guaranteed" ${it.guaranteed ? 'checked' : ''}> 保證續保</span></label>` : ''}
-      ${insWarnHtml(it)}` : ''}
+      <label>要保人（繳保費的人）<select data-f="owner"><option value="me"${it.owner !== 'other' ? ' selected' : ''}>我</option><option value="other"${it.owner === 'other' ? ' selected' : ''}>其他人</option></select></label>
+      <label>被保險人<select data-f="insured"><option value="me"${it.insured !== 'other' ? ' selected' : ''}>我</option><option value="other"${it.insured === 'other' ? ' selected' : ''}>其他人</option></select></label>
+      <label class="chk-col">受益人<span><input type="checkbox" data-f="benNamed" ${it.benNamed !== false ? 'checked' : ''}> 已指定</span></label>
+      <label>投保時年齡<input type="number" min="0" data-f="issueAge" value="${it.issueAge || ''}" placeholder="例如 40"></label>
+      <label class="chk-col">繳費方式<span><input type="checkbox" data-f="singlePrem" ${it.singlePrem ? 'checked' : ''}> 躉繳</span></label>
+      <label class="chk-col">投保時<span><input type="checkbox" data-f="illLoan" ${it.illLoan ? 'checked' : ''}> 帶病或借款</span></label>
+      ${insWarnHtml(it)}
+      ${insEstateHtml(it)}` : ''}
     ${COUNTRY_CATS.has(it.cat) ? `<label>所在國家<select data-f="country">${Object.keys(COUNTRIES).map(k => `<option value="${k}"${countryOf(it) === k ? ' selected' : ''}>${COUNTRIES[k].zh}</option>`).join('')}</select></label>` : ''}
     ${it.cat === 'realestate' && countryOf(it) !== 'TW' ? `<div class="foreign-note">🌏 國外不動產以<b>市價</b>計入台灣遺產稅，不需填公告現值。${COUNTRIES[countryOf(it)].rule}</div>` : ''}
     ${it.cat === 'realestate' && countryOf(it) === 'TW' ? `<label title="公告土地現值 × 持分面積 ＋ 房屋評定現值。土地：用地號到縣市地政局「地價查詢」或看土地登記謄本（地價稅單上的「公告地價」不是公告現值）；房屋：房屋稅繳款書上的「課稅現值」。遺產稅以此計算，通常遠低於市價。">課稅價值（公告現值）<input type="number" inputmode="decimal" data-f="taxValue" value="${it.taxValue || ''}" placeholder="土地公告現值＋房屋評定現值"></label>` : ''}
@@ -1100,6 +1157,12 @@ function renderCats(){
 // Everything except the item list (which keeps focus while typing).
 function renderAll(){
   const t = totals();
+  document.querySelectorAll('[data-insestate]').forEach(box => {
+    const it = state.items.find(i => i.id === box.dataset.insestate); if (!it) return;
+    const e = insEstate(it); if (!e) return;
+    box.className = 'ins-estate' + (e.risks && e.risks.length ? ' risk' : e.amount ? ' in' : '');
+    box.innerHTML = '🏛️ ' + e.txt;
+  });
   // Per-policy expiry warnings depend on the age in the profile too.
   document.querySelectorAll('[data-inswarn]').forEach(box => {
     const it = state.items.find(i => i.id === box.dataset.inswarn); if (!it) return;
@@ -1160,7 +1223,7 @@ function onField(e){
   const it = state.items.find(i => i.id === inp.closest('.inv-item').dataset.id); if (!it) return;
   const f = inp.dataset.f;
   if (inp.type === 'checkbox') it[f] = inp.checked;
-  else if (f === 'value' || f === 'income' || f === 'cover' || f === 'taxValue' || f === 'endAge') it[f] = parseFloat(inp.value) || 0;
+  else if (f === 'value' || f === 'income' || f === 'cover' || f === 'taxValue' || f === 'endAge' || f === 'issueAge') it[f] = parseFloat(inp.value) || 0;
   else it[f] = inp.value;
   if (f === 'term') { save(); renderCats(); return; }
   if (f === 'endAge' || f === 'renewDate' || f === 'guaranteed') {
