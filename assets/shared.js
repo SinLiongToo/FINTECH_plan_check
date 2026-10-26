@@ -26,6 +26,7 @@
   var TOOLS = [
     { href: ROOT + 'index.html', label: '總覽', key: 'home' },
     { href: ROOT + 'tools/stock-drop/index.html', label: '📉 股價下跌追蹤', key: 'stock-drop' },
+    { href: ROOT + 'tools/big5/index.html', label: '📊 大盤與五大權值', key: 'big5' },
     { href: ROOT + 'tools/rebalance/index.html', label: '⚖️ 再平衡計算', key: 'rebalance' },
     { href: ROOT + 'tools/retirement/index.html', label: '🏖️ 退休試算', key: 'retirement' },
     { href: ROOT + 'tools/loan/index.html', label: '💰 貸款投資試算', key: 'loan' },

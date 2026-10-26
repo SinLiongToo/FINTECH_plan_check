@@ -1,12 +1,17 @@
 ---
 name: fintech-toolkit-dev
-description: Run, test, and deploy changes to the FinTech Toolkit — an 8-page static site (project_claude_FINTECH) on GitHub Pages (SinLiongToo/FINTECH_plan_check) with a GitHub Actions + yfinance stock-data pipeline. Use whenever asked to test this app locally, verify a change before/after committing, check or trigger the stock data workflow, or confirm something is live on GitHub Pages after a push.
+description: Run, test, and deploy changes to the FinTech Toolkit — a 9-page static site (project_claude_FINTECH) on GitHub Pages (SinLiongToo/FINTECH_plan_check) with a GitHub Actions + yfinance stock-data pipeline. Use whenever asked to test this app locally, verify a change before/after committing, check or trigger the stock data workflow, or confirm something is live on GitHub Pages after a push.
 ---
 
 # FinTech Toolkit — dev workflow
 
 Static multi-page site, no build step, no framework. Pages:
-`index.html`, `tools/{stock-drop,rebalance,retirement,loan,rules,quotes,inventory}/index.html`.
+`index.html`, `tools/{stock-drop,big5,rebalance,retirement,loan,rules,quotes,inventory}/index.html`.
+`tools/big5/` is a copy of an external Antigravity project; it keeps its own
+CSS/JS and reads `data/big5_market_data.json` (written by
+`fetch_big5_data.py` in the daily workflow). Its CPI/PMI tab: only US
+CPI/Core CPI are real (BLS); the rest are labelled samples — never present
+them as real data.
 A new page must also be added to the `TOOLS` array in `assets/shared.js`
 (nav), the home-page card grid, `SHELL` in `sw.js` (bump `CACHE`), and
 `PAGES` in `verify.mjs`.

@@ -15,11 +15,12 @@ Repo：[SinLiongToo/FINTECH_plan_check](https://github.com/SinLiongToo/FINTECH_p
 
 ---
 
-## 八個頁面
+## 九個頁面
 
 | 頁面 | 來源 | 資料來源 | 備註 |
 |---|---|---|---|
 | 📉 [股價下跌追蹤](tools/stock-drop/) | `taiwan_stock_v4.html` | `data/stock_data.json`（見下方管線） | 14 檔內建（台股個股 + TAIEX）+ VT/BND/SOXX + 美股搜尋（55 檔資料庫）；「➕ 加入再平衡」一鍵把目前個股送到再平衡；資料超過 4 天未更新會顯示警示 |
+| 📊 [大盤與五大權值](tools/big5/)（新增） | 外部專案「stock inculde big 5」（Antigravity）複製整合 | `data/big5_market_data.json`（`fetch_big5_data.py`，每日自動更新） | 台股加權指數「扣除五大權值股（台積電、聯發科、鴻海、廣達、台達電）」後的真實漲跌、五大權值貢獻點數、波段漲跌天數、連漲連跌、最大回撤、拉積失真日數；美股四大指數與 VT/VTI/BND/TSM/NVDA/GOOGL；CPI／PMI 總經分頁（僅美國 CPI／核心 CPI 為 BLS 官方數據並自動更新，台灣 CPI 與各項 PMI 為原專案示意數據，頁面已標示）。五大權值權重為原專案的固定近似值 |
 | ⚖️ [再平衡計算](tools/rebalance/) | `rebalance.html` | `data/stock_data.json` → `data/quotes.json`（全部台股上市櫃 + S&P 500 + 熱門美股 ETF/ADR 最新收盤）→ AllOrigins（目前已不可用）；查不到時畫面會提示手動輸入 | 雙幣別（TWD/USD）獨立投入 or 全球統一再平衡；持股自動儲存在瀏覽器、可匯出／匯入 JSON；開頁自動更新股價；每個價格標示收盤日期，過期顯示警示 |
 | 🏖️ [退休試算](tools/retirement/) | `retirement simulation.html` | 純本地試算 | 內建中英文切換、巴菲特金句跑馬燈；可「從再平衡計算帶入投資資產」 |
 | 💰 [貸款投資試算](tools/loan/) | `fintech_loan_investment_tool.html` | 純本地試算 | 內建 20 句中英雙語理財金句跑馬燈、Help 按鈕直達說明頁 |

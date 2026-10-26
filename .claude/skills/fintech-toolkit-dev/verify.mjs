@@ -27,6 +27,7 @@ const PAGES = [
   ['rules', '/tools/rules/index.html'],
   ['quotes', '/tools/quotes/index.html'],
   ['inventory', '/tools/inventory/index.html'],
+  ['big5', '/tools/big5/index.html'],
 ];
 
 const browser = await chromium.launch();
