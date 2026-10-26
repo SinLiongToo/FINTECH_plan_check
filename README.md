@@ -75,6 +75,21 @@ GitHub Pages 只能放靜態檔案，不能跑 Python，所以「即時抓股價
 7. **`current_price` 額外用每日資料補新鮮度**：週線本身偶爾會被 Yahoo 延遲 1–2 天才發布最新一週的資料（見下方已知限制），如果「目前股價」也只看週線，會跟著卡住。`fetch_stock_data.py` 另外抓一段短天期的日線，只要比週線新就優先拿來當 `current_price`／`day_change`／`day_change_pct`，並記錄一個 `quote_date` 欄位標明這個價格實際對應哪一天；週線歷史本身（畫圖表用）維持不變。
 8. **`data/quotes.json`：廣覆蓋的最新收盤表**（`fetch_quotes_universe.py`，同一個 workflow）。再平衡工具讓使用者自行新增任意代號，但瀏覽器無法直接呼叫 Yahoo / TWSE（沒有 CORS 標頭），公開 CORS 代理（AllOrigins、corsproxy.io、codetabs 等）實測也已全數失效。因此改在 Action 端多抓一份只含「名稱 + 最新收盤 + 日期」的輕量表：TWSE 與 TPEx 官方 Open Data 各一次請求涵蓋全部上市櫃股票/ETF，美股為 S&P 500 成分股 + 約 250 檔熱門 ETF/ADR（一次 yfinance 批次下載）。任一來源失敗時保留上一次的值，不影響主要的 `stock_data.json` 更新。
 
+### 各頁面的自動更新
+
+三個用到股價的頁面，都由**同一支** GitHub Actions 排程（`.github/workflows/daily_stock_update.yml`，「Daily Stock Data Update」）更新，週一到週五每天兩次，週末不更新：
+
+| | 📉 股價下跌追蹤 | ⚖️ 再平衡計算 | 📊 大盤與五大權值 |
+|---|---|---|---|
+| 誰負責更新 | GitHub Actions「Daily Stock Data Update」 | 同一支排程 | 同一支排程（步驟 `fetch_big5_data.py`） |
+| 更新時間 | 週一至週五每天兩次：台股收盤後（台灣時間 14:30）、美股收盤後（台灣時間隔天 06:00） | 同左 | 同左 |
+| 資料檔 | `data/stock_data.json` | `data/stock_data.json` ＋ `data/quotes.json` | `data/big5_market_data.json` |
+| 抓取程式 | `fetch_stock_data.py` | `fetch_stock_data.py` ＋ `fetch_quotes_universe.py` | `fetch_big5_data.py` |
+
+頁面打開時會讀取最新的資料檔，不需要手動按更新。
+
+**「超過 4 天未更新」只是故障警報，不是更新頻率。** 平常不會出現；只有在更新流程出問題（例如 Yahoo 暫時故障、排程執行失敗）時才會顯示「⚠ 已 N 天未更新」，避免把舊價格誤當成今天的價格。門檻定在 4 天，是因為一般週末加上一天連假，最多就是 3–4 天沒有新收盤價，這屬於正常情況，不會觸發警報。三個頁面都有這個警報。
+
 ### 已知限制
 
 - **資料新鮮度取決於 Yahoo Finance 自己的發布節奏，不是排程有沒有跑**：實測發現台股個股（如台積電、鴻海）通常比 TAIEX 指數或美股 ETF 更新得快；某週的資料有時要等 1–2 天才會出現在 Yahoo 的回應裡（查詢當下是 `NaN`），不是我們的 pipeline 壞掉。這個延遲通常在 1–2 天內就會自行解除（實測驗證過），`current_price` 已經用每日資料墊高新鮮度（見上），只有週線歷史圖表本身還是要等 Yahoo 補資料。
