@@ -43,6 +43,12 @@
   font-size:12.5px; color:var(--ftk-text-dim); background:var(--ftk-bg);
   border:1px dashed var(--ftk-border); border-radius:8px; padding:8px 12px; margin-top:8px;
 }
+.r7-calc{ margin-top:10px; padding:10px 12px; border:1px solid var(--ftk-accent); border-radius:10px; background:var(--ftk-bg); }
+.r7-row{ display:flex; flex-wrap:wrap; gap:8px 12px; }
+.r7-row label{ display:flex; flex-direction:column; gap:3px; font-size:11.5px; color:var(--ftk-text-dim); }
+.r7-row input{ width:110px; padding:5px 8px; border-radius:7px; border:1px solid var(--ftk-border); background:var(--ftk-bg-elev); color:var(--ftk-text); font-family:Consolas,monospace; text-align:right; }
+.r7-out{ margin-top:8px; font-size:13px; line-height:1.65; }
+.r7-out b.big{ color:var(--ftk-accent); font-size:15px; }
 .rule-formula{
   font-family:'Consolas',monospace; font-size:12.5px; color:var(--ftk-accent-2);
   background:var(--ftk-bg); border:1px solid var(--ftk-border); border-radius:8px;
@@ -99,9 +105,35 @@ const RULES = [
     en: 'Before you start investing, make sure you have an emergency fund equal to <b>6x</b> your monthly expenses.<div class="rule-example">Example: at $6,000 in monthly expenses, your emergency fund should be $36,000.</div>'
   },
   {
-    no: 7, head_zh: '25 倍投資法則', head_en: '25X Investment Rule',
-    zh: '當你累積的資產達到「年支出的 25 倍」時，就可以開始考慮退休。<div class="rule-example">範例：每年需要 $50,000 生活費 → 退休時至少需準備 $1,250,000。</div>',
-    en: 'You can start considering retirement once your assets reach 25x your annual expenses.<div class="rule-example">Example: needing $50,000/year to live &rarr; you’ll need at least $1,250,000 to retire.</div>'
+    no: 7, head_zh: '退休金倍數法則（依退休年齡）', head_en: 'Retirement Multiple (by Retirement Age)',
+    zh: '常聽到的「年支出 25 倍」其實是 <b>4% 法則</b>，前提是退休後只要撐約 <b>30 年</b>（約 65 歲退休、活到 95 歲）。越早退休，錢要撐越久，每年能安全提領的比例就越低，需要的倍數越高；越晚退休則相反。'
+      + '<ul><li><b>45 歲以前</b>退休（撐 50 年以上）：提領約 3.25% → 約 <b>31 倍</b></li>'
+      + '<li><b>45–54 歲</b>（撐 40–50 年）：約 3.5% → 約 <b>29 倍</b></li>'
+      + '<li><b>55–64 歲</b>（撐 30–40 年）：約 3.75%–4% → 約 <b>25–27 倍</b></li>'
+      + '<li><b>65–69 歲</b>（撐 25–30 年）：約 4.5% → 約 <b>22 倍</b></li>'
+      + '<li><b>70 歲以上</b>（撐 20 年左右）：約 5% → 約 <b>20 倍</b></li></ul>'
+      + '<div class="rule-formula">需要的退休資產 ＝（每年生活費 − 每年年金收入）× 倍數<br>倍數 ＝ 100 ÷ 安全提領率（%）</div>'
+      + '<div class="rule-example">台灣的<b>勞保年金、勞退月領、公教退休金</b>每年會固定入帳，只有「生活費扣掉年金」的缺口需要靠自己的資產支應。<br>範例：每年需要 60 萬、勞保年金每年 24 萬 → 缺口 36 萬。40 歲退休約需 36 萬 × 30.8 ≈ <b>1,110 萬</b>；55 歲退休約需 36 萬 × 26.7 ≈ <b>960 萬</b>；65 歲退休約需 36 萬 × 22.2 ≈ <b>800 萬</b>。同樣的生活費，早退休 15 年要多準備三百多萬。</div>'
+      + '<div class="r7-calc">'
+      + '<div class="r7-row"><label>退休年齡<input type="number" id="r7Age" value="60" min="30" max="90"></label>'
+      + '<label>每年生活費（萬）<input type="number" id="r7Exp" value="60" min="0"></label>'
+      + '<label>每年年金收入（萬）<input type="number" id="r7Pen" value="24" min="0"></label></div>'
+      + '<div class="r7-out" id="r7Out"></div></div>'
+      + '<div class="rule-example">提領率是以「股債混合、依通膨調整提領金額」的歷史回測為基礎的經驗值，不是保證。要更保守可以再加 10%–20% 的緩衝，或在市場大跌那幾年少領一點。想做完整試算，請用「🏖️ 退休試算」。</div>',
+    en: 'The common “25x annual expenses” is the <b>4% rule</b>, which assumes your money only needs to last about <b>30 years</b> (retire around 65, live to 95). Retire earlier and the money must last longer, so the safe withdrawal rate falls and the multiple rises; retire later and the reverse.'
+      + '<ul><li>Retire <b>before 45</b> (50+ years): ~3.25% &rarr; about <b>31x</b></li>'
+      + '<li><b>45&ndash;54</b> (40&ndash;50 years): ~3.5% &rarr; about <b>29x</b></li>'
+      + '<li><b>55&ndash;64</b> (30&ndash;40 years): ~3.75%&ndash;4% &rarr; about <b>25&ndash;27x</b></li>'
+      + '<li><b>65&ndash;69</b> (25&ndash;30 years): ~4.5% &rarr; about <b>22x</b></li>'
+      + '<li><b>70+</b> (~20 years): ~5% &rarr; about <b>20x</b></li></ul>'
+      + '<div class="rule-formula">Retirement assets needed = (annual spending &minus; annual pension income) &times; multiple<br>Multiple = 100 &divide; safe withdrawal rate (%)</div>'
+      + '<div class="rule-example">Pensions such as Taiwan’s Labor Insurance annuity and Labor Pension pay you every year, so only the gap between spending and pension income must come from your own savings.<br>Example: NT$600K/year spending, NT$240K/year pension &rarr; NT$360K gap. Retire at 40: 360K &times; 30.8 &asymp; <b>NT$11.1M</b>; at 55: 360K &times; 26.7 &asymp; <b>NT$9.6M</b>; at 65: 360K &times; 22.2 &asymp; <b>NT$8.0M</b>. Same lifestyle, retiring 15 years earlier needs over NT$3M more.</div>'
+      + '<div class="r7-calc">'
+      + '<div class="r7-row"><label>Retirement age<input type="number" id="r7Age" value="60" min="30" max="90"></label>'
+      + '<label>Annual spending (10K)<input type="number" id="r7Exp" value="60" min="0"></label>'
+      + '<label>Annual pension (10K)<input type="number" id="r7Pen" value="24" min="0"></label></div>'
+      + '<div class="r7-out" id="r7Out"></div></div>'
+      + '<div class="rule-example">Withdrawal rates are rules of thumb from historical back-tests of a stock/bond mix with inflation-adjusted withdrawals &mdash; not guarantees. For extra safety add a 10&ndash;20% buffer or spend a little less in bad market years. For a full projection, use the Retirement Simulator.</div>'
   },
   {
     no: 8, head_zh: '解套公式', head_en: 'Recovery-from-Loss Rule',
@@ -183,6 +215,7 @@ function render() {
       <div class="rule-card-body">${currentLang === 'zh' ? r.zh : r.en}</div>
     </div>
   `).join('');
+  r7Wire();
 }
 
 document.getElementById('langToggle').addEventListener('click', () => {
@@ -190,6 +223,32 @@ document.getElementById('langToggle').addEventListener('click', () => {
   try { localStorage.setItem(LANG_KEY, currentLang); } catch (e) {}
   render();
 });
+
+// Rule 7 calculator: safe withdrawal rate by retirement age (rule-of-thumb
+// bands shown in the card), multiple = 100 / rate.
+function r7Rate(age){
+  if (age < 45) return 3.25;
+  if (age < 55) return 3.5;
+  if (age < 60) return 3.75;
+  if (age < 65) return 4.0;
+  if (age < 70) return 4.5;
+  return 5.0;
+}
+function r7Update(){
+  const out = document.getElementById('r7Out'); if (!out) return;
+  const age = parseFloat(document.getElementById('r7Age').value) || 0;
+  const exp = parseFloat(document.getElementById('r7Exp').value) || 0;
+  const pen = parseFloat(document.getElementById('r7Pen').value) || 0;
+  const rate = r7Rate(age), mult = 100 / rate, gap = Math.max(0, exp - pen), need = gap * mult;
+  const f = n => n.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  out.innerHTML = currentLang === 'zh'
+    ? `${age} 歲退休 → 安全提領率約 <b>${rate}%</b>，倍數約 <b>${mult.toFixed(1)} 倍</b><br>缺口 ${f(exp)} − ${f(pen)} ＝ ${f(gap)} 萬／年 × ${mult.toFixed(1)} ＝ <b class="big">約 ${f(need)} 萬</b>`
+    : `Retire at ${age} &rarr; safe withdrawal about <b>${rate}%</b>, multiple about <b>${mult.toFixed(1)}x</b><br>Gap ${f(exp)} &minus; ${f(pen)} = ${f(gap)} (10K)/yr &times; ${mult.toFixed(1)} = <b class="big">about ${f(need)} (10K)</b>`;
+}
+function r7Wire(){
+  ['r7Age', 'r7Exp', 'r7Pen'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('input', r7Update); });
+  r7Update();
+}
 
 render();
 </script>
