@@ -259,7 +259,8 @@
 
   <div class="inv-panel">
     <div class="panel-head"><h2>📈 淨資產趨勢</h2>
-      <button type="button" class="inv-btn primary small" id="btnSnapshot">📸 記錄今天的淨資產</button></div>
+      <span><button type="button" class="inv-btn small" id="btnSnapCsv" title="把每次記錄的淨資產下載成 CSV">📊 匯出 CSV</button>
+      <button type="button" class="inv-btn primary small" id="btnSnapshot">📸 記錄今天的淨資產</button></span></div>
     <div id="trendBody"></div>
   </div>
 
@@ -314,7 +315,8 @@
     <button type="button" class="inv-btn primary" id="btnFromRebalance" title="把「再平衡計算」儲存的持股帶入：台股（TWD）與美股（USD）兩筆">⇢ 從再平衡帶入投資</button>
     <button type="button" class="inv-btn" id="btnExpandAll">展開全部</button>
     <button type="button" class="inv-btn" id="btnCollapseAll">收合全部</button>
-    <button type="button" class="inv-btn" id="btnExport">⬇ 匯出</button>
+    <button type="button" class="inv-btn" id="btnExportCsv" title="下載成 CSV，可用 Excel、Google 試算表開啟">📊 匯出 CSV</button>
+    <button type="button" class="inv-btn" id="btnExport" title="完整備份（含設定、聯絡人、記錄），可用「匯入」還原">⬇ 匯出備份（JSON）</button>
     <button type="button" class="inv-btn" id="btnImport">⬆ 匯入</button>
     <button type="button" class="inv-btn" id="btnPrint">🖨 列印完整清單</button>
     <button type="button" class="inv-btn" id="btnPrintFamily" title="只印家人需要的：帳戶在哪、文件放哪、找誰">👪 列印家人摘要</button>
@@ -1354,6 +1356,69 @@ $('btnExpandAll').addEventListener('click', () => setAllClosed(false));
 $('btnCollapseAll').addEventListener('click', () => setAllClosed(true));
 $('btnPrint').addEventListener('click', () => window.print());
 $('btnPrintFamily').addEventListener('click', printFamily);
+
+// ─── CSV export (opens in Excel / Google Sheets) ─────────────────────────
+// UTF-8 with BOM so Excel shows Chinese correctly; one row per item, all
+// amounts both in the item's currency and converted to NT$.
+function csvCell(v){
+  if (v === null || v === undefined) return '';
+  const t = String(v);
+  return /[",\r\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+}
+function downloadCsv(rows, name){
+  const csv = '\ufeff' + rows.map(r => r.map(csvCell).join(',')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+function exportItemsCsv(){
+  if (!state.items.length) { msg('還沒有任何項目可以匯出。', true); return; }
+  const head = ['類別', '名稱', '機構／位置', '所在國家', '幣別', '估值（原幣）', '估值（NT$）', '每年收入（原幣）', '每年收入（NT$）',
+    '受益人／繼承人', '流動性', '美國資產', '課稅價值（公告現值）', '保額', '保障類型', '保障期間', '保到幾歲', '續約日',
+    '要保人', '被保險人', '已指定受益人', '遺產稅處理', '存取方式／文件存放', '最後確認日'];
+  const rows = [head];
+  CATS.forEach(c => state.items.filter(i => i.cat === c.key).forEach(it => {
+    const ins = it.cat === 'insurance', debt = it.cat === 'debt';
+    const e = ins ? insEstate(it) : null;
+    rows.push([
+      c.zh, it.name || '', it.inst || '',
+      COUNTRY_CATS.has(it.cat) ? COUNTRIES[countryOf(it)].zh : '',
+      it.cur || 'TWD',
+      (debt ? -1 : 1) * (+it.value || 0), Math.round((debt ? -1 : 1) * twd(it)),
+      debt ? '' : (+it.income || ''), debt ? '' : (Math.round(twdIncome(it)) || ''),
+      it.heir || '', debt ? '' : LIQ[liqOf(it)],
+      US_SITUS_CATS.has(it.cat) ? (isUSSitus(it) ? '是' : '否') : '',
+      it.cat === 'realestate' && +it.taxValue ? +it.taxValue : '',
+      ins && +it.cover ? +it.cover : '', ins && it.itype ? INS_TYPES[it.itype] : '',
+      ins && it.term ? TERMS[it.term] : '', ins && it.term === 'term' && +it.endAge ? +it.endAge : '',
+      ins && it.term === 'annual' ? (it.renewDate || '') : '',
+      ins ? (it.owner === 'other' ? '其他人' : '我') : '', ins ? (it.insured === 'other' ? '其他人' : '我') : '',
+      ins ? (it.benNamed === false ? '否' : '是') : '',
+      e ? e.txt.replace(/<[^>]+>/g, '') : '',
+      it.note || '', it.checked || ''
+    ]);
+  }));
+  const t = totals();
+  rows.push([]);
+  rows.push(['總資產（NT$）', '', '', '', '', '', Math.round(t.assets)]);
+  rows.push(['總負債（NT$）', '', '', '', '', '', -Math.round(t.debts)]);
+  rows.push(['淨資產（NT$）', '', '', '', '', '', Math.round(t.net)]);
+  rows.push(['每年被動收入（NT$）', '', '', '', '', '', '', '', Math.round(t.income)]);
+  rows.push([`匯出日期 ${todayISO()}；外幣以當時匯率換算；負債以負數表示`]);
+  downloadCsv(rows, `asset-inventory-${todayISO()}.csv`);
+  msg('📊 已匯出 CSV（可用 Excel、Google 試算表開啟）。檔案含有你的財產資訊，請妥善保管。');
+}
+function exportSnapshotsCsv(){
+  if (!state.snapshots.length) { msg('還沒有淨資產記錄。先按「📸 記錄今天的淨資產」。', true); return; }
+  const head = ['日期', '淨資產', '總資產', '總負債', ...CATS.map(c => c.zh)];
+  const rows = [head, ...state.snapshots.map(sn => [sn.date, sn.net, sn.assets, sn.debts, ...CATS.map(c => (sn.byCat && sn.byCat[c.key]) || 0)])];
+  downloadCsv(rows, `net-worth-history-${todayISO()}.csv`);
+  msg('📊 已匯出淨資產記錄 CSV。');
+}
+$('btnExportCsv').addEventListener('click', exportItemsCsv);
+$('btnSnapCsv').addEventListener('click', exportSnapshotsCsv);
 
 $('btnExport').addEventListener('click', () => {
   save();
