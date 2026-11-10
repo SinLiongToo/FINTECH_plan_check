@@ -243,6 +243,11 @@ after `load`). The page logic is the inline script in `index.html`.
 - The grid renders `PAGE` (60) cards at a time; anything that needs a card
   in the DOM (jump, autoplay scroll) must call `ensureRendered(pos)` first.
 - `#q=N` in the URL opens quote N (home card links use it).
+- Auto-play holds a Screen Wake Lock (`keepAwake()`), because phones stop
+  `speechSynthesis` as soon as the screen locks. Acquire in `autoPlay()`,
+  release in `stop()`, re-acquire on `visibilitychange`; the `release`
+  listener must only clear its *own* lock (restart = stop + autoPlay races).
+  Headless Chromium has no wake lock — mock `navigator.wakeLock` to test.
 - Features that must keep working: auto-play, prev/next, shuffle, loop,
   category tabs, favorites, load-more, daily quote, share card (PNG
   download), sleep timer / 睡前模式, author filter + search, "從第 N 句 / 跳至 Go" jump (clears filters that

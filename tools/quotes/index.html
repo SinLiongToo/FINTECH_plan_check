@@ -401,9 +401,34 @@ function toggleFav(id){
   }
 }
 
+// ─── keep the screen on while auto-playing (Screen Wake Lock API) ───────
+// Phones stop browser speech once the screen locks, so during auto-play we
+// ask the screen to stay on; it's released on stop. The OS drops the lock
+// whenever the page is hidden, so it's re-requested when the page returns.
+let wakeLock = null;
+const hasWakeLock = 'wakeLock' in navigator;
+async function keepAwake(on){
+  if (!hasWakeLock) return;
+  try {
+    if (on && !wakeLock) {
+      const l = await navigator.wakeLock.request('screen');
+      if (!playing) { l.release(); return; } // stopped while we were waiting
+      wakeLock = l;
+      l.addEventListener('release', () => { if (wakeLock === l) { wakeLock = null; setStatus(); } });
+    } else if (!on && wakeLock) {
+      const l = wakeLock; wakeLock = null; await l.release();
+    }
+  } catch (e) { wakeLock = null; } // e.g. low battery mode or not allowed
+  setStatus();
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && playing) keepAwake(true);
+});
+
 function setStatus(){
   let s = playing ? '▶ 自動播放中 Playing' : '已停止 Stopped';
   if (playing && sleepUntil) s += ` · ⏲ 剩 ${Math.max(1, Math.ceil((sleepUntil - Date.now()) / 60000))} 分`;
+  if (playing && wakeLock) s += ' · 🔆 螢幕保持開啟';
   $('qStatus').textContent = s;
   $('qStatus').classList.toggle('on', playing);
   $('btnPlay').textContent = playing ? '⏸ 暫停 Pause' : '▶ 自動播放 Auto-play';
@@ -420,6 +445,7 @@ function armSleepTimer(){
 async function autoPlay(){
   const token = ++runToken;
   playing = true; setStatus();
+  keepAwake(true);
   while (playing && token === runToken && playlist.length) {
     ensureRendered(pos);
     renderCurrent();
@@ -443,6 +469,7 @@ function stop(){
   playing = false;
   sleepUntil = 0;
   if (hasTTS) speechSynthesis.cancel();
+  keepAwake(false);
   setStatus();
 }
 
